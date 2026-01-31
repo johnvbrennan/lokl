@@ -1626,6 +1626,9 @@
                 <button class="header-btn" id="practice-btn" title="Practice Mode (P)">🎯 <span class="btn-text">Practice</span></button>
                 <button class="header-btn" id="locate-btn" title="Locate Mode - Find county on map (L)">📍 <span class="btn-text">Locate</span></button>
                 <button class="header-btn" id="stats-btn" title="Statistics">📊 <span class="btn-text">Stats</span></button>
+                <button class="header-btn" id="difficulty-toggle-btn" title="Click to change difficulty">
+                    <span id="difficulty-display">Medium</span>
+                </button>
                 <div class="settings-container">
                     <button class="header-btn" id="settings-btn" title="Settings">⚙️</button>
                     <div class="settings-dropdown" id="settings-dropdown">
@@ -2178,11 +2181,11 @@
                 mouseout: function(e) {
                     const layer = e.target;
                     // Reset to default style based on game mode
-                    const showBorders = gameState.mode === 'locate';
+                    const isLocateMode = gameState.mode === 'locate';
                     layer.setStyle({
-                        weight: showBorders ? 1 : 0.5,
-                        opacity: showBorders ? 1 : 0.1,
-                        color: 'rgba(0, 255, 136, 0.2)'
+                        weight: isLocateMode ? 2 : 1,
+                        opacity: isLocateMode ? 1 : 0.5,
+                        color: isLocateMode ? 'rgba(0, 255, 136, 0.4)' : 'rgba(0, 255, 136, 0.15)'
                     });
                     const el = layer.getElement();
                     if (el) el.style.cursor = '';
@@ -2615,6 +2618,28 @@
                 document.getElementById('menu-practice').classList.add('active');
             } else if (gameState.mode === 'locate') {
                 document.getElementById('menu-locate').classList.add('active');
+            }
+        }
+
+        function updateDifficultyDisplay() {
+            const display = document.getElementById('difficulty-display');
+            if (!display) return;
+
+            const diffNames = {
+                'easy': 'Easy',
+                'medium': 'Medium',
+                'hard': 'Hard'
+            };
+            const diffDescriptions = {
+                'easy': 'Distance + Direction',
+                'medium': 'Distance only',
+                'hard': 'Direction only'
+            };
+
+            display.textContent = diffNames[settings.difficulty];
+            const btn = document.getElementById('difficulty-toggle-btn');
+            if (btn) {
+                btn.title = `Difficulty: ${diffNames[settings.difficulty]} (${diffDescriptions[settings.difficulty]}). Click to change.`;
             }
         }
 
@@ -3540,6 +3565,7 @@
                     // Re-render guess history with new settings
                     refreshGuessHistory();
                     updateModeBadge();
+                    updateDifficultyDisplay();
                 });
             });
 
@@ -3561,6 +3587,25 @@
                 saveSettings();
                 refreshGuessHistory();
                 updateModeBadge();
+                updateDifficultyDisplay();
+            });
+
+            // Difficulty toggle button in header
+            document.getElementById('difficulty-toggle-btn')?.addEventListener('click', () => {
+                // Cycle through difficulties: easy -> medium -> hard -> easy
+                const difficulties = ['easy', 'medium', 'hard'];
+                const currentIndex = difficulties.indexOf(settings.difficulty);
+                const nextIndex = (currentIndex + 1) % difficulties.length;
+                settings.difficulty = difficulties[nextIndex];
+
+                // Update radio buttons to keep in sync
+                const radio = document.getElementById(`diff-${settings.difficulty}`);
+                if (radio) radio.checked = true;
+
+                saveSettings();
+                refreshGuessHistory();
+                updateModeBadge();
+                updateDifficultyDisplay();
             });
 
             // Panel toggle
