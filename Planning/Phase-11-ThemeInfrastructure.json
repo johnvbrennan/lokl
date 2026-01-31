@@ -1,0 +1,75 @@
+{
+  "phase": 11,
+  "name": "Theme Infrastructure & CSS Variables",
+  "goal": "Set up the foundation for theme switching without breaking existing functionality",
+  "prds": [
+    {
+      "id": "11.1",
+      "category": "structural",
+      "description": "Add data-theme attribute system to HTML element for theme switching",
+      "steps": [
+        "Open browser console",
+        "Verify <html> element has data-theme attribute",
+        "Verify default theme is 'dark'",
+        "Change data-theme to 'light' via console",
+        "Verify CSS variables update accordingly"
+      ],
+      "passes": true
+    },
+    {
+      "id": "11.2",
+      "category": "styling",
+      "description": "Create light theme CSS variable palette",
+      "steps": [
+        "Inspect CSS in DevTools",
+        "Verify [data-theme='light'] selector exists",
+        "Verify light theme defines all necessary color variables",
+        "Compare with dark theme variables to ensure parity",
+        "Verify light theme colors provide sufficient contrast"
+      ],
+      "passes": true
+    },
+    {
+      "id": "11.3",
+      "category": "functional",
+      "description": "Replace hardcoded colors with CSS variables in map styling",
+      "steps": [
+        "Search codebase for rgba(0, 255, 136, ...) hardcoded values",
+        "Verify map border colors use CSS variables",
+        "Verify defaultStyle() function references CSS variables",
+        "Verify mouseout handler uses CSS variables",
+        "Test map in both themes - borders should change color"
+      ],
+      "passes": true
+    },
+    {
+      "id": "11.4",
+      "category": "visual",
+      "description": "Add theme toggle button to floating header menu",
+      "steps": [
+        "Open game in browser",
+        "Click hamburger menu (☰)",
+        "Verify 'Theme' option appears in menu",
+        "Verify theme icon shows current theme (☀️ for light, 🌙 for dark)",
+        "Click theme toggle",
+        "Verify theme changes immediately"
+      ],
+      "passes": true
+    },
+    {
+      "id": "11.5",
+      "category": "data",
+      "description": "Implement localStorage persistence for theme preference",
+      "steps": [
+        "Switch to light theme",
+        "Refresh the page",
+        "Verify light theme is still active",
+        "Switch to dark theme",
+        "Refresh the page",
+        "Verify dark theme is active",
+        "Check localStorage in DevTools for 'loklTheme' key"
+      ],
+      "passes": true
+    }
+  ]
+}

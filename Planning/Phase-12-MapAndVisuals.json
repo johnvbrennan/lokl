@@ -1,0 +1,75 @@
+{
+  "phase": 12,
+  "name": "Map Styling & Visual Polish",
+  "goal": "Adapt the Leaflet map and visual effects for both themes",
+  "prds": [
+    {
+      "id": "12.1",
+      "category": "visual",
+      "description": "Update Leaflet tile layer brightness/contrast for each theme",
+      "steps": [
+        "Start game in dark theme",
+        "Verify map tiles are slightly darkened (current behavior)",
+        "Switch to light theme",
+        "Verify map tiles are brighter/clearer",
+        "Verify county borders are visible in both themes"
+      ],
+      "passes": true
+    },
+    {
+      "id": "12.2",
+      "category": "styling",
+      "description": "Update glow effects and shadows for light theme",
+      "steps": [
+        "Switch to light theme",
+        "Verify neon glow effects are toned down but still visible",
+        "Verify text shadows provide sufficient contrast",
+        "Verify button hover effects work in light theme",
+        "Compare visual hierarchy with dark theme - should be equivalent"
+      ],
+      "passes": true
+    },
+    {
+      "id": "12.3",
+      "category": "styling",
+      "description": "Fix glassmorphism overlays for light theme",
+      "steps": [
+        "Switch to light theme",
+        "Verify glass panels (modals, floating header) are visible",
+        "Verify backdrop blur effect works",
+        "Verify glass borders are visible but not overpowering",
+        "Verify text on glass panels is readable"
+      ],
+      "passes": true
+    },
+    {
+      "id": "12.4",
+      "category": "functional",
+      "description": "Test all game states (playing, won, lost) in both themes",
+      "steps": [
+        "Start new game in dark theme",
+        "Make guesses - verify colors update correctly",
+        "Win a game - verify confetti and modal styling in dark theme",
+        "Switch to light theme",
+        "Start new game, make guesses - verify colors update correctly",
+        "Lose a game (use 6 wrong guesses) - verify end modal in light theme"
+      ],
+      "passes": true
+    },
+    {
+      "id": "12.5",
+      "category": "visual",
+      "description": "Verify proximity feedback colors work in both themes",
+      "steps": [
+        "Make guesses in dark theme",
+        "Verify color progression: blue → yellow → orange → red → green",
+        "Verify all colors are clearly distinguishable",
+        "Switch to light theme",
+        "Make guesses in light theme",
+        "Verify same color progression is visible and distinguishable",
+        "Verify sufficient contrast against light background"
+      ],
+      "passes": true
+    }
+  ]
+}

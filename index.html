@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,7 +8,8 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
     <style>
         /* CSS Custom Properties - Cyber-Emerald Theme */
-        :root {
+        :root,
+        [data-theme="dark"] {
             /* Cyber-Emerald Palette */
             --bg-deep: #020b09;
             --bg-forest: #052c24;
@@ -42,6 +43,16 @@
             --accent: var(--neon-mint);
             --accent-hover: #33ff99;
 
+            /* Map-specific colors */
+            --map-border: rgba(0, 255, 136, 0.3);
+            --map-border-bright: rgba(0, 255, 136, 0.6);
+            --map-hover: #f8fafc;
+
+            /* Shadow colors for effects */
+            --shadow-inset-light: rgba(0, 255, 136, 0.05);
+            --shadow-inset-medium: rgba(0, 255, 136, 0.1);
+            --shadow-inset-subtle: rgba(0, 255, 136, 0.03);
+
             /* Sizing */
             --border-radius: 8px;
             --border-radius-pill: 24px;
@@ -56,16 +67,68 @@
             --color-danger: #ff4b2b;
         }
 
+        /* Light Theme */
+        [data-theme="light"] {
+            /* Light Palette */
+            --bg-deep: #f8faf9;
+            --bg-forest: #e8f5f0;
+            --neon-mint: #009955;
+            --neon-mint-dim: rgba(0, 153, 85, 0.4);
+            --neon-mint-glow: rgba(0, 153, 85, 0.2);
+
+            /* Feedback Colors (same for both themes) */
+            --color-correct: #00aa5e;
+            --color-hot: #ff6b6b;
+            --color-warm-3: #ffa94d;
+            --color-warm-2: #ffd43b;
+            --color-warm-1: #74c0fc;
+            --color-cold-2: #4dabf7;
+            --color-cold-1: #1864ab;
+            --color-default: transparent;
+            --color-stroke: rgba(0, 153, 85, 0.25);
+
+            /* Glass UI */
+            --glass-bg: rgba(255, 255, 255, 0.8);
+            --glass-border: rgba(0, 153, 85, 0.25);
+            --glass-blur: 15px;
+
+            /* UI Colors */
+            --bg-primary: var(--bg-deep);
+            --bg-secondary: rgba(232, 245, 240, 0.9);
+            --bg-tertiary: rgba(0, 153, 85, 0.1);
+            --text-primary: #1a2d27;
+            --text-secondary: rgba(26, 45, 39, 0.7);
+            --text-muted: rgba(26, 45, 39, 0.4);
+            --accent: var(--neon-mint);
+            --accent-hover: #00b366;
+
+            /* Map-specific colors */
+            --map-border: rgba(0, 153, 85, 0.4);
+            --map-border-bright: rgba(0, 153, 85, 0.8);
+            --map-hover: #1a2d27;
+
+            /* Shadow colors for effects */
+            --shadow-inset-light: rgba(0, 153, 85, 0.08);
+            --shadow-inset-medium: rgba(0, 153, 85, 0.15);
+            --shadow-inset-subtle: rgba(0, 153, 85, 0.05);
+
+            /* Warning colors */
+            --color-warning: #cc9900;
+            --color-danger: #cc3c28;
+        }
+
         /* Utility Classes - Glassmorphism */
         .glass {
             background: var(--glass-bg);
             backdrop-filter: blur(var(--glass-blur));
             -webkit-backdrop-filter: blur(var(--glass-blur));
+            transition: background-color 0.3s ease, border-color 0.3s ease;
         }
 
         .neon-border {
             border: 1px solid var(--glass-border);
-            box-shadow: 0 0 10px var(--neon-mint-glow), inset 0 0 10px rgba(0, 255, 136, 0.05);
+            box-shadow: 0 0 10px var(--neon-mint-glow), inset 0 0 10px var(--neon-mint-glow);
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
         }
 
         @keyframes pulse-glow {
@@ -80,8 +143,8 @@
         }
 
         @keyframes neon-pulse {
-            0%, 100% { box-shadow: 0 0 5px var(--neon-mint-glow), inset 0 0 5px rgba(0, 255, 136, 0.05); }
-            50% { box-shadow: 0 0 15px var(--neon-mint-dim), inset 0 0 10px rgba(0, 255, 136, 0.1); }
+            0%, 100% { box-shadow: 0 0 5px var(--neon-mint-glow), inset 0 0 5px var(--shadow-inset-light); }
+            50% { box-shadow: 0 0 15px var(--neon-mint-dim), inset 0 0 10px var(--shadow-inset-medium); }
         }
 
         /* Reset & Base */
@@ -97,6 +160,7 @@
             background: var(--bg-deep);
             color: var(--text-primary);
             overflow: hidden;
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
 
         /* App Layout - Full-screen map-first */
@@ -487,7 +551,7 @@
 
         .input-dock .county-input:focus {
             border-color: var(--neon-mint);
-            box-shadow: 0 0 20px var(--neon-mint-dim), inset 0 0 10px rgba(0, 255, 136, 0.1);
+            box-shadow: 0 0 20px var(--neon-mint-dim), inset 0 0 10px var(--shadow-inset-medium);
         }
 
         .input-dock .county-input:disabled {
@@ -813,7 +877,7 @@
             max-height: 90vh;
             overflow-y: auto;
             backdrop-filter: blur(var(--glass-blur));
-            box-shadow: 0 0 40px var(--neon-mint-glow), inset 0 0 20px rgba(0, 255, 136, 0.03);
+            box-shadow: 0 0 40px var(--neon-mint-glow), inset 0 0 20px var(--shadow-inset-subtle);
         }
 
         .modal-title {
@@ -1746,6 +1810,10 @@
                         <span class="menu-icon">🎮</span>
                         <span class="menu-label">New Game</span>
                     </button>
+                    <button class="floating-menu-item" id="theme-toggle-btn">
+                        <span class="menu-icon">🌙</span>
+                        <span class="menu-label">Theme</span>
+                    </button>
                     <div class="menu-divider"></div>
                     <button class="floating-menu-item" id="menu-stats">
                         <span class="menu-icon">📊</span>
@@ -2162,12 +2230,17 @@
             // Locate mode: bright borders to help find counties
             // Practice/Daily: visible borders so you can see the map
             const isLocateMode = gameState.mode === 'locate';
+            const mapBorder = getComputedStyle(document.documentElement)
+                .getPropertyValue('--map-border').trim();
+            const mapBorderBright = getComputedStyle(document.documentElement)
+                .getPropertyValue('--map-border-bright').trim();
+
             return {
                 fillColor: 'transparent',
                 fillOpacity: 0,
                 weight: isLocateMode ? 2 : 1,
                 opacity: isLocateMode ? 1 : 0.6,
-                color: isLocateMode ? 'rgba(0, 255, 136, 0.6)' : 'rgba(0, 255, 136, 0.3)'
+                color: isLocateMode ? mapBorderBright : mapBorder
             };
         }
 
@@ -2179,9 +2252,12 @@
             layer.on({
                 mouseover: function(e) {
                     const layer = e.target;
+                    const mapHover = getComputedStyle(document.documentElement)
+                        .getPropertyValue('--map-hover').trim();
+
                     layer.setStyle({
                         weight: 3,
-                        color: '#f8fafc'
+                        color: mapHover
                     });
                     layer.bringToFront();
                     // Show pointer cursor in locate mode
@@ -2194,10 +2270,15 @@
                     const layer = e.target;
                     // Reset to default style based on game mode
                     const isLocateMode = gameState.mode === 'locate';
+                    const mapBorder = getComputedStyle(document.documentElement)
+                        .getPropertyValue('--map-border').trim();
+                    const mapBorderBright = getComputedStyle(document.documentElement)
+                        .getPropertyValue('--map-border-bright').trim();
+
                     layer.setStyle({
                         weight: isLocateMode ? 2 : 1,
                         opacity: isLocateMode ? 1 : 0.6,
-                        color: isLocateMode ? 'rgba(0, 255, 136, 0.6)' : 'rgba(0, 255, 136, 0.3)'
+                        color: isLocateMode ? mapBorderBright : mapBorder
                     });
                     const el = layer.getElement();
                     if (el) el.style.cursor = '';
@@ -2268,10 +2349,15 @@
             if (layer) {
                 // Restore to default border style based on game mode
                 const isLocateMode = gameState.mode === 'locate';
+                const mapBorder = getComputedStyle(document.documentElement)
+                    .getPropertyValue('--map-border').trim();
+                const mapBorderBright = getComputedStyle(document.documentElement)
+                    .getPropertyValue('--map-border-bright').trim();
+
                 layer.setStyle({
                     weight: isLocateMode ? 2 : 1,
                     opacity: isLocateMode ? 1 : 0.6,
-                    color: isLocateMode ? 'rgba(0, 255, 136, 0.6)' : 'rgba(0, 255, 136, 0.3)'
+                    color: isLocateMode ? mapBorderBright : mapBorder
                 });
 
                 // If it's no longer the highlighted county, clear the tracking
@@ -3353,10 +3439,75 @@
         }
 
         // ============================================
+        // THEME MANAGEMENT
+        // ============================================
+
+        let currentTheme = 'dark';
+
+        function initTheme() {
+            const savedTheme = localStorage.getItem('loklTheme') || 'dark';
+            setTheme(savedTheme);
+        }
+
+        function setTheme(theme) {
+            currentTheme = theme;
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('loklTheme', theme);
+            updateThemeButton();
+            updateMapTileFilters();
+            updateAllMapBorders();
+        }
+
+        function toggleTheme() {
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            setTheme(newTheme);
+        }
+
+        function updateThemeButton() {
+            const btn = document.getElementById('theme-toggle-btn');
+            if (btn) {
+                const icon = btn.querySelector('.menu-icon');
+                if (icon) {
+                    icon.textContent = currentTheme === 'dark' ? '☀️' : '🌙';
+                }
+                btn.title = currentTheme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode';
+            }
+        }
+
+        function updateMapTileFilters() {
+            // Wait a bit for the map to be initialized
+            setTimeout(() => {
+                const tilePane = document.querySelector('.leaflet-tile-pane');
+                if (tilePane) {
+                    if (currentTheme === 'light') {
+                        tilePane.style.filter = 'brightness(1) contrast(1) saturate(1)';
+                    } else {
+                        tilePane.style.filter = 'brightness(0.7) contrast(1.2) saturate(0.8)';
+                    }
+                }
+            }, 100);
+        }
+
+        function updateAllMapBorders() {
+            // Update all county borders when theme changes
+            if (countyLayers && Object.keys(countyLayers).length > 0) {
+                Object.values(countyLayers).forEach(layer => {
+                    const currentStyle = defaultStyle(layer.feature);
+                    layer.setStyle({
+                        color: currentStyle.color,
+                        opacity: currentStyle.opacity,
+                        weight: currentStyle.weight
+                    });
+                });
+            }
+        }
+
+        // ============================================
         // EVENT LISTENERS
         // ============================================
 
         document.addEventListener('DOMContentLoaded', () => {
+            initTheme(); // Initialize theme before anything else
             loadStatistics();
             loadSettings();
             initStartScreenListeners(); // Set up start screen interactions
@@ -3526,6 +3677,11 @@
             document.getElementById('menu-help').addEventListener('click', () => {
                 floatingMenu.classList.remove('visible');
                 showHelp();
+            });
+
+            document.getElementById('theme-toggle-btn').addEventListener('click', () => {
+                toggleTheme();
+                // Keep menu open so user can see the change
             });
 
             document.getElementById('practice-btn').addEventListener('click', () => {

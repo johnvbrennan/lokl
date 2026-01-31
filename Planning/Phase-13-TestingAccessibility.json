@@ -1,0 +1,75 @@
+{
+  "phase": 13,
+  "name": "Testing & Accessibility",
+  "goal": "Ensure all features work correctly in both themes with proper accessibility",
+  "prds": [
+    {
+      "id": "13.1",
+      "category": "functional",
+      "description": "Test all game modes (Daily, Practice, Locate) in both themes",
+      "steps": [
+        "Start Daily Challenge in dark theme - verify it works",
+        "Switch to light theme mid-game - verify no visual breaks",
+        "Start Practice Mode in light theme - verify it works",
+        "Switch to dark theme mid-game - verify no visual breaks",
+        "Start Locate Mode in both themes - verify map interaction works"
+      ],
+      "passes": true
+    },
+    {
+      "id": "13.2",
+      "category": "functional",
+      "description": "Test difficulty levels in both themes",
+      "steps": [
+        "Set difficulty to Easy in dark theme",
+        "Verify distance + direction both show",
+        "Switch to light theme",
+        "Verify distance + direction still show correctly",
+        "Test Medium and Hard difficulties in both themes",
+        "Verify all difficulty feedback is visible"
+      ],
+      "passes": true
+    },
+    {
+      "id": "13.3",
+      "category": "accessibility",
+      "description": "Verify color contrast meets WCAG AA standards",
+      "steps": [
+        "Use browser DevTools contrast checker",
+        "Check text-on-background contrast in light theme (should be 4.5:1 minimum)",
+        "Check text-on-background contrast in dark theme (should be 4.5:1 minimum)",
+        "Check button/interactive element contrast in both themes",
+        "Verify no contrast issues in either theme"
+      ],
+      "passes": true
+    },
+    {
+      "id": "13.4",
+      "category": "functional",
+      "description": "Test theme switching mid-game doesn't break state",
+      "steps": [
+        "Start game in dark theme",
+        "Make 3 guesses",
+        "Switch to light theme",
+        "Verify all 3 previous guesses are still visible",
+        "Make 3 more guesses in light theme",
+        "Switch back to dark theme",
+        "Verify all 6 guesses are visible and styled correctly"
+      ],
+      "passes": true
+    },
+    {
+      "id": "13.5",
+      "category": "compatibility",
+      "description": "Browser compatibility testing (Chrome, Firefox, Safari, Edge)",
+      "steps": [
+        "Open game in Chrome - test theme switching",
+        "Open game in Firefox - test theme switching",
+        "Open game in Safari - test theme switching (especially backdrop-filter)",
+        "Open game in Edge - test theme switching",
+        "Verify localStorage persists theme in all browsers"
+      ],
+      "passes": true
+    }
+  ]
+}
