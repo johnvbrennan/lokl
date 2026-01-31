@@ -1,0 +1,71 @@
+{
+  "phase": 1,
+  "name": "Foundation (HTML, CSS, Data, SVG Map)",
+  "goal": "Create the basic application shell with all static assets",
+  "prds": [
+    {
+      "id": "1.1",
+      "category": "structural",
+      "description": "HTML skeleton with responsive two-panel layout (map left, game right on desktop; stacked on mobile)",
+      "steps": [
+        "Open index.html in a browser",
+        "Verify two-panel layout on desktop (700px+)",
+        "Verify map panel on left, game panel on right",
+        "Resize to mobile width (<700px)",
+        "Verify stacked layout with map on top"
+      ],
+      "passes": true,
+      "automatedTest": "P1.1 - Responsive layout exists"
+    },
+    {
+      "id": "1.2",
+      "category": "styling",
+      "description": "CSS styling with custom properties for colors and theming",
+      "steps": [
+        "Verify CSS custom properties defined for all colors",
+        "Verify dark theme applied to page background",
+        "Verify consistent styling across components"
+      ],
+      "passes": true,
+      "automatedTest": "P1.2 - CSS custom properties defined"
+    },
+    {
+      "id": "1.3",
+      "category": "data",
+      "description": "County data embedded in JavaScript (32 counties with lat/lng, province, facts)",
+      "steps": [
+        "Open browser console",
+        "Verify COUNTIES object exists with 32 entries",
+        "Verify each county has lat, lng, province, and fact properties",
+        "Verify all provinces represented (Munster, Leinster, Ulster, Connacht)"
+      ],
+      "passes": true,
+      "automatedTest": "P1.3 - County data has 32 entries"
+    },
+    {
+      "id": "1.4",
+      "category": "visual",
+      "description": "SVG map of Ireland with all 32 county paths",
+      "steps": [
+        "Verify SVG map is visible in the map panel",
+        "Verify all 32 counties are rendered as separate paths",
+        "Verify each path has id='county-{Name}' format",
+        "Verify each path has data-county='{Name}' attribute"
+      ],
+      "passes": true,
+      "automatedTest": "P1.4 - SVG map has 32 county paths"
+    },
+    {
+      "id": "1.5",
+      "category": "styling",
+      "description": "Default county styling (fill: #1a2a4a, stroke: #2a3d5e)",
+      "steps": [
+        "Verify all counties have dark neutral fill color",
+        "Verify counties have subtle border strokes",
+        "Verify hover effect shows county names or highlights"
+      ],
+      "passes": true,
+      "automatedTest": "P1.5 - Default county fill is correct"
+    }
+  ]
+}

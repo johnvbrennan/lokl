@@ -1,0 +1,84 @@
+{
+  "phase": 6,
+  "name": "Persistence & Statistics",
+  "goal": "Save progress and track player statistics",
+  "prds": [
+    {
+      "id": "6.1",
+      "category": "functional",
+      "description": "localStorage schema for statistics (games played, won, streaks, distribution)",
+      "steps": [
+        "Complete a game",
+        "Open browser DevTools > Application > Local Storage",
+        "Verify statistics object is stored",
+        "Verify contains: gamesPlayed, gamesWon, currentStreak, bestStreak, distribution"
+      ],
+      "passes": true,
+      "automatedTest": "P6.1 - Statistics object has required properties"
+    },
+    {
+      "id": "6.2",
+      "category": "functional",
+      "description": "Save/load statistics on game start/end",
+      "steps": [
+        "Complete a game",
+        "Refresh the page",
+        "Verify statistics are loaded from localStorage",
+        "Verify games played count is preserved"
+      ],
+      "passes": true,
+      "manualTest": "loadStatistics and saveStatistics implemented"
+    },
+    {
+      "id": "6.3",
+      "category": "functional",
+      "description": "Today's game state persistence (prevent daily challenge replay)",
+      "steps": [
+        "Play daily challenge game",
+        "Refresh the page",
+        "Verify game state is restored (same guesses shown)",
+        "Verify cannot make additional guesses if game was completed"
+      ],
+      "passes": true,
+      "manualTest": "loadDailyState and saveDailyState implemented"
+    },
+    {
+      "id": "6.4",
+      "category": "visual",
+      "description": "Guess distribution histogram display in win/loss modals",
+      "steps": [
+        "Complete several games",
+        "Verify histogram appears in modal",
+        "Verify bars represent games won in 1-6 guesses",
+        "Verify current game's guess count is highlighted"
+      ],
+      "passes": true,
+      "automatedTest": "P6.4 - Distribution histogram container exists"
+    },
+    {
+      "id": "6.5",
+      "category": "visual",
+      "description": "Score summary in modals (guesses used, best score, current streak)",
+      "steps": [
+        "Win a game",
+        "Verify modal shows guesses used",
+        "Verify modal shows best ever score",
+        "Verify modal shows current streak"
+      ],
+      "passes": true,
+      "manualTest": "Modal stat values populated in showEndModal"
+    },
+    {
+      "id": "6.6",
+      "category": "functional",
+      "description": "Win percentage calculation and display",
+      "steps": [
+        "Play several games",
+        "Verify win percentage is calculated correctly",
+        "Verify displayed in statistics section"
+      ],
+      "passes": true,
+      "manualTest": "Win percentage calculated in showEndModal"
+    }
+  ]
+}

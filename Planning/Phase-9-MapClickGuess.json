@@ -1,0 +1,186 @@
+{
+  "phase": 9,
+  "name": "Locate Mode - Find County on Map",
+  "goal": "Add a reverse game mode where players are shown a county name and must click its location on the map, reinforcing spatial awareness and geography learning",
+  "rationale": "The normal game mode tests recall (type the county name). Locate mode tests spatial recognition (where is this county?). Together they provide comprehensive geography learning.",
+  "userStory": "As a player, I want a mode where I'm shown a county name and must find it on the map, so I can learn the physical locations of Irish counties.",
+  "prds": [
+    {
+      "id": "9.1",
+      "category": "functional",
+      "description": "Locate mode button in header to enter/exit mode",
+      "steps": [
+        "Click the Locate button in header",
+        "Verify game switches to locate mode",
+        "Verify button changes to 'Back'",
+        "Click Back button",
+        "Verify returns to normal game mode"
+      ],
+      "passes": true,
+      "acceptanceCriteria": [
+        "Locate button visible in header",
+        "Clicking toggles between locate mode and normal mode",
+        "Button label updates to indicate current action"
+      ]
+    },
+    {
+      "id": "9.2",
+      "category": "functional",
+      "description": "Locate mode shows target county name to find",
+      "steps": [
+        "Enter locate mode",
+        "Verify a county name is displayed prominently",
+        "Verify 'Find this county:' label is shown"
+      ],
+      "passes": true,
+      "acceptanceCriteria": [
+        "County name displayed large and clearly",
+        "Instructional text explains what to do",
+        "Different county shown each round"
+      ]
+    },
+    {
+      "id": "9.3",
+      "category": "functional",
+      "description": "Clicking correct county shows success feedback",
+      "steps": [
+        "In locate mode, note the target county",
+        "Click on the correct county on the map",
+        "Verify county turns green",
+        "Verify history shows correct attempt",
+        "Verify score increments"
+      ],
+      "passes": true,
+      "acceptanceCriteria": [
+        "Correct click highlights county in green",
+        "Success emoji shown in history",
+        "Score updates immediately",
+        "Next county loads after brief delay"
+      ]
+    },
+    {
+      "id": "9.4",
+      "category": "functional",
+      "description": "Clicking wrong county shows failure feedback",
+      "steps": [
+        "In locate mode, note the target county",
+        "Click on a different county",
+        "Verify clicked county turns red",
+        "Verify correct county turns green",
+        "Verify history shows incorrect attempt with what was clicked"
+      ],
+      "passes": true,
+      "acceptanceCriteria": [
+        "Wrong click highlights clicked county in red",
+        "Correct location revealed in green",
+        "History shows both target and clicked county",
+        "Longer delay before next county (learning moment)"
+      ]
+    },
+    {
+      "id": "9.5",
+      "category": "functional",
+      "description": "Skip button moves to next county",
+      "steps": [
+        "In locate mode, click Skip button",
+        "Verify current county location is revealed (gray)",
+        "Verify history shows skipped attempt",
+        "Verify next county loads"
+      ],
+      "passes": true,
+      "acceptanceCriteria": [
+        "Skip button visible and functional",
+        "Skipped county shown on map",
+        "Skip counted in total but not correct"
+      ]
+    },
+    {
+      "id": "9.6",
+      "category": "ux",
+      "description": "No county name tooltips in locate mode",
+      "steps": [
+        "Enter locate mode",
+        "Hover over various counties on the map",
+        "Verify no tooltip shows county name"
+      ],
+      "passes": true,
+      "acceptanceCriteria": [
+        "Tooltips disabled/hidden in locate mode",
+        "This prevents giving away the answer"
+      ]
+    },
+    {
+      "id": "9.7",
+      "category": "functional",
+      "description": "Score tracking in locate mode",
+      "steps": [
+        "Enter locate mode",
+        "Make several guesses (correct and incorrect)",
+        "Verify score shows 'X / Y correct' format",
+        "Verify correct count and total update properly"
+      ],
+      "passes": true,
+      "acceptanceCriteria": [
+        "Score displayed clearly",
+        "Correct count increments only on correct clicks",
+        "Total increments on any click or skip"
+      ]
+    },
+    {
+      "id": "9.8",
+      "category": "visual",
+      "description": "Locate mode has distinct visual styling",
+      "steps": [
+        "Enter locate mode",
+        "Verify mode badge shows 'Locate' with distinct color",
+        "Verify locate-specific UI elements styled consistently"
+      ],
+      "passes": true,
+      "acceptanceCriteria": [
+        "Mode badge shows 'Locate' in purple",
+        "UI clearly different from normal game mode"
+      ]
+    },
+    {
+      "id": "9.9",
+      "category": "functional",
+      "description": "Keyboard shortcut L toggles locate mode",
+      "steps": [
+        "Press 'L' key while in normal mode",
+        "Verify locate mode activates",
+        "Press 'L' key again",
+        "Verify returns to normal mode"
+      ],
+      "passes": true,
+      "acceptanceCriteria": [
+        "L key toggles locate mode",
+        "Works when not focused on input field"
+      ]
+    }
+  ],
+  "technicalNotes": {
+    "implementation": [
+      "locateState object tracks current target, attempts, score",
+      "initLocateMode() switches UI and picks first county",
+      "processLocateGuess() handles click evaluation",
+      "nextLocateCounty() picks random unused county",
+      "Tooltips not bound to layers (removed from onEachFeature)",
+      "Click handler checks gameState.mode before processing"
+    ],
+    "uiElements": [
+      "locate-area: shows target county and score",
+      "locate-history: shows attempt results",
+      "skip-btn: allows skipping difficult counties"
+    ]
+  },
+  "outOfScope": [
+    "Timed locate mode",
+    "Locate mode daily challenge",
+    "Leaderboards for locate mode"
+  ],
+  "estimatedComplexity": "Medium",
+  "dependencies": [
+    "Core game functionality complete",
+    "Leaflet map with click handlers"
+  ]
+}

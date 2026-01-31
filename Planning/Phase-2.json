@@ -1,0 +1,91 @@
+{
+  "phase": 2,
+  "name": "Core Game Engine",
+  "goal": "Implement the game logic algorithms and state management",
+  "prds": [
+    {
+      "id": "2.1",
+      "category": "functional",
+      "description": "Haversine distance calculation function (returns km between two coordinates)",
+      "steps": [
+        "Open browser console",
+        "Call getDistance with Dublin and Cork coordinates",
+        "Verify returns approximately 220 km",
+        "Call getDistance with Dublin and Antrim",
+        "Verify returns reasonable distance (~150 km)"
+      ],
+      "passes": true,
+      "automatedTest": "P2.1 - getDistance returns correct value"
+    },
+    {
+      "id": "2.2",
+      "category": "functional",
+      "description": "Bearing calculation function (returns one of 8 directional arrows)",
+      "steps": [
+        "Open browser console",
+        "Call getBearing from Dublin to Cork",
+        "Verify returns southward arrow",
+        "Call getBearing from Cork to Donegal",
+        "Verify returns northward arrow"
+      ],
+      "passes": true,
+      "automatedTest": "P2.2 - getBearing returns valid arrow"
+    },
+    {
+      "id": "2.3",
+      "category": "functional",
+      "description": "Daily seed function (date-based deterministic county selection)",
+      "steps": [
+        "Open browser console",
+        "Call getDailyCounty multiple times",
+        "Verify same county returned each time",
+        "Verify county is one of the 32 valid counties"
+      ],
+      "passes": true,
+      "automatedTest": "P2.3 - getDailyCounty returns consistent result"
+    },
+    {
+      "id": "2.4",
+      "category": "functional",
+      "description": "Color assignment function (distance ratio to color mapping)",
+      "steps": [
+        "Open browser console",
+        "Call getProximityColor with 0 km (correct)",
+        "Verify returns green color (#27ae60)",
+        "Call getProximityColor with 400 km",
+        "Verify returns dark blue (#1a5276)",
+        "Test intermediate distances for correct color bands"
+      ],
+      "passes": true,
+      "automatedTest": "P2.4 - getProximityColor returns correct colors"
+    },
+    {
+      "id": "2.5",
+      "category": "functional",
+      "description": "Game state object (target county, guesses array, game status)",
+      "steps": [
+        "Open browser console",
+        "Verify gameState object exists",
+        "Verify gameState has targetCounty property",
+        "Verify gameState has guesses array",
+        "Verify gameState has status property (playing/won/lost)"
+      ],
+      "passes": true,
+      "automatedTest": "P2.5 - gameState object has required properties"
+    },
+    {
+      "id": "2.6",
+      "category": "functional",
+      "description": "Initialize game on page load (set daily target)",
+      "steps": [
+        "Refresh page",
+        "Open browser console",
+        "Verify gameState.targetCounty is set",
+        "Verify gameState.guesses is empty array",
+        "Verify gameState.status is 'playing'"
+      ],
+      "passes": true,
+      "automatedTest": "P2.6 - Game initializes with target county"
+    }
+  ]
+}

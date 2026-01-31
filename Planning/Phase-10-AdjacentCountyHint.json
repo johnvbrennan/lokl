@@ -1,0 +1,207 @@
+{
+  "phase": 10,
+  "name": "Adjacent County Detection & Hint",
+  "goal": "Indicate when a guessed county borders/touches the target county, providing a strong spatial hint that the answer is immediately adjacent",
+  "rationale": "Distance in km can be misleading for adjacent counties - two counties might share a border but their centroids are 50km apart. Telling players 'this county touches the target' is a powerful learning hint that reinforces the map's geography.",
+  "userStory": "As a player, I want to know when my guess borders the target county, so I can narrow down my search to immediate neighbors and learn which counties are adjacent.",
+  "prds": [
+    {
+      "id": "10.1",
+      "category": "data",
+      "description": "Adjacency data defining which counties border each other",
+      "steps": [
+        "Verify COUNTY_ADJACENCY object exists in code",
+        "Verify all 32 counties have adjacency entries",
+        "Spot-check accuracy: Dublin borders Meath, Kildare, Wicklow",
+        "Spot-check accuracy: Cork borders Kerry, Limerick, Tipperary, Waterford",
+        "Verify bidirectional: if A borders B, then B borders A"
+      ],
+      "passes": true,
+      "acceptanceCriteria": [
+        "Data structure: { 'Dublin': ['Meath', 'Kildare', 'Wicklow'], ... }",
+        "All 32 counties included",
+        "Accurate real-world adjacency relationships",
+        "No self-references (county doesn't border itself)"
+      ],
+      "notes": "May need to research/verify Irish county borders for accuracy"
+    },
+    {
+      "id": "10.2",
+      "category": "functional",
+      "description": "Function to check if two counties are adjacent",
+      "steps": [
+        "Call areAdjacent('Dublin', 'Meath')",
+        "Verify returns true",
+        "Call areAdjacent('Dublin', 'Cork')",
+        "Verify returns false",
+        "Call areAdjacent('Kerry', 'Kerry')",
+        "Verify returns false (same county)"
+      ],
+      "passes": true,
+      "acceptanceCriteria": [
+        "Function: areAdjacent(county1, county2) => boolean",
+        "Case-insensitive matching",
+        "Returns false for same county",
+        "Returns false for non-existent counties"
+      ]
+    },
+    {
+      "id": "10.3",
+      "category": "functional",
+      "description": "Guess processing checks for adjacency and stores result",
+      "steps": [
+        "Make a guess that borders the target county",
+        "Verify guess object includes 'isAdjacent: true'",
+        "Make a guess that does not border the target",
+        "Verify guess object includes 'isAdjacent: false'"
+      ],
+      "passes": true,
+      "acceptanceCriteria": [
+        "processGuess() calls areAdjacent(guessedCounty, targetCounty)",
+        "Result stored in guess object for display",
+        "Does not affect distance/direction calculations"
+      ]
+    },
+    {
+      "id": "10.4",
+      "category": "visual",
+      "description": "Adjacent guess shows special indicator in guess history",
+      "steps": [
+        "Make a guess that borders the target county",
+        "Verify guess row shows adjacency indicator",
+        "Indicator could be: icon, badge, border style, or text",
+        "Verify indicator is visually distinct but not overwhelming"
+      ],
+      "passes": true,
+      "acceptanceCriteria": [
+        "Clear visual indicator (e.g., '🔗' icon, 'Borders target' text, or colored border)",
+        "Indicator appears alongside existing distance/direction info",
+        "Works with all difficulty settings",
+        "Accessible: not color-only indication"
+      ],
+      "designOptions": [
+        "Option A: Add '🔗' or '📍' emoji after direction arrow",
+        "Option B: Add 'ADJACENT' badge/pill",
+        "Option C: Special border/glow on the guess row",
+        "Option D: Replace distance with 'Borders target!' text"
+      ]
+    },
+    {
+      "id": "10.5",
+      "category": "visual",
+      "description": "Adjacent county highlighted differently on map",
+      "steps": [
+        "Make a guess that borders the target",
+        "Verify the guessed county has distinct visual treatment on map",
+        "Could be: pulsing border, different shade, or pattern overlay"
+      ],
+      "passes": true,
+      "priority": "medium",
+      "acceptanceCriteria": [
+        "Adjacent guesses visually distinct from non-adjacent",
+        "Does not reveal target location directly",
+        "Subtle but noticeable difference"
+      ]
+    },
+    {
+      "id": "10.6",
+      "category": "functional",
+      "description": "Share text includes adjacency information",
+      "steps": [
+        "Complete a game where one guess was adjacent to target",
+        "Click Share button",
+        "Verify share text indicates adjacent guess (optional enhancement)"
+      ],
+      "passes": true,
+      "priority": "low",
+      "acceptanceCriteria": [
+        "Could use special emoji for adjacent guesses in share grid",
+        "Example: 🟧🟨🔗🟩 (where 🔗 indicates adjacent guess)",
+        "Or simply note 'Had an adjacent guess!' in text"
+      ]
+    },
+    {
+      "id": "10.7",
+      "category": "ux",
+      "description": "Help/tutorial explains adjacency indicator",
+      "steps": [
+        "Open How to Play modal",
+        "Verify adjacency hint feature is explained",
+        "Verify indicator meaning is clear"
+      ],
+      "passes": true,
+      "priority": "low",
+      "acceptanceCriteria": [
+        "Brief explanation in tutorial/help",
+        "Example shown if possible"
+      ]
+    }
+  ],
+  "technicalNotes": {
+    "adjacencyDataSource": [
+      "Option A: Manually curate from map reference",
+      "Option B: Compute from GeoJSON using topological analysis (complex)",
+      "Option C: Use existing dataset if available online",
+      "Recommendation: Manual curation - only 32 counties, one-time effort"
+    ],
+    "implementation": [
+      "Add COUNTY_ADJACENCY constant object with adjacency lists",
+      "Add areAdjacent(county1, county2) helper function",
+      "Modify processGuess() to check and store adjacency",
+      "Modify addGuessToHistory() to display indicator",
+      "Update CSS for adjacent guess styling"
+    ],
+    "edgeCases": [
+      "Northern Ireland counties bordering Republic counties (cross-border adjacency)",
+      "Counties with many neighbors (e.g., Tipperary borders 8 counties)",
+      "Island considerations (none for Irish counties)"
+    ]
+  },
+  "adjacencyReference": {
+    "note": "This is reference data to be verified and added to code",
+    "data": {
+      "Antrim": ["Londonderry", "Tyrone", "Armagh", "Down"],
+      "Armagh": ["Tyrone", "Down", "Louth", "Monaghan", "Antrim"],
+      "Carlow": ["Laois", "Kildare", "Wicklow", "Wexford", "Kilkenny"],
+      "Cavan": ["Monaghan", "Fermanagh", "Leitrim", "Longford", "Westmeath", "Meath"],
+      "Clare": ["Galway", "Limerick", "Tipperary"],
+      "Cork": ["Kerry", "Limerick", "Tipperary", "Waterford"],
+      "Donegal": ["Londonderry", "Tyrone", "Fermanagh", "Leitrim"],
+      "Down": ["Antrim", "Armagh", "Louth"],
+      "Dublin": ["Meath", "Kildare", "Wicklow"],
+      "Fermanagh": ["Donegal", "Tyrone", "Monaghan", "Cavan", "Leitrim"],
+      "Galway": ["Mayo", "Roscommon", "Offaly", "Tipperary", "Clare"],
+      "Kerry": ["Limerick", "Cork"],
+      "Kildare": ["Dublin", "Meath", "Offaly", "Laois", "Carlow", "Wicklow"],
+      "Kilkenny": ["Laois", "Carlow", "Wexford", "Waterford", "Tipperary"],
+      "Laois": ["Offaly", "Kildare", "Carlow", "Kilkenny", "Tipperary"],
+      "Leitrim": ["Donegal", "Fermanagh", "Cavan", "Longford", "Roscommon", "Sligo"],
+      "Limerick": ["Clare", "Tipperary", "Cork", "Kerry"],
+      "Londonderry": ["Donegal", "Tyrone", "Antrim"],
+      "Longford": ["Leitrim", "Cavan", "Westmeath", "Roscommon"],
+      "Louth": ["Down", "Armagh", "Monaghan", "Meath"],
+      "Mayo": ["Sligo", "Roscommon", "Galway"],
+      "Meath": ["Louth", "Monaghan", "Cavan", "Westmeath", "Offaly", "Kildare", "Dublin"],
+      "Monaghan": ["Armagh", "Tyrone", "Fermanagh", "Cavan", "Meath", "Louth"],
+      "Offaly": ["Galway", "Roscommon", "Westmeath", "Meath", "Kildare", "Laois", "Tipperary"],
+      "Roscommon": ["Sligo", "Leitrim", "Longford", "Westmeath", "Offaly", "Galway", "Mayo"],
+      "Sligo": ["Leitrim", "Roscommon", "Mayo"],
+      "Tipperary": ["Clare", "Galway", "Offaly", "Laois", "Kilkenny", "Waterford", "Cork", "Limerick"],
+      "Tyrone": ["Londonderry", "Antrim", "Armagh", "Monaghan", "Fermanagh", "Donegal"],
+      "Waterford": ["Cork", "Tipperary", "Kilkenny", "Wexford"],
+      "Westmeath": ["Longford", "Cavan", "Meath", "Offaly", "Roscommon"],
+      "Wexford": ["Wicklow", "Carlow", "Kilkenny", "Waterford"],
+      "Wicklow": ["Dublin", "Kildare", "Carlow", "Wexford"]
+    }
+  },
+  "outOfScope": [
+    "Showing all adjacent counties on the map",
+    "Revealing which direction the target is from adjacent guess",
+    "Changing game difficulty based on adjacency"
+  ],
+  "estimatedComplexity": "Low-Medium - mostly data entry and UI updates",
+  "dependencies": [
+    "Core game functionality complete",
+    "Guess history display working"
+  ]
+}

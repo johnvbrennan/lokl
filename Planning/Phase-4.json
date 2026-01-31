@@ -1,0 +1,75 @@
+{
+  "phase": 4,
+  "name": "Guess History & Stats Bar",
+  "goal": "Show detailed feedback for each guess",
+  "prds": [
+    {
+      "id": "4.1",
+      "category": "visual",
+      "description": "Scrollable guess history list (most recent first)",
+      "steps": [
+        "Make several guesses",
+        "Verify guess history list is visible",
+        "Verify most recent guess appears at top",
+        "Verify list is scrollable if many guesses"
+      ],
+      "passes": true,
+      "automatedTest": "P4.1 - Guess history container exists"
+    },
+    {
+      "id": "4.2",
+      "category": "visual",
+      "description": "Each guess shows: number, color dot, county name, distance (km), direction arrow",
+      "steps": [
+        "Make a guess",
+        "Verify guess entry shows guess number (1)",
+        "Verify color dot matches map color",
+        "Verify county name is displayed",
+        "Verify distance in km is shown",
+        "Verify direction arrow is displayed"
+      ],
+      "passes": true,
+      "manualTest": "addGuessToHistory renders all fields"
+    },
+    {
+      "id": "4.3",
+      "category": "visual",
+      "description": "Correct guess highlighted with green and target emoji",
+      "steps": [
+        "Guess the correct county",
+        "Verify correct guess has green highlight",
+        "Verify target emoji is displayed on correct guess"
+      ],
+      "passes": true,
+      "manualTest": "Correct class and emoji added in addGuessToHistory"
+    },
+    {
+      "id": "4.4",
+      "category": "visual",
+      "description": "Stats bar with 3 boxes: guess count (X/6), closest distance, closest province",
+      "steps": [
+        "Verify stats bar is visible",
+        "Verify guess count shows X/6 format",
+        "Make a guess",
+        "Verify closest distance updates",
+        "Verify closest province updates"
+      ],
+      "passes": true,
+      "automatedTest": "P4.4 - Stats bar has 3 stat boxes"
+    },
+    {
+      "id": "4.5",
+      "category": "functional",
+      "description": "Update stats bar after each guess",
+      "steps": [
+        "Note initial stats bar values",
+        "Make a guess",
+        "Verify guess count increments",
+        "Make a closer guess",
+        "Verify closest distance updates to new closer value"
+      ],
+      "passes": true,
+      "manualTest": "updateStatsBar called after each guess"
+    }
+  ]
+}

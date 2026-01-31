@@ -1,0 +1,102 @@
+{
+  "phase": 7,
+  "name": "Share & Practice Mode",
+  "goal": "Complete the feature set with sharing and alternate game mode",
+  "prds": [
+    {
+      "id": "7.1",
+      "category": "functional",
+      "description": "Share button in win/loss modals",
+      "steps": [
+        "Complete a game",
+        "Verify Share button is visible in modal",
+        "Verify button is clearly labeled"
+      ],
+      "passes": true,
+      "automatedTest": "P7.1 - Share button exists"
+    },
+    {
+      "id": "7.2",
+      "category": "functional",
+      "description": "Generate emoji result string (color emojis matching guess colors)",
+      "steps": [
+        "Complete a game with multiple guesses",
+        "Click Share button",
+        "Verify emoji string is generated",
+        "Verify emojis match colors of each guess",
+        "Verify format includes game number and score"
+      ],
+      "passes": true,
+      "manualTest": "shareResult generates emoji string with COLOR_EMOJIS"
+    },
+    {
+      "id": "7.3",
+      "category": "functional",
+      "description": "Copy to clipboard functionality with feedback",
+      "steps": [
+        "Complete a game",
+        "Click Share button",
+        "Verify text is copied to clipboard",
+        "Verify visual feedback shown (e.g., 'Copied!')"
+      ],
+      "passes": true,
+      "manualTest": "navigator.clipboard.writeText and showCopyFeedback implemented"
+    },
+    {
+      "id": "7.4",
+      "category": "functional",
+      "description": "Practice mode toggle in UI",
+      "steps": [
+        "Verify practice mode toggle/button is visible",
+        "Click to enter practice mode",
+        "Verify mode switches",
+        "Click to return to daily mode",
+        "Verify mode switches back"
+      ],
+      "passes": true,
+      "automatedTest": "P7.4 - Practice mode button exists"
+    },
+    {
+      "id": "7.5",
+      "category": "functional",
+      "description": "Practice mode: random county selection, no streak tracking",
+      "steps": [
+        "Enter practice mode",
+        "Verify random county is selected (different from daily)",
+        "Complete a practice game",
+        "Verify streak is not affected",
+        "Play again",
+        "Verify new random county is selected"
+      ],
+      "passes": true,
+      "manualTest": "getRandomCounty and mode check in updateStatistics"
+    },
+    {
+      "id": "7.6",
+      "category": "visual",
+      "description": "Mode indicator in header",
+      "steps": [
+        "Verify header shows current mode",
+        "Switch to practice mode",
+        "Verify header updates to show 'Practice Mode'",
+        "Switch back to daily",
+        "Verify header shows 'Daily Challenge'"
+      ],
+      "passes": true,
+      "automatedTest": "P7.6 - Mode badge exists"
+    },
+    {
+      "id": "7.7",
+      "category": "visual",
+      "description": "Countdown to next daily challenge (in daily mode)",
+      "steps": [
+        "Complete daily challenge",
+        "Verify countdown timer appears",
+        "Verify shows time until midnight",
+        "Verify countdown updates in real-time"
+      ],
+      "passes": true,
+      "automatedTest": "P7.7 - Countdown element exists"
+    }
+  ]
+}

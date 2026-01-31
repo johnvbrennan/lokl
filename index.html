@@ -1,0 +1,3621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>lokl - Irish County Guessing Game</title>
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <style>
+        /* CSS Custom Properties - Cyber-Emerald Theme */
+        :root {
+            /* Cyber-Emerald Palette */
+            --bg-deep: #020b09;
+            --bg-forest: #052c24;
+            --neon-mint: #00ff88;
+            --neon-mint-dim: rgba(0, 255, 136, 0.4);
+            --neon-mint-glow: rgba(0, 255, 136, 0.2);
+
+            /* Feedback Colors (proximity) */
+            --color-correct: #00ff88;
+            --color-hot: #00ff88;        /* 0-15% */
+            --color-warm-3: #33ff99;     /* 15-25% */
+            --color-warm-2: #ffcc00;     /* 25-40% - Warning Orange */
+            --color-warm-1: #ff8844;     /* 40-55% */
+            --color-cold-2: #ff4b2b;     /* 55-75% - Hot Coral */
+            --color-cold-1: #cc3322;     /* 75-100% */
+            --color-default: transparent; /* Unguessed county fill */
+            --color-stroke: rgba(0, 255, 136, 0.2); /* County border */
+
+            /* Glass UI */
+            --glass-bg: rgba(10, 10, 10, 0.6);
+            --glass-border: rgba(0, 255, 136, 0.15);
+            --glass-blur: 15px;
+
+            /* UI Colors (mapped to new theme) */
+            --bg-primary: var(--bg-deep);
+            --bg-secondary: rgba(5, 44, 36, 0.8);
+            --bg-tertiary: rgba(0, 255, 136, 0.1);
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.7);
+            --text-muted: rgba(255, 255, 255, 0.4);
+            --accent: var(--neon-mint);
+            --accent-hover: #33ff99;
+
+            /* Sizing */
+            --border-radius: 8px;
+            --border-radius-pill: 24px;
+            --spacing-xs: 4px;
+            --spacing-sm: 8px;
+            --spacing-md: 16px;
+            --spacing-lg: 24px;
+            --spacing-xl: 32px;
+
+            /* Warning colors */
+            --color-warning: #ffcc00;
+            --color-danger: #ff4b2b;
+        }
+
+        /* Utility Classes - Glassmorphism */
+        .glass {
+            background: var(--glass-bg);
+            backdrop-filter: blur(var(--glass-blur));
+            -webkit-backdrop-filter: blur(var(--glass-blur));
+        }
+
+        .neon-border {
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 0 10px var(--neon-mint-glow), inset 0 0 10px rgba(0, 255, 136, 0.05);
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% {
+                filter: drop-shadow(0 0 5px var(--neon-mint));
+                box-shadow: 0 0 5px var(--neon-mint-glow);
+            }
+            50% {
+                filter: drop-shadow(0 0 15px var(--neon-mint)) drop-shadow(0 0 25px var(--neon-mint));
+                box-shadow: 0 0 20px var(--neon-mint-dim);
+            }
+        }
+
+        @keyframes neon-pulse {
+            0%, 100% { box-shadow: 0 0 5px var(--neon-mint-glow), inset 0 0 5px rgba(0, 255, 136, 0.05); }
+            50% { box-shadow: 0 0 15px var(--neon-mint-dim), inset 0 0 10px rgba(0, 255, 136, 0.1); }
+        }
+
+        /* Reset & Base */
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html, body {
+            height: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: var(--bg-deep);
+            color: var(--text-primary);
+            overflow: hidden;
+        }
+
+        /* App Layout - Full-screen map-first */
+        .app {
+            position: relative;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+        }
+
+        /* Floating Header Pill */
+        .floating-header {
+            position: fixed;
+            top: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+            padding: var(--spacing-sm) var(--spacing-md);
+            border-radius: var(--border-radius-pill);
+            transition: all 0.3s ease;
+        }
+
+        .floating-header .header-logo {
+            height: 32px;
+            width: auto;
+            border-radius: 6px;
+        }
+
+        .floating-header .guess-counter-pill {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--neon-mint);
+            padding: var(--spacing-xs) var(--spacing-sm);
+            background: rgba(0, 255, 136, 0.1);
+            border-radius: var(--border-radius);
+            min-width: 40px;
+            text-align: center;
+        }
+
+        .floating-header .menu-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            font-size: 1.25rem;
+            cursor: pointer;
+            padding: var(--spacing-xs);
+            border-radius: var(--border-radius);
+            transition: all 0.2s;
+        }
+
+        .floating-header .menu-btn:hover {
+            background: var(--bg-tertiary);
+            color: var(--neon-mint);
+        }
+
+        /* Legacy header styles (hidden but kept for JS compatibility) */
+        .header {
+            display: none;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+
+        .header-logo {
+            height: 40px;
+            width: auto;
+            border-radius: 6px;
+        }
+
+        .mode-badge {
+            font-size: 0.75rem;
+            padding: var(--spacing-xs) var(--spacing-sm);
+            background: var(--accent);
+            border-radius: var(--border-radius);
+            font-weight: 500;
+            color: var(--bg-deep);
+        }
+
+        .mode-badge.practice {
+            background: var(--color-warm-2);
+        }
+
+        .mode-badge.locate {
+            background: #9b59b6;
+            color: white;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: var(--spacing-sm);
+        }
+
+        .header-btn {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+            padding: var(--spacing-sm) var(--spacing-md);
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+            backdrop-filter: blur(10px);
+        }
+
+        .header-btn:hover {
+            background: var(--neon-mint-dim);
+            border-color: var(--neon-mint);
+            color: var(--neon-mint);
+        }
+
+        /* Main Content - Full Screen Map */
+        .main-content {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+        }
+
+        /* Map Panel - Full Screen */
+        .map-panel {
+            position: absolute;
+            inset: 0;
+            background: var(--bg-deep);
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+            background: var(--bg-deep);
+        }
+
+        /* Leaflet customization */
+        .leaflet-container {
+            background: var(--bg-deep);
+        }
+
+        /* Darken and desaturate tile layer */
+        .leaflet-tile-pane {
+            filter: brightness(0.7) contrast(1.2) saturate(0.8);
+        }
+
+        .leaflet-control-zoom {
+            border: none !important;
+        }
+
+        .leaflet-control-zoom a {
+            background: var(--glass-bg) !important;
+            color: var(--text-primary) !important;
+            border: 1px solid var(--glass-border) !important;
+            backdrop-filter: blur(10px);
+        }
+
+        .leaflet-control-zoom a:hover {
+            background: var(--neon-mint-dim) !important;
+            color: var(--neon-mint) !important;
+        }
+
+        .leaflet-control-attribution {
+            background: var(--glass-bg) !important;
+            color: var(--text-muted) !important;
+            font-size: 10px;
+            backdrop-filter: blur(10px);
+        }
+
+        .leaflet-control-attribution a {
+            color: var(--neon-mint) !important;
+        }
+
+        /* County styling via Leaflet */
+        .county-correct {
+            animation: leaflet-pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes leaflet-pulse {
+            0%, 100% {
+                filter: drop-shadow(0 0 10px var(--neon-mint)) drop-shadow(0 0 20px var(--neon-mint));
+            }
+            50% {
+                filter: drop-shadow(0 0 20px var(--neon-mint)) drop-shadow(0 0 40px var(--neon-mint));
+            }
+        }
+
+        /* County tooltip styling */
+        .county-tooltip {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--border-radius);
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 0.875rem;
+            font-weight: 500;
+            padding: 8px 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 10px var(--neon-mint-glow);
+            backdrop-filter: blur(10px);
+        }
+
+        .county-tooltip::before {
+            border-top-color: var(--glass-border) !important;
+        }
+
+        /* Shake animation for duplicate click */
+        .shake {
+            animation: shake 0.3s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        /* Game Panel - HIDDEN in new layout */
+        .game-panel {
+            display: none;
+        }
+
+        /* Stats Bar - HIDDEN */
+        .stats-bar {
+            display: none;
+        }
+
+        .stat-box {
+            flex: 1;
+            text-align: center;
+            padding: var(--spacing-sm);
+            background: var(--bg-tertiary);
+            border-radius: var(--border-radius);
+        }
+
+        .stat-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .stat-label {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+        }
+
+        /* Old Guess Counter - HIDDEN */
+        .guess-counter {
+            display: none;
+        }
+
+        .guess-slot {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 2px solid var(--glass-border);
+            transition: all 0.4s ease;
+        }
+
+        .guess-slot.filled {
+            border-color: transparent;
+        }
+
+        /* Old Input Area - HIDDEN */
+        .input-area {
+            display: none;
+        }
+
+        /* ====================================
+           NEW FLOATING UI COMPONENTS
+           ==================================== */
+
+        /* Input Dock - Bottom Center */
+        .input-dock {
+            position: fixed;
+            bottom: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            display: flex;
+            gap: var(--spacing-sm);
+            padding: var(--spacing-sm);
+            border-radius: var(--border-radius-pill);
+            width: calc(100% - 32px);
+            max-width: 500px;
+        }
+
+        .input-dock .county-input {
+            flex: 1;
+            padding: var(--spacing-md) var(--spacing-lg);
+            font-size: 1rem;
+            border: 1px solid var(--glass-border);
+            border-radius: var(--border-radius-pill);
+            background: rgba(0, 0, 0, 0.3);
+            color: var(--text-primary);
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .input-dock .county-input:focus {
+            border-color: var(--neon-mint);
+            box-shadow: 0 0 20px var(--neon-mint-dim), inset 0 0 10px rgba(0, 255, 136, 0.1);
+        }
+
+        .input-dock .county-input:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .input-dock .county-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .input-dock .submit-btn {
+            padding: var(--spacing-md) var(--spacing-lg);
+            background: transparent;
+            border: 1px solid var(--glass-border);
+            border-radius: 50%;
+            color: var(--text-muted);
+            font-size: 1.25rem;
+            cursor: not-allowed;
+            transition: all 0.3s ease;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .input-dock .submit-btn.ready {
+            background: var(--neon-mint);
+            border-color: var(--neon-mint);
+            color: var(--bg-deep);
+            cursor: pointer;
+            box-shadow: 0 0 20px var(--neon-mint-dim);
+        }
+
+        @keyframes pulse-ready {
+            0%, 100% { box-shadow: 0 0 10px var(--neon-mint-dim); }
+            50% { box-shadow: 0 0 25px var(--neon-mint-dim), 0 0 40px var(--neon-mint-glow); }
+        }
+
+        .input-dock .submit-btn.ready:hover {
+            background: var(--accent-hover);
+            box-shadow: 0 0 30px var(--neon-mint-dim);
+        }
+
+        .input-dock .submit-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Guess Rail - Horizontal Scrolling Pills */
+        .guess-rail {
+            position: fixed;
+            bottom: 80px;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            padding: 0 var(--spacing-md);
+            overflow-x: auto;
+            overflow-y: hidden;
+            display: flex;
+            gap: var(--spacing-sm);
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            scroll-snap-type: x mandatory;
+        }
+
+        .guess-rail::-webkit-scrollbar {
+            display: none;
+        }
+
+        .guess-pill {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            padding: var(--spacing-sm) var(--spacing-md);
+            border-radius: var(--border-radius-pill);
+            font-size: 0.875rem;
+            font-weight: 500;
+            scroll-snap-align: start;
+            transition: all 0.4s ease;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .guess-pill .guess-name {
+            color: var(--text-primary);
+        }
+
+        .guess-pill .guess-direction {
+            font-size: 1rem;
+        }
+
+        .guess-pill .guess-distance {
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+        }
+
+        .guess-pill.correct {
+            background: var(--neon-mint) !important;
+            border-color: var(--neon-mint) !important;
+            color: var(--bg-deep);
+            animation: pulse-glow 2s ease-in-out infinite;
+        }
+
+        .guess-pill.correct .guess-name,
+        .guess-pill.correct .guess-distance {
+            color: var(--bg-deep);
+        }
+
+        .guess-pill.adjacent {
+            border: 1px solid var(--neon-mint);
+        }
+
+        /* Autocomplete for Input Dock */
+        .input-dock .autocomplete-list {
+            position: absolute;
+            bottom: 100%;
+            left: var(--spacing-sm);
+            right: calc(var(--spacing-sm) + 56px);
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--border-radius);
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1001;
+            display: none;
+            margin-bottom: var(--spacing-sm);
+            backdrop-filter: blur(var(--glass-blur));
+        }
+
+        .input-dock .autocomplete-list.visible {
+            display: block;
+        }
+
+        .autocomplete-item {
+            padding: var(--spacing-md);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .autocomplete-item:last-child {
+            border-bottom: none;
+        }
+
+        .autocomplete-item:hover,
+        .autocomplete-item.selected {
+            background: var(--neon-mint-glow);
+            color: var(--neon-mint);
+        }
+
+        /* Warning state for low guesses */
+        .guess-slot.warning {
+            border-color: var(--color-warning);
+            animation: warning-pulse 1s ease-in-out infinite;
+        }
+
+        @keyframes warning-pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(255, 204, 0, 0.4); }
+            50% { box-shadow: 0 0 0 4px rgba(255, 204, 0, 0); }
+        }
+
+        /* Panel collapse toggle - HIDDEN */
+        .panel-toggle {
+            display: none;
+        }
+
+        /* Autocomplete - Old, kept for compatibility */
+        .autocomplete-list {
+            position: absolute;
+            bottom: 100%;
+            left: 0;
+            right: 60px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--border-radius);
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+            backdrop-filter: blur(var(--glass-blur));
+        }
+
+        .autocomplete-list.visible {
+            display: block;
+        }
+
+        /* Guess History - HIDDEN in new layout */
+        .guess-history {
+            display: none;
+        }
+
+        .guess-list {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-sm);
+        }
+
+        .guess-item {
+            display: none;
+        }
+
+        .guess-item.correct {
+            background: rgba(0, 255, 136, 0.2);
+            border: 1px solid var(--color-correct);
+        }
+
+        .guess-item.adjacent {
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid var(--neon-mint-dim);
+        }
+
+        .adjacent-badge {
+            font-size: 1rem;
+            cursor: help;
+        }
+
+        /* Locate Mode Styles - Floating */
+        .locate-area {
+            display: none;
+        }
+
+        .locate-dock {
+            position: fixed;
+            bottom: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            text-align: center;
+            padding: var(--spacing-md) var(--spacing-xl);
+            border-radius: var(--border-radius-pill);
+            max-width: 400px;
+        }
+
+        .locate-prompt {
+            margin-bottom: 0;
+        }
+
+        .locate-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-bottom: var(--spacing-xs);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .locate-target {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--neon-mint);
+            text-shadow: 0 0 20px var(--neon-mint-dim);
+        }
+
+        .locate-hint {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            min-height: 1.2em;
+            margin-top: var(--spacing-xs);
+        }
+
+        .guess-number {
+            font-weight: 700;
+            color: var(--text-secondary);
+            min-width: 24px;
+        }
+
+        .guess-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .guess-name {
+            flex: 1;
+            font-weight: 500;
+        }
+
+        .guess-distance {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .guess-direction {
+            font-size: 1.25rem;
+        }
+
+        .target-emoji {
+            font-size: 1.25rem;
+        }
+
+        /* Modal - Glass Effect */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(2, 11, 9, 0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            padding: var(--spacing-md);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.visible {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--border-radius);
+            max-width: 400px;
+            width: 100%;
+            padding: var(--spacing-xl);
+            text-align: center;
+            position: relative;
+            max-height: 90vh;
+            overflow-y: auto;
+            backdrop-filter: blur(var(--glass-blur));
+            box-shadow: 0 0 40px var(--neon-mint-glow), inset 0 0 20px rgba(0, 255, 136, 0.03);
+        }
+
+        .modal-title {
+            font-size: 1.75rem;
+            margin-bottom: var(--spacing-sm);
+            color: var(--text-primary);
+        }
+
+        .modal-stars {
+            font-size: 1.5rem;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .modal-county {
+            font-size: 1.25rem;
+            color: var(--neon-mint);
+            margin-bottom: var(--spacing-md);
+            text-shadow: 0 0 10px var(--neon-mint-dim);
+        }
+
+        .modal-fact {
+            color: var(--text-secondary);
+            font-style: italic;
+            margin-bottom: var(--spacing-lg);
+            line-height: 1.5;
+        }
+
+        .modal-stats {
+            display: flex;
+            justify-content: center;
+            gap: var(--spacing-lg);
+            margin-bottom: var(--spacing-lg);
+            padding: var(--spacing-md);
+            background: rgba(0, 255, 136, 0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--border-radius);
+        }
+
+        .modal-stat {
+            text-align: center;
+        }
+
+        .modal-stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--neon-mint);
+        }
+
+        .modal-stat-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        /* Distribution Histogram */
+        .distribution {
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .distribution-title {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .distribution-bars {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-xs);
+        }
+
+        .distribution-row {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+
+        .distribution-label {
+            width: 20px;
+            text-align: right;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .distribution-bar-container {
+            flex: 1;
+            height: 20px;
+            background: rgba(0, 255, 136, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .distribution-bar {
+            height: 100%;
+            background: var(--neon-mint-dim);
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: var(--spacing-xs);
+            font-size: 0.75rem;
+            min-width: fit-content;
+            color: var(--bg-deep);
+        }
+
+        .distribution-bar.current {
+            background: var(--neon-mint);
+            box-shadow: 0 0 10px var(--neon-mint-dim);
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: var(--spacing-sm);
+            justify-content: center;
+        }
+
+        .modal-btn {
+            padding: var(--spacing-md) var(--spacing-lg);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--border-radius-pill);
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .modal-btn.primary {
+            background: var(--neon-mint);
+            color: var(--bg-deep);
+            border-color: var(--neon-mint);
+            font-weight: 600;
+        }
+
+        .modal-btn.primary:hover {
+            background: var(--accent-hover);
+            box-shadow: 0 0 20px var(--neon-mint-dim);
+        }
+
+        .modal-btn.secondary {
+            background: transparent;
+            color: var(--text-primary);
+            border-color: var(--glass-border);
+        }
+
+        .modal-btn.secondary:hover {
+            background: var(--neon-mint-glow);
+            border-color: var(--neon-mint);
+            color: var(--neon-mint);
+        }
+
+        .countdown {
+            margin-top: var(--spacing-md);
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .countdown-time {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--neon-mint);
+            text-shadow: 0 0 10px var(--neon-mint-dim);
+        }
+
+        /* Confetti - Neon colors */
+        .confetti-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1999;
+            overflow: hidden;
+        }
+
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            opacity: 0;
+        }
+
+        @keyframes confetti-fall {
+            0% {
+                transform: translateY(-10vh) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(110vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+
+        /* Copy feedback */
+        .copy-feedback {
+            position: fixed;
+            bottom: 120px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--neon-mint);
+            color: var(--bg-deep);
+            padding: var(--spacing-md) var(--spacing-lg);
+            border-radius: var(--border-radius-pill);
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 2001;
+            font-weight: 600;
+            box-shadow: 0 0 20px var(--neon-mint-dim);
+        }
+
+        .copy-feedback.visible {
+            opacity: 1;
+        }
+
+        /* Loading indicator */
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: var(--neon-mint);
+            text-shadow: 0 0 10px var(--neon-mint-dim);
+        }
+
+        /* Responsive - Mobile Layout */
+        @media (max-width: 700px) {
+            .floating-header {
+                top: 12px;
+                padding: var(--spacing-xs) var(--spacing-md);
+            }
+
+            .floating-header .header-logo {
+                height: 28px;
+            }
+
+            .floating-header .guess-counter-pill {
+                font-size: 0.875rem;
+            }
+
+            .guess-rail {
+                bottom: 76px;
+                padding: 0 var(--spacing-sm);
+            }
+
+            .guess-pill {
+                padding: var(--spacing-xs) var(--spacing-sm);
+                font-size: 0.8rem;
+            }
+
+            .input-dock {
+                bottom: 12px;
+                width: calc(100% - 24px);
+                padding: var(--spacing-xs);
+            }
+
+            .input-dock .county-input {
+                padding: var(--spacing-sm) var(--spacing-md);
+                font-size: 0.9rem;
+            }
+
+            .input-dock .submit-btn {
+                width: 42px;
+                height: 42px;
+            }
+
+            .locate-dock {
+                bottom: 12px;
+                padding: var(--spacing-sm) var(--spacing-lg);
+            }
+
+            .locate-target {
+                font-size: 1.25rem;
+            }
+
+            .header-logo {
+                height: 32px;
+            }
+
+            .header-actions {
+                gap: var(--spacing-xs);
+            }
+
+            .header-btn {
+                padding: var(--spacing-xs) var(--spacing-sm);
+                font-size: 0.875rem;
+            }
+
+            .header-btn .btn-text {
+                display: none;
+            }
+        }
+
+        /* Test Results Panel (hidden by default) */
+        #test-results {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--border-radius);
+            padding: var(--spacing-lg);
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            z-index: 3000;
+            backdrop-filter: blur(var(--glass-blur));
+        }
+
+        #test-results.visible {
+            display: block;
+        }
+
+        #test-results h2 {
+            margin-bottom: var(--spacing-md);
+            color: var(--neon-mint);
+        }
+
+        .test-result {
+            padding: var(--spacing-sm);
+            margin: var(--spacing-xs) 0;
+            border-radius: 4px;
+        }
+
+        .test-result.pass {
+            background: rgba(0, 255, 136, 0.2);
+        }
+
+        .test-result.fail {
+            background: rgba(255, 75, 43, 0.2);
+        }
+
+        #close-tests {
+            margin-top: var(--spacing-md);
+        }
+
+        /* Help Modal */
+        .help-modal {
+            max-width: 500px;
+        }
+
+        .help-section {
+            text-align: left;
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .help-section h3 {
+            color: var(--neon-mint);
+            margin-bottom: var(--spacing-sm);
+            font-size: 1rem;
+        }
+
+        .help-section p {
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .shortcut-list {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: var(--spacing-sm) var(--spacing-md);
+            margin-top: var(--spacing-sm);
+        }
+
+        .shortcut-key {
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid var(--glass-border);
+            padding: var(--spacing-xs) var(--spacing-sm);
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--neon-mint);
+        }
+
+        .shortcut-desc {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        /* Start/Mode Selection Overlay */
+        .start-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(2, 11, 9, 0.95);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 3000;
+            padding: var(--spacing-md);
+            backdrop-filter: blur(5px);
+        }
+
+        .start-overlay.visible {
+            display: flex;
+        }
+
+        .start-content {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            max-width: 480px;
+            width: 100%;
+            padding: var(--spacing-xl);
+            text-align: center;
+            animation: slideUp 0.3s ease-out;
+            backdrop-filter: blur(var(--glass-blur));
+            box-shadow: 0 0 60px var(--neon-mint-glow);
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .start-logo {
+            height: 64px;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .start-content h2 {
+            font-size: 1.5rem;
+            margin-bottom: var(--spacing-xs);
+            color: var(--text-primary);
+        }
+
+        .start-tagline {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: var(--spacing-lg);
+        }
+
+        /* Mode Selection Cards */
+        .mode-cards {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-sm);
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .mode-card {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+            padding: var(--spacing-md);
+            background: rgba(0, 255, 136, 0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+        }
+
+        .mode-card:hover {
+            border-color: var(--neon-mint);
+            transform: translateX(4px);
+            background: rgba(0, 255, 136, 0.1);
+        }
+
+        .mode-card.selected {
+            border-color: var(--neon-mint);
+            background: rgba(0, 255, 136, 0.15);
+            box-shadow: 0 0 20px var(--neon-mint-glow);
+        }
+
+        .mode-icon {
+            font-size: 1.75rem;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-deep);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--border-radius);
+            flex-shrink: 0;
+        }
+
+        .mode-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .mode-name {
+            font-weight: 600;
+            font-size: 1rem;
+            margin-bottom: 2px;
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+
+        .mode-tag {
+            font-size: 0.65rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        .mode-tag.daily-tag {
+            background: var(--neon-mint);
+            color: var(--bg-deep);
+        }
+
+        .mode-tag.practice-tag {
+            background: var(--color-warm-2);
+            color: var(--bg-deep);
+        }
+
+        .mode-tag.locate-tag {
+            background: #9b59b6;
+            color: white;
+        }
+
+        .mode-desc {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        /* Difficulty Selection */
+        .difficulty-section {
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .difficulty-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            margin-bottom: var(--spacing-sm);
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .difficulty-options {
+            display: flex;
+            gap: var(--spacing-xs);
+            justify-content: center;
+        }
+
+        .difficulty-btn {
+            flex: 1;
+            padding: var(--spacing-sm) var(--spacing-md);
+            background: rgba(0, 255, 136, 0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--border-radius);
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.85rem;
+        }
+
+        .difficulty-btn:hover {
+            border-color: var(--neon-mint-dim);
+            background: rgba(0, 255, 136, 0.1);
+        }
+
+        .difficulty-btn.selected {
+            border-color: var(--neon-mint);
+            background: rgba(0, 255, 136, 0.15);
+            box-shadow: 0 0 15px var(--neon-mint-glow);
+        }
+
+        .difficulty-btn .diff-name {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .difficulty-btn .diff-hint {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+        }
+
+        /* Start Button */
+        .start-btn {
+            width: 100%;
+            padding: var(--spacing-md) var(--spacing-lg);
+            background: var(--neon-mint);
+            border: none;
+            border-radius: var(--border-radius-pill);
+            color: var(--bg-deep);
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 20px var(--neon-mint-dim);
+        }
+
+        .start-btn:hover {
+            background: var(--accent-hover);
+            transform: scale(1.02);
+            box-shadow: 0 0 30px var(--neon-mint-dim);
+        }
+
+        /* Quick How-to-Play (collapsible) */
+        .how-to-play {
+            margin-top: var(--spacing-lg);
+            padding-top: var(--spacing-md);
+            border-top: 1px solid var(--glass-border);
+        }
+
+        .how-to-play-toggle {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--spacing-xs);
+            width: 100%;
+            padding: var(--spacing-xs);
+            transition: color 0.2s;
+        }
+
+        .how-to-play-toggle:hover {
+            color: var(--neon-mint);
+        }
+
+        .how-to-play-content {
+            display: none;
+            text-align: left;
+            margin-top: var(--spacing-md);
+            padding: var(--spacing-md);
+            background: rgba(0, 255, 136, 0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--border-radius);
+        }
+
+        .how-to-play-content.visible {
+            display: block;
+        }
+
+        .how-to-play-content p {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .how-to-play-content p:last-child {
+            margin-bottom: 0;
+        }
+
+        /* Color legend */
+        .color-legend {
+            display: flex;
+            justify-content: center;
+            gap: var(--spacing-sm);
+            margin: var(--spacing-md) 0;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+        }
+
+        /* Mobile adjustments for start screen */
+        @media (max-width: 500px) {
+            .start-content {
+                padding: var(--spacing-lg);
+            }
+
+            .mode-card {
+                padding: var(--spacing-sm) var(--spacing-md);
+            }
+
+            .mode-icon {
+                width: 40px;
+                height: 40px;
+                font-size: 1.5rem;
+            }
+
+            .difficulty-options {
+                flex-direction: column;
+            }
+        }
+
+        /* Tabular numbers for distances */
+        .guess-distance, .stat-value, .countdown-time {
+            font-variant-numeric: tabular-nums;
+            font-feature-settings: "tnum";
+        }
+
+        /* Colorblind mode */
+        body.colorblind-mode .guess-color::after,
+        body.colorblind-mode .guess-slot.filled::after {
+            content: attr(data-guess-num);
+            position: absolute;
+            font-size: 0.6rem;
+            font-weight: bold;
+            color: white;
+            text-shadow: 0 0 2px black;
+        }
+
+        /* Settings button */
+        .settings-toggle {
+            position: relative;
+        }
+
+        .settings-container {
+            position: relative;
+        }
+
+        .settings-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: var(--bg-secondary);
+            border: 1px solid var(--bg-tertiary);
+            border-radius: var(--border-radius);
+            padding: var(--spacing-sm);
+            min-width: 200px;
+            display: none;
+            z-index: 200;
+        }
+
+        .settings-dropdown.visible {
+            display: block;
+        }
+
+        .settings-option {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: var(--spacing-sm);
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .settings-option:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .settings-option label {
+            font-size: 0.875rem;
+            cursor: pointer;
+        }
+
+        .settings-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            padding: var(--spacing-xs) var(--spacing-sm);
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .diff-desc {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            margin-left: 4px;
+        }
+
+        /* Toggle switch */
+        .toggle-switch {
+            position: relative;
+            width: 40px;
+            height: 22px;
+            background: var(--bg-tertiary);
+            border-radius: 11px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .toggle-switch.active {
+            background: var(--accent);
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 18px;
+            height: 18px;
+            background: white;
+            border-radius: 50%;
+            transition: left 0.2s;
+        }
+
+        .toggle-switch.active::after {
+            left: 20px;
+        }
+
+        /* Share preview */
+        .share-preview {
+            background: var(--bg-tertiary);
+            border-radius: var(--border-radius);
+            padding: var(--spacing-md);
+            margin-bottom: var(--spacing-md);
+            font-family: monospace;
+            font-size: 0.875rem;
+            white-space: pre-wrap;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <!-- Header -->
+        <header class="header">
+            <h1>
+                <img src="assets/images/lokl-logo.png" alt="lokl" class="header-logo">
+            </h1>
+            <div class="header-actions">
+                <button class="header-btn" id="help-btn" title="How to Play (?)">?</button>
+                <button class="header-btn" id="practice-btn" title="Practice Mode (P)">🎯 <span class="btn-text">Practice</span></button>
+                <button class="header-btn" id="locate-btn" title="Locate Mode - Find county on map (L)">📍 <span class="btn-text">Locate</span></button>
+                <button class="header-btn" id="stats-btn" title="Statistics">📊 <span class="btn-text">Stats</span></button>
+                <div class="settings-container">
+                    <button class="header-btn" id="settings-btn" title="Settings">⚙️</button>
+                    <div class="settings-dropdown" id="settings-dropdown">
+                        <div class="settings-section">
+                            <div class="settings-label">Difficulty</div>
+                            <div class="settings-option">
+                                <input type="radio" name="difficulty" id="diff-easy" value="easy">
+                                <label for="diff-easy">Easy <span class="diff-desc">Distance + Direction</span></label>
+                            </div>
+                            <div class="settings-option">
+                                <input type="radio" name="difficulty" id="diff-medium" value="medium" checked>
+                                <label for="diff-medium">Medium <span class="diff-desc">Distance only</span></label>
+                            </div>
+                            <div class="settings-option">
+                                <input type="radio" name="difficulty" id="diff-hard" value="hard">
+                                <label for="diff-hard">Hard <span class="diff-desc">Direction only</span></label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Map Panel -->
+            <div class="map-panel">
+                <div id="map"></div>
+                <div class="loading" id="loading">Loading map...<br><small style="opacity:0.7">(Requires web server - see console)</small></div>
+            </div>
+
+            <!-- Game Panel -->
+            <div class="game-panel" id="game-panel">
+                <button class="panel-toggle" id="panel-toggle" title="Toggle Panel (Tab)">&#9664;</button>
+                <!-- Stats Bar -->
+                <div class="stats-bar">
+                    <div class="stat-box">
+                        <div class="stat-value" id="stat-guesses">0/6</div>
+                        <div class="stat-label">Guesses</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="stat-closest">--</div>
+                        <div class="stat-label">Closest</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="stat-province">--</div>
+                        <div class="stat-label">Province</div>
+                    </div>
+                </div>
+
+                <!-- Guess Counter -->
+                <div class="guess-counter">
+                    <div class="guess-slot" id="slot-0"></div>
+                    <div class="guess-slot" id="slot-1"></div>
+                    <div class="guess-slot" id="slot-2"></div>
+                    <div class="guess-slot" id="slot-3"></div>
+                    <div class="guess-slot" id="slot-4"></div>
+                    <div class="guess-slot" id="slot-5"></div>
+                </div>
+
+                <!-- Input Area (Normal/Practice Mode) -->
+                <div class="input-area" id="input-area">
+                    <div class="input-wrapper">
+                        <input type="text" class="county-input" id="county-input" placeholder="Guess a county..." autocomplete="off">
+                        <button class="submit-btn" id="submit-btn">&#10148;</button>
+                        <div class="autocomplete-list" id="autocomplete-list"></div>
+                    </div>
+                </div>
+
+                <!-- Locate Mode Area -->
+                <div class="locate-area" id="locate-area" style="display: none;">
+                    <div class="locate-prompt">
+                        <div class="locate-label">Find this county on the map:</div>
+                        <div class="locate-target" id="locate-target">--</div>
+                        <div class="locate-hint" id="locate-hint"></div>
+                    </div>
+                </div>
+
+                <!-- Guess History -->
+                <div class="guess-history" id="guess-history">
+                    <div class="guess-list" id="guess-list"></div>
+                </div>
+            </div>
+        </main>
+
+        <!-- NEW: Floating Header Pill -->
+        <header class="floating-header glass neon-border">
+            <img src="assets/images/lokl-logo.png" alt="lokl" class="header-logo">
+            <span class="guess-counter-pill" id="guess-counter-pill">0/6</span>
+            <button class="menu-btn" id="floating-menu-btn" title="Menu">&#9776;</button>
+        </header>
+
+        <!-- NEW: Guess Rail (horizontal scrolling) -->
+        <div class="guess-rail" id="guess-rail"></div>
+
+        <!-- NEW: Input Dock -->
+        <div class="input-dock glass neon-border" id="input-dock">
+            <input type="text" class="county-input" id="county-input-new" placeholder="Guess a county..." autocomplete="off">
+            <button class="submit-btn" id="submit-btn-new">&#10148;</button>
+            <div class="autocomplete-list" id="autocomplete-list-new"></div>
+        </div>
+
+        <!-- NEW: Locate Mode Dock -->
+        <div class="locate-dock glass neon-border" id="locate-dock" style="display: none;">
+            <div class="locate-prompt">
+                <div class="locate-label">Find this county on the map</div>
+                <div class="locate-target" id="locate-target-new">--</div>
+                <div class="locate-hint" id="locate-hint-new"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="modal-overlay">
+        <div class="modal" id="game-modal">
+            <h2 class="modal-title" id="modal-title">Well Done!</h2>
+            <div class="modal-stars" id="modal-stars"></div>
+            <div class="modal-county" id="modal-county"></div>
+            <p class="modal-fact" id="modal-fact"></p>
+
+            <div class="modal-stats" id="modal-stats-summary">
+                <div class="modal-stat">
+                    <div class="modal-stat-value" id="modal-guesses">0</div>
+                    <div class="modal-stat-label">Guesses</div>
+                </div>
+                <div class="modal-stat">
+                    <div class="modal-stat-value" id="modal-streak">0</div>
+                    <div class="modal-stat-label">Streak</div>
+                </div>
+                <div class="modal-stat">
+                    <div class="modal-stat-value" id="modal-win-pct">0%</div>
+                    <div class="modal-stat-label">Win %</div>
+                </div>
+            </div>
+
+            <div class="distribution" id="distribution-container">
+                <div class="distribution-title">Guess Distribution</div>
+                <div class="distribution-bars" id="distribution-bars"></div>
+            </div>
+
+            <div class="modal-buttons">
+                <button class="modal-btn secondary" id="share-btn">Share</button>
+                <button class="modal-btn primary" id="play-again-btn">New Game</button>
+            </div>
+
+            <div class="countdown" id="countdown-container">
+                <span>Next puzzle in: </span>
+                <span class="countdown-time" id="countdown-time">--:--:--</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confetti Container -->
+    <div class="confetti-container" id="confetti-container"></div>
+
+    <!-- Copy Feedback -->
+    <div class="copy-feedback" id="copy-feedback">Copied to clipboard!</div>
+
+    <!-- Help Modal -->
+    <div class="modal-overlay" id="help-overlay">
+        <div class="modal help-modal">
+            <h2 class="modal-title">How to Play</h2>
+
+            <div class="help-section">
+                <h3>Goal</h3>
+                <p>Guess the mystery Irish county in 6 tries or fewer. After each guess, the map will show you how close you are!</p>
+            </div>
+
+            <div class="help-section">
+                <h3>Color Guide</h3>
+                <div class="color-legend">
+                    <div class="legend-item"><span class="legend-color" style="background:#27ae60"></span> Correct!</div>
+                    <div class="legend-item"><span class="legend-color" style="background:#c0392b"></span> Very close</div>
+                    <div class="legend-item"><span class="legend-color" style="background:#e67e22"></span> Getting warmer</div>
+                    <div class="legend-item"><span class="legend-color" style="background:#1a5276"></span> Far away</div>
+                </div>
+                <p>The arrow shows which direction to look!</p>
+            </div>
+
+            <div class="help-section">
+                <h3>Game Modes</h3>
+                <p><strong>Daily:</strong> Same county for everyone, one puzzle per day</p>
+                <p><strong>Practice:</strong> Random counties, unlimited plays</p>
+                <p><strong>Locate:</strong> Click on the map to find named counties</p>
+            </div>
+
+            <div class="help-section">
+                <h3>Keyboard Shortcuts</h3>
+                <div class="shortcut-list">
+                    <span class="shortcut-key">Enter</span><span class="shortcut-desc">Submit guess</span>
+                    <span class="shortcut-key">Esc</span><span class="shortcut-desc">Close menus</span>
+                    <span class="shortcut-key">?</span><span class="shortcut-desc">Show this help</span>
+                    <span class="shortcut-key">P</span><span class="shortcut-desc">Toggle practice mode</span>
+                    <span class="shortcut-key">L</span><span class="shortcut-desc">Toggle locate mode</span>
+                    <span class="shortcut-key">Tab</span><span class="shortcut-desc">Toggle side panel</span>
+                </div>
+            </div>
+
+            <button class="modal-btn primary" id="close-help">Got it!</button>
+        </div>
+    </div>
+
+    <!-- Start/Mode Selection Overlay -->
+    <div class="start-overlay" id="start-overlay">
+        <div class="start-content">
+            <img src="assets/images/lokl-logo.png" alt="lokl" class="start-logo">
+            <h2>Welcome to lokl!</h2>
+            <p class="start-tagline">Can you find the mystery Irish county?</p>
+
+            <!-- Mode Selection -->
+            <div class="mode-cards">
+                <div class="mode-card selected" data-mode="daily">
+                    <div class="mode-icon">📅</div>
+                    <div class="mode-info">
+                        <div class="mode-name">Daily Challenge <span class="mode-tag daily-tag">New</span></div>
+                        <div class="mode-desc">Same county for everyone. One puzzle per day.</div>
+                    </div>
+                </div>
+                <div class="mode-card" data-mode="practice">
+                    <div class="mode-icon">🎯</div>
+                    <div class="mode-info">
+                        <div class="mode-name">Practice <span class="mode-tag practice-tag">Unlimited</span></div>
+                        <div class="mode-desc">Random counties, play as many times as you want.</div>
+                    </div>
+                </div>
+                <div class="mode-card" data-mode="locate">
+                    <div class="mode-icon">📍</div>
+                    <div class="mode-info">
+                        <div class="mode-name">Locate Mode <span class="mode-tag locate-tag">Learn</span></div>
+                        <div class="mode-desc">Click on the map to find named counties. Great for learning!</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Difficulty Selection -->
+            <div class="difficulty-section">
+                <div class="difficulty-label">Difficulty</div>
+                <div class="difficulty-options">
+                    <button class="difficulty-btn" data-difficulty="easy">
+                        <span class="diff-name">Easy</span>
+                        <span class="diff-hint">Distance + Direction</span>
+                    </button>
+                    <button class="difficulty-btn selected" data-difficulty="medium">
+                        <span class="diff-name">Medium</span>
+                        <span class="diff-hint">Distance only</span>
+                    </button>
+                    <button class="difficulty-btn" data-difficulty="hard">
+                        <span class="diff-name">Hard</span>
+                        <span class="diff-hint">Direction only</span>
+                    </button>
+                </div>
+            </div>
+
+            <button class="start-btn" id="start-game-btn">Start Game</button>
+
+            <!-- Collapsible How to Play -->
+            <div class="how-to-play">
+                <button class="how-to-play-toggle" id="how-to-play-toggle">
+                    <span>How to play</span>
+                    <span id="how-to-play-arrow">&#9660;</span>
+                </button>
+                <div class="how-to-play-content" id="how-to-play-content">
+                    <p><strong>1.</strong> Type an Irish county name or click on the map</p>
+                    <p><strong>2.</strong> Counties light up showing how close you are</p>
+                    <div class="color-legend">
+                        <div class="legend-item"><span class="legend-color" style="background:#27ae60"></span> Correct</div>
+                        <div class="legend-item"><span class="legend-color" style="background:#c0392b"></span> Hot</div>
+                        <div class="legend-item"><span class="legend-color" style="background:#e67e22"></span> Warm</div>
+                        <div class="legend-item"><span class="legend-color" style="background:#2980b9"></span> Cold</div>
+                    </div>
+                    <p><strong>3.</strong> Use distance and direction hints to narrow down</p>
+                    <p><strong>4.</strong> Find the county in 6 guesses or fewer!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Test Results Panel -->
+    <div id="test-results">
+        <h2>Test Results</h2>
+        <div id="test-output"></div>
+        <button class="modal-btn primary" id="close-tests">Close</button>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+    <script>
+        // ============================================
+        // COUNTY DATA (32 counties)
+        // ============================================
+        const COUNTIES = {
+            "Antrim": { lat: 54.72, lng: -6.21, province: "Ulster", fact: "Home to the Giant's Causeway, one of Ireland's most famous landmarks!" },
+            "Armagh": { lat: 54.35, lng: -6.65, province: "Ulster", fact: "Known as the Orchard County - famous for Bramley apples!" },
+            "Carlow": { lat: 52.72, lng: -6.84, province: "Leinster", fact: "Ireland's second-smallest county - but packed with history!" },
+            "Cavan": { lat: 53.99, lng: -7.36, province: "Ulster", fact: "The source of the River Shannon, Ireland's longest river!" },
+            "Clare": { lat: 52.84, lng: -8.98, province: "Munster", fact: "Home to the Cliffs of Moher and the Burren's lunar landscape!" },
+            "Cork": { lat: 51.90, lng: -8.47, province: "Munster", fact: "Ireland's largest county - the Rebel County!" },
+            "Derry": { lat: 54.99, lng: -7.00, province: "Ulster", fact: "Derry's city walls are among the best-preserved in Europe!" },
+            "Donegal": { lat: 54.83, lng: -7.95, province: "Ulster", fact: "Contains Ireland's most northerly point - Malin Head!" },
+            "Down": { lat: 54.38, lng: -5.88, province: "Ulster", fact: "Home to the Mourne Mountains that inspired C.S. Lewis's Narnia!" },
+            "Dublin": { lat: 53.35, lng: -6.26, province: "Leinster", fact: "Ireland's capital - home to about a third of the country's population!" },
+            "Fermanagh": { lat: 54.34, lng: -7.64, province: "Ulster", fact: "A third of Fermanagh is covered by water - the Lakeland County!" },
+            "Galway": { lat: 53.27, lng: -8.86, province: "Connacht", fact: "Home to the Aran Islands and the heart of the Gaeltacht!" },
+            "Kerry": { lat: 52.06, lng: -9.85, province: "Munster", fact: "Home to Carrauntoohil - Ireland's highest mountain!" },
+            "Kildare": { lat: 53.16, lng: -6.91, province: "Leinster", fact: "The home of Irish horse racing - the Curragh is legendary!" },
+            "Kilkenny": { lat: 52.65, lng: -7.25, province: "Leinster", fact: "The Marble City - and hurling royalty with 36 All-Ireland titles!" },
+            "Laois": { lat: 53.03, lng: -7.56, province: "Leinster", fact: "Home to the Rock of Dunamase, a stunning ruined fortress!" },
+            "Leitrim": { lat: 54.12, lng: -8.00, province: "Connacht", fact: "Ireland's least populated county - but beautiful lake country!" },
+            "Limerick": { lat: 52.66, lng: -8.63, province: "Munster", fact: "The Treaty City - where the famous Treaty of Limerick was signed!" },
+            "Longford": { lat: 53.73, lng: -7.80, province: "Leinster", fact: "Corlea Trackway here is a 2,000-year-old Iron Age road!" },
+            "Louth": { lat: 53.88, lng: -6.49, province: "Leinster", fact: "Ireland's smallest county - the Wee County!" },
+            "Mayo": { lat: 53.76, lng: -9.53, province: "Connacht", fact: "Home to Croagh Patrick - Ireland's holy mountain!" },
+            "Meath": { lat: 53.60, lng: -6.66, province: "Leinster", fact: "Newgrange is older than the Egyptian pyramids!" },
+            "Monaghan": { lat: 54.25, lng: -6.97, province: "Ulster", fact: "The drumlin county - rolling hills shaped by ice age glaciers!" },
+            "Offaly": { lat: 53.23, lng: -7.72, province: "Leinster", fact: "Clonmacnoise monastery was once one of Europe's great centres of learning!" },
+            "Roscommon": { lat: 53.76, lng: -8.27, province: "Connacht", fact: "Home to Rathcroghan - the ancient capital of Connacht!" },
+            "Sligo": { lat: 54.25, lng: -8.47, province: "Connacht", fact: "Yeats Country - the poet's beloved Ben Bulben is here!" },
+            "Tipperary": { lat: 52.47, lng: -7.86, province: "Munster", fact: "The Rock of Cashel is one of Ireland's most spectacular sites!" },
+            "Tyrone": { lat: 54.60, lng: -7.31, province: "Ulster", fact: "Ireland's largest inland county - the O'Neill heartland!" },
+            "Waterford": { lat: 52.26, lng: -7.11, province: "Munster", fact: "Ireland's oldest city - founded by Vikings in 914 AD!" },
+            "Westmeath": { lat: 53.53, lng: -7.34, province: "Leinster", fact: "The Lake County - home to beautiful Lough Ennell and Lough Owel!" },
+            "Wexford": { lat: 52.47, lng: -6.58, province: "Leinster", fact: "The Sunny Southeast - has the most sunshine hours in Ireland!" },
+            "Wicklow": { lat: 52.98, lng: -6.37, province: "Leinster", fact: "The Garden of Ireland - stunning mountains just south of Dublin!" }
+        };
+
+        const COUNTY_NAMES = Object.keys(COUNTIES).sort();
+        const MAX_DISTANCE = 470; // Maximum distance across Ireland in km
+
+        // County adjacency data - which counties share a border
+        const COUNTY_ADJACENCY = {
+            "Antrim": ["Londonderry", "Tyrone", "Armagh", "Down"],
+            "Armagh": ["Tyrone", "Down", "Louth", "Monaghan", "Antrim"],
+            "Carlow": ["Laois", "Kildare", "Wicklow", "Wexford", "Kilkenny"],
+            "Cavan": ["Monaghan", "Fermanagh", "Leitrim", "Longford", "Westmeath", "Meath"],
+            "Clare": ["Galway", "Limerick", "Tipperary"],
+            "Cork": ["Kerry", "Limerick", "Tipperary", "Waterford"],
+            "Donegal": ["Londonderry", "Tyrone", "Fermanagh", "Leitrim"],
+            "Down": ["Antrim", "Armagh", "Louth"],
+            "Dublin": ["Meath", "Kildare", "Wicklow"],
+            "Fermanagh": ["Donegal", "Tyrone", "Monaghan", "Cavan", "Leitrim"],
+            "Galway": ["Mayo", "Roscommon", "Offaly", "Tipperary", "Clare"],
+            "Kerry": ["Limerick", "Cork"],
+            "Kildare": ["Dublin", "Meath", "Offaly", "Laois", "Carlow", "Wicklow"],
+            "Kilkenny": ["Laois", "Carlow", "Wexford", "Waterford", "Tipperary"],
+            "Laois": ["Offaly", "Kildare", "Carlow", "Kilkenny", "Tipperary"],
+            "Leitrim": ["Donegal", "Fermanagh", "Cavan", "Longford", "Roscommon", "Sligo"],
+            "Limerick": ["Clare", "Tipperary", "Cork", "Kerry"],
+            "Londonderry": ["Donegal", "Tyrone", "Antrim"],
+            "Longford": ["Leitrim", "Cavan", "Westmeath", "Roscommon"],
+            "Louth": ["Down", "Armagh", "Monaghan", "Meath"],
+            "Mayo": ["Sligo", "Roscommon", "Galway"],
+            "Meath": ["Louth", "Monaghan", "Cavan", "Westmeath", "Offaly", "Kildare", "Dublin"],
+            "Monaghan": ["Armagh", "Tyrone", "Fermanagh", "Cavan", "Meath", "Louth"],
+            "Offaly": ["Galway", "Roscommon", "Westmeath", "Meath", "Kildare", "Laois", "Tipperary"],
+            "Roscommon": ["Sligo", "Leitrim", "Longford", "Westmeath", "Offaly", "Galway", "Mayo"],
+            "Sligo": ["Leitrim", "Roscommon", "Mayo"],
+            "Tipperary": ["Clare", "Galway", "Offaly", "Laois", "Kilkenny", "Waterford", "Cork", "Limerick"],
+            "Tyrone": ["Londonderry", "Antrim", "Armagh", "Monaghan", "Fermanagh", "Donegal"],
+            "Waterford": ["Cork", "Tipperary", "Kilkenny", "Wexford"],
+            "Westmeath": ["Longford", "Cavan", "Meath", "Offaly", "Roscommon"],
+            "Wexford": ["Wicklow", "Carlow", "Kilkenny", "Waterford"],
+            "Wicklow": ["Dublin", "Kildare", "Carlow", "Wexford"]
+        };
+
+        function areAdjacent(county1, county2) {
+            if (!county1 || !county2 || county1 === county2) return false;
+            const neighbors = COUNTY_ADJACENCY[county1];
+            return neighbors ? neighbors.includes(county2) : false;
+        }
+
+        // ============================================
+        // COLOR CONSTANTS - Cyber-Emerald Theme
+        // ============================================
+        const COLORS = {
+            COLD_1: '#cc3322',   // Deep Red (75-100%)
+            COLD_2: '#ff4b2b',   // Hot Coral (55-75%)
+            WARM_1: '#ff8844',   // Orange (40-55%)
+            WARM_2: '#ffcc00',   // Warning Yellow (25-40%)
+            WARM_3: '#33ff99',   // Light Mint (15-25%)
+            HOT: '#00ff88',      // Neon Mint (5-15%)
+            CORRECT: '#00ff88',  // Neon Mint (correct)
+            DEFAULT: 'transparent'   // Unguessed
+        };
+
+        const COLOR_EMOJIS = {
+            [COLORS.COLD_1]: '🔴',
+            [COLORS.COLD_2]: '🟧',
+            [COLORS.WARM_1]: '🟠',
+            [COLORS.WARM_2]: '🟡',
+            [COLORS.WARM_3]: '🟢',
+            [COLORS.HOT]: '🟢',
+            [COLORS.CORRECT]: '🎯'
+        };
+
+        // ============================================
+        // GAME STATE
+        // ============================================
+        let gameState = {
+            targetCounty: null,
+            guesses: [],
+            status: 'playing', // 'playing', 'won', 'lost'
+            mode: 'daily', // 'daily', 'practice', 'locate'
+            gameNumber: 0
+        };
+
+        let settings = {
+            difficulty: 'medium' // 'easy', 'medium', 'hard'
+        };
+
+        let statistics = {
+            gamesPlayed: 0,
+            gamesWon: 0,
+            currentStreak: 0,
+            bestStreak: 0,
+            distribution: [0, 0, 0, 0, 0, 0],
+            lastPlayedDate: null
+        };
+
+        // ============================================
+        // LEAFLET MAP
+        // ============================================
+        let map = null;
+        let countyLayers = {}; // Store layer references by county name
+        let geoJsonLayer = null;
+
+        function initMap() {
+            // Create map centered on Ireland
+            map = L.map('map', {
+                center: [53.5, -7.5],
+                zoom: 7,
+                minZoom: 6,
+                maxZoom: 10,
+                zoomControl: true,
+                attributionControl: true
+            });
+
+            // Add dark tile layer WITHOUT labels (CartoDB Dark Matter No Labels)
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+                subdomains: 'abcd',
+                maxZoom: 20
+            }).addTo(map);
+
+            // Load GeoJSON after tiles
+            loadGeoJSON();
+        }
+
+        function loadGeoJSON() {
+            fetch('assets/ireland.json')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('GeoJSON loaded, features:', data.features.length);
+
+                    geoJsonLayer = L.geoJSON(data, {
+                        style: defaultStyle,
+                        onEachFeature: onEachFeature
+                    }).addTo(map);
+
+                    // Bring counties to front
+                    geoJsonLayer.bringToFront();
+
+                    // Fit map to Ireland bounds
+                    map.fitBounds(geoJsonLayer.getBounds(), { padding: [20, 20] });
+
+                    // Hide loading indicator
+                    document.getElementById('loading').style.display = 'none';
+
+                    console.log('County layers loaded:', Object.keys(countyLayers).length);
+
+                    // Initialize game after map is ready
+                    initGame('daily');
+                })
+                .catch(error => {
+                    console.error('Failed to load GeoJSON:', error);
+                    console.log('To run locally, start a web server:');
+                    console.log('  Python: python -m http.server 8000');
+                    console.log('  Node:   npx serve');
+                    console.log('  Then open: http://localhost:8000');
+                    document.getElementById('loading').innerHTML =
+                        'Failed to load map data.<br><small>Run from a web server (see console for instructions)</small>';
+                });
+        }
+
+        function defaultStyle(feature) {
+            return {
+                fillColor: 'transparent',
+                fillOpacity: 0,
+                weight: 1,
+                opacity: 1,
+                color: 'rgba(0, 255, 136, 0.2)'  // Neon mint border
+            };
+        }
+
+        function onEachFeature(feature, layer) {
+            const countyName = feature.properties.name;
+            countyLayers[countyName] = layer;
+
+            // Hover effects
+            layer.on({
+                mouseover: function(e) {
+                    const layer = e.target;
+                    layer.setStyle({
+                        weight: 3,
+                        color: '#f8fafc'
+                    });
+                    layer.bringToFront();
+                    // Show pointer cursor in locate mode
+                    const el = layer.getElement();
+                    if (el && gameState.mode === 'locate' && gameState.status === 'playing') {
+                        el.style.cursor = 'pointer';
+                    }
+                },
+                mouseout: function(e) {
+                    const layer = e.target;
+                    layer.setStyle({
+                        weight: 2,
+                        color: '#4a5d7e'
+                    });
+                    const el = layer.getElement();
+                    if (el) el.style.cursor = '';
+                },
+                click: function(e) {
+                    handleMapClick(countyName);
+                }
+            });
+        }
+
+        function handleMapClick(countyName) {
+            // Only process clicks in locate mode
+            if (gameState.mode !== 'locate') return;
+            if (gameState.status !== 'playing') return;
+
+            // Use the normal processGuess - clicking is just another input method
+            processGuess(countyName);
+        }
+
+        function updateMapCounty(countyName, color, isCorrect = false) {
+            const layer = countyLayers[countyName];
+            if (layer) {
+                layer.setStyle({
+                    fillColor: color,
+                    fillOpacity: 0.9
+                });
+
+                if (isCorrect) {
+                    // Add pulsing effect for correct answer
+                    layer.getElement()?.classList.add('county-correct');
+                }
+            }
+        }
+
+        function resetMapColors() {
+            Object.values(countyLayers).forEach(layer => {
+                layer.setStyle(defaultStyle());
+                layer.getElement()?.classList.remove('county-correct');
+            });
+        }
+
+        function highlightCounty(countyName) {
+            const layer = countyLayers[countyName];
+            if (layer) {
+                layer.setStyle({
+                    weight: 4,
+                    color: '#ffffff',
+                    opacity: 1
+                });
+                layer.bringToFront();
+                // Also pan to county if not in view
+                const bounds = layer.getBounds();
+                if (!map.getBounds().contains(bounds)) {
+                    map.panTo(bounds.getCenter());
+                }
+            }
+        }
+
+        function unhighlightCounty(countyName) {
+            const layer = countyLayers[countyName];
+            if (layer) {
+                // Restore original border style
+                layer.setStyle({
+                    weight: 2,
+                    color: '#4a5d7e',
+                    opacity: 1
+                });
+            }
+        }
+
+        // ============================================
+        // CORE ALGORITHMS
+        // ============================================
+
+        function getDistance(c1, c2) {
+            const R = 6371;
+            const dLat = (c2.lat - c1.lat) * Math.PI / 180;
+            const dLng = (c2.lng - c1.lng) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                      Math.cos(c1.lat * Math.PI / 180) * Math.cos(c2.lat * Math.PI / 180) *
+                      Math.sin(dLng/2) * Math.sin(dLng/2);
+            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        }
+
+        function getBearing(from, to) {
+            const dLng = (to.lng - from.lng) * Math.PI / 180;
+            const lat1 = from.lat * Math.PI / 180;
+            const lat2 = to.lat * Math.PI / 180;
+            const y = Math.sin(dLng) * Math.cos(lat2);
+            const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLng);
+            const bearing = (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
+            const arrows = ['↑', '↗', '→', '↘', '↓', '↙', '←', '↖'];
+            return arrows[Math.round(bearing / 45) % 8];
+        }
+
+        function getProximityColor(distance) {
+            if (distance === 0) return COLORS.CORRECT;
+            const ratio = distance / MAX_DISTANCE;
+            if (ratio >= 0.75) return COLORS.COLD_1;
+            if (ratio >= 0.55) return COLORS.COLD_2;
+            if (ratio >= 0.40) return COLORS.WARM_1;
+            if (ratio >= 0.25) return COLORS.WARM_2;
+            if (ratio >= 0.15) return COLORS.WARM_3;
+            if (ratio >= 0.05) return COLORS.HOT;
+            return COLORS.CORRECT;
+        }
+
+        function getDailyCounty() {
+            const today = new Date().toISOString().split('T')[0];
+            let hash = 0;
+            for (let i = 0; i < today.length; i++) {
+                hash = ((hash << 5) - hash) + today.charCodeAt(i);
+                hash |= 0;
+            }
+            return COUNTY_NAMES[Math.abs(hash) % COUNTY_NAMES.length];
+        }
+
+        function getGameNumber() {
+            const epoch = new Date('2026-01-01');
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            return Math.floor((today - epoch) / (1000 * 60 * 60 * 24)) + 1;
+        }
+
+        function getRandomCounty() {
+            return COUNTY_NAMES[Math.floor(Math.random() * COUNTY_NAMES.length)];
+        }
+
+        // ============================================
+        // GAME LOGIC
+        // ============================================
+
+        function initGame(mode = 'daily', suppressModal = false) {
+            gameState.mode = mode;
+            gameState.guesses = [];
+            gameState.status = 'playing';
+
+            if (mode === 'daily') {
+                gameState.targetCounty = getDailyCounty();
+                gameState.gameNumber = getGameNumber();
+
+                const savedState = loadDailyState();
+                if (savedState && savedState.date === new Date().toISOString().split('T')[0]) {
+                    gameState.guesses = savedState.guesses;
+                    gameState.status = savedState.status;
+                    restoreGameUI();
+                    if (gameState.status !== 'playing' && !suppressModal) {
+                        showEndModal();
+                    }
+                    return;
+                }
+            } else {
+                gameState.targetCounty = getRandomCounty();
+                gameState.gameNumber = 0;
+            }
+
+            resetUI();
+            updateModeBadge();
+        }
+
+        // ============================================
+        // LOCATE MODE
+        // ============================================
+
+        function initLocateMode() {
+            gameState.mode = 'locate';
+            gameState.guesses = [];
+            gameState.status = 'playing';
+
+            // Pick a random target county
+            const targetCounty = getRandomCounty();
+            gameState.targetCounty = targetCounty;
+
+            // Clear previous game state
+            resetMapColors();
+            clearResultLine();
+            document.getElementById('guess-list').innerHTML = '';
+
+            // Reset guess slots
+            for (let i = 0; i < 6; i++) {
+                const slot = document.getElementById(`slot-${i}`);
+                slot.style.backgroundColor = '';
+                slot.classList.remove('filled', 'warning');
+            }
+
+            // Reset stats display
+            document.getElementById('stat-guesses').textContent = '0/6';
+            document.getElementById('stat-closest').textContent = '--';
+            document.getElementById('stat-province').textContent = '--';
+
+            // Switch UI - hide text input, show locate prompt
+            document.getElementById('input-area').style.display = 'none';
+            document.getElementById('locate-area').style.display = 'block';
+
+            // NEW: Hide input dock, show locate dock
+            document.getElementById('input-dock').style.display = 'none';
+            document.getElementById('locate-dock').style.display = 'flex';
+
+            // Show target county name
+            document.getElementById('locate-target').textContent = targetCounty;
+            document.getElementById('locate-hint').textContent = 'Click on the map to find it!';
+
+            // NEW: Also update the new locate dock
+            document.getElementById('locate-target-new').textContent = targetCounty;
+            document.getElementById('locate-hint-new').textContent = 'Click on the map to find it!';
+
+            updateModeBadge();
+        }
+
+        function exitLocateMode() {
+            // Switch back to normal UI
+            document.getElementById('input-area').style.display = '';
+            document.getElementById('locate-area').style.display = 'none';
+
+            // NEW: Show input dock, hide locate dock
+            document.getElementById('input-dock').style.display = 'flex';
+            document.getElementById('locate-dock').style.display = 'none';
+
+            // Return to practice mode
+            initGame('practice');
+        }
+
+        function startNextLocateRound() {
+            // Pick a new random target
+            gameState.targetCounty = getRandomCounty();
+            gameState.guesses = [];
+            gameState.status = 'playing';
+
+            // Update UI
+            document.getElementById('locate-target').textContent = gameState.targetCounty;
+            document.getElementById('locate-hint').textContent = 'Click on the map to find it!';
+
+            // NEW: Update the new locate dock
+            document.getElementById('locate-target-new').textContent = gameState.targetCounty;
+            document.getElementById('locate-hint-new').textContent = 'Click on the map to find it!';
+
+            // NEW: Clear guess rail
+            document.getElementById('guess-rail').innerHTML = '';
+            updateGuessCounterPill();
+
+            resetUI();
+        }
+
+        function processGuess(countyName) {
+            if (gameState.status !== 'playing') return;
+            if (gameState.guesses.some(g => g.county === countyName)) return;
+            if (!COUNTIES[countyName]) return;
+
+            const target = COUNTIES[gameState.targetCounty];
+            const guessed = COUNTIES[countyName];
+            const isCorrect = countyName === gameState.targetCounty;
+            const isAdjacent = areAdjacent(countyName, gameState.targetCounty);
+            // Adjacent counties = 0km (borders touch), otherwise use centroid distance
+            const distance = isCorrect ? 0 : isAdjacent ? 0 : Math.round(getDistance(guessed, target));
+            const direction = isCorrect ? '🎯' : getBearing(guessed, target);
+            // Only correct answer gets green; adjacent gets HOT (red) to indicate "very close"
+            const color = isCorrect ? COLORS.CORRECT : isAdjacent ? COLORS.HOT : getProximityColor(distance);
+
+            const guess = {
+                county: countyName,
+                distance,
+                direction,
+                color,
+                province: guessed.province,
+                isAdjacent
+            };
+
+            gameState.guesses.push(guess);
+
+            updateMapCounty(countyName, color, countyName === gameState.targetCounty);
+            addGuessToHistory(guess, gameState.guesses.length);
+            updateGuessCounter();
+            updateStatsBar();
+
+            // NEW: Update floating UI elements
+            updateGuessRail();
+            updateGuessCounterPill();
+
+            if (countyName === gameState.targetCounty) {
+                gameState.status = 'won';
+                if (gameState.mode === 'locate') {
+                    // Locate mode: auto-start next round after delay
+                    setTimeout(() => startNextLocateRound(), 1500);
+                } else {
+                    updateStatistics(true, gameState.guesses.length);
+                    saveDailyState();
+                    setTimeout(() => showEndModal(), 500);
+                }
+            } else if (gameState.guesses.length >= 6) {
+                gameState.status = 'lost';
+                updateMapCounty(gameState.targetCounty, COLORS.CORRECT, true);
+                if (gameState.mode === 'locate') {
+                    // Locate mode: show correct answer, then next round
+                    setTimeout(() => startNextLocateRound(), 2000);
+                } else {
+                    updateStatistics(false);
+                    saveDailyState();
+                    setTimeout(() => showEndModal(), 500);
+                }
+            }
+
+            if (gameState.mode === 'daily') {
+                saveDailyState();
+            }
+
+            if (gameState.status !== 'playing') {
+                disableInput();
+            }
+
+            document.getElementById('county-input').value = '';
+            document.getElementById('county-input-new').value = '';
+            hideAutocomplete();
+            hideAutocompleteNew();
+        }
+
+        // ============================================
+        // UI FUNCTIONS
+        // ============================================
+
+        function resetUI() {
+            resetMapColors();
+            clearResultLine();
+
+            for (let i = 0; i < 6; i++) {
+                const slot = document.getElementById(`slot-${i}`);
+                slot.style.backgroundColor = '';
+                slot.classList.remove('filled', 'warning');
+            }
+
+            document.getElementById('guess-list').innerHTML = '';
+            document.getElementById('stat-guesses').textContent = '0/6';
+            document.getElementById('stat-closest').textContent = '--';
+            document.getElementById('stat-province').textContent = '--';
+
+            enableInput();
+            updateSubmitButtonState();
+        }
+
+        function restoreGameUI() {
+            resetUI();
+            gameState.guesses.forEach((guess, index) => {
+                updateMapCounty(guess.county, guess.color, guess.county === gameState.targetCounty);
+                addGuessToHistory(guess, index + 1);
+            });
+            updateGuessCounter();
+            updateStatsBar();
+
+            if (gameState.status !== 'playing') {
+                disableInput();
+                if (gameState.status === 'lost') {
+                    updateMapCounty(gameState.targetCounty, COLORS.CORRECT, true);
+                }
+            }
+        }
+
+        function addGuessToHistory(guess, number) {
+            const list = document.getElementById('guess-list');
+            const isCorrect = guess.county === gameState.targetCounty;
+
+            // Determine what to show based on difficulty
+            // Easy: distance + direction, Medium: distance only, Hard: direction only
+            const showDistance = settings.difficulty === 'easy' || settings.difficulty === 'medium';
+            const showDirection = settings.difficulty === 'easy' || settings.difficulty === 'hard';
+
+            const item = document.createElement('div');
+            item.className = `guess-item${isCorrect ? ' correct' : ''}${guess.isAdjacent ? ' adjacent' : ''}`;
+            item.dataset.county = guess.county;
+            item.innerHTML = `
+                <span class="guess-number">${number}</span>
+                <span class="guess-color" style="background-color: ${guess.color}"></span>
+                <span class="guess-name">${guess.county}</span>
+                ${showDistance ? `<span class="guess-distance">${guess.distance} km</span>` : ''}
+                ${showDirection ? `<span class="guess-direction">${guess.direction}</span>` : ''}
+                ${guess.isAdjacent && !isCorrect ? '<span class="adjacent-badge" title="Borders the target county!">🔗</span>' : ''}
+                ${isCorrect ? '<span class="target-emoji">🎯</span>' : ''}
+            `;
+
+            // Add hover events for map highlighting
+            item.addEventListener('mouseenter', () => highlightCounty(guess.county));
+            item.addEventListener('mouseleave', () => unhighlightCounty(guess.county));
+
+            list.insertBefore(item, list.firstChild);
+        }
+
+        function refreshGuessHistory() {
+            const list = document.getElementById('guess-list');
+            list.innerHTML = '';
+            gameState.guesses.forEach((guess, index) => {
+                addGuessToHistory(guess, index + 1);
+            });
+        }
+
+        function updateGuessCounter() {
+            document.getElementById('stat-guesses').textContent = `${gameState.guesses.length}/6`;
+
+            gameState.guesses.forEach((guess, index) => {
+                const slot = document.getElementById(`slot-${index}`);
+                slot.style.backgroundColor = guess.color;
+                slot.classList.add('filled');
+            });
+
+            updateWarningState();
+        }
+
+        function updateStatsBar() {
+            if (gameState.guesses.length === 0) return;
+
+            const closest = gameState.guesses.reduce((min, g) => g.distance < min.distance ? g : min);
+            const showDistance = settings.difficulty === 'easy' || settings.difficulty === 'medium';
+            document.getElementById('stat-closest').textContent = showDistance ? `${closest.distance} km` : '--';
+            document.getElementById('stat-province').textContent = closest.province.substring(0, 4);
+        }
+
+        function updateModeBadge() {
+            const badge = document.getElementById('mode-badge');
+            if (!badge) return;
+            badge.classList.remove('practice', 'locate');
+
+            // Build badge text with difficulty for non-locate modes
+            let modeText = '';
+            if (gameState.mode === 'locate') {
+                modeText = 'Locate';
+                badge.classList.add('locate');
+            } else if (gameState.mode === 'practice') {
+                modeText = 'Practice';
+                badge.classList.add('practice');
+            } else {
+                modeText = 'Daily';
+            }
+
+            // Add difficulty indicator for guess modes
+            if (gameState.mode !== 'locate') {
+                const diffIcon = settings.difficulty === 'easy' ? ' (E)' :
+                                 settings.difficulty === 'hard' ? ' (H)' : '';
+                modeText += diffIcon;
+            }
+
+            badge.textContent = modeText;
+        }
+
+        function enableInput() {
+            document.getElementById('county-input').disabled = false;
+            document.getElementById('submit-btn').disabled = false;
+            // NEW: Enable new input
+            document.getElementById('county-input-new').disabled = false;
+            document.getElementById('submit-btn-new').disabled = false;
+            updateSubmitButtonState();
+            updateSubmitButtonStateNew();
+        }
+
+        function disableInput() {
+            document.getElementById('county-input').disabled = true;
+            document.getElementById('submit-btn').disabled = true;
+            document.getElementById('submit-btn').classList.remove('ready');
+            // NEW: Disable new input
+            document.getElementById('county-input-new').disabled = true;
+            document.getElementById('submit-btn-new').disabled = true;
+            document.getElementById('submit-btn-new').classList.remove('ready');
+        }
+
+        // PRD 8.2: Submit button ready state
+        function updateSubmitButtonState() {
+            const input = document.getElementById('county-input');
+            const btn = document.getElementById('submit-btn');
+            const value = input.value.trim();
+            const matches = getAutocompleteMatches(value);
+            const isValid = matches.length === 1 || COUNTY_NAMES.includes(value);
+
+            if (isValid && gameState.status === 'playing') {
+                btn.classList.add('ready');
+            } else {
+                btn.classList.remove('ready');
+            }
+        }
+
+        // PRD 8.7: Warning state for low guesses
+        function updateWarningState() {
+            const guessCount = gameState.guesses.length;
+            for (let i = 0; i < 6; i++) {
+                const slot = document.getElementById(`slot-${i}`);
+                slot.classList.remove('warning');
+            }
+
+            // Warn on guess 5 and 6
+            if (guessCount >= 4 && gameState.status === 'playing') {
+                const nextSlot = document.getElementById(`slot-${guessCount}`);
+                if (nextSlot) {
+                    nextSlot.classList.add('warning');
+                }
+            }
+        }
+
+        // PRD 8.1: Panel toggle
+        function togglePanel() {
+            const panel = document.getElementById('game-panel');
+            const toggle = document.getElementById('panel-toggle');
+            panel.classList.toggle('collapsed');
+            toggle.innerHTML = panel.classList.contains('collapsed') ? '&#9654;' : '&#9664;';
+
+            // Resize map after panel toggle
+            setTimeout(() => {
+                if (map) map.invalidateSize();
+            }, 350);
+        }
+
+        // PRD 8.8: Start screen for first-time users and mode selection
+        let selectedStartMode = 'daily';
+        let selectedStartDifficulty = 'medium';
+
+        function showStartScreen() {
+            if (!localStorage.getItem('loklTutorialSeen')) {
+                document.getElementById('start-overlay').classList.add('visible');
+                // Sync difficulty button with current settings
+                updateStartScreenDifficulty();
+            }
+        }
+
+        function hideStartScreen() {
+            document.getElementById('start-overlay').classList.remove('visible');
+            localStorage.setItem('loklTutorialSeen', 'true');
+        }
+
+        function updateStartScreenDifficulty() {
+            document.querySelectorAll('.difficulty-btn').forEach(btn => {
+                btn.classList.toggle('selected', btn.dataset.difficulty === settings.difficulty);
+            });
+            selectedStartDifficulty = settings.difficulty;
+        }
+
+        function initStartScreenListeners() {
+            // Mode card selection
+            document.querySelectorAll('.mode-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('selected'));
+                    card.classList.add('selected');
+                    selectedStartMode = card.dataset.mode;
+                });
+            });
+
+            // Difficulty button selection
+            document.querySelectorAll('.difficulty-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.difficulty-btn').forEach(b => b.classList.remove('selected'));
+                    btn.classList.add('selected');
+                    selectedStartDifficulty = btn.dataset.difficulty;
+                    // Also update the settings dropdown to keep in sync
+                    settings.difficulty = selectedStartDifficulty;
+                    const radio = document.getElementById(`diff-${selectedStartDifficulty}`);
+                    if (radio) radio.checked = true;
+                    saveSettings();
+                });
+            });
+
+            // Start game button
+            document.getElementById('start-game-btn').addEventListener('click', () => {
+                hideStartScreen();
+                if (selectedStartMode === 'locate') {
+                    initLocateMode();
+                    document.getElementById('locate-btn').innerHTML = '&#128281; <span class="btn-text">Back</span>';
+                } else {
+                    initGame(selectedStartMode);
+                    // Update practice button label
+                    if (selectedStartMode === 'practice') {
+                        document.getElementById('practice-btn').innerHTML = '&#128197; <span class="btn-text">Daily</span>';
+                        document.getElementById('practice-btn').title = 'Return to Daily Challenge';
+                    }
+                }
+            });
+
+            // How to play toggle
+            document.getElementById('how-to-play-toggle').addEventListener('click', () => {
+                const content = document.getElementById('how-to-play-content');
+                const arrow = document.getElementById('how-to-play-arrow');
+                content.classList.toggle('visible');
+                arrow.innerHTML = content.classList.contains('visible') ? '&#9650;' : '&#9660;';
+            });
+        }
+
+        // Legacy aliases for backward compatibility
+        function showTutorial() {
+            showStartScreen();
+        }
+
+        function hideTutorial() {
+            hideStartScreen();
+        }
+
+        // Help modal
+        function showHelp() {
+            document.getElementById('help-overlay').classList.add('visible');
+        }
+
+        function hideHelp() {
+            document.getElementById('help-overlay').classList.remove('visible');
+        }
+
+        // PRD 8.3: Polyline connecting guess to target
+        let resultLine = null;
+
+        function showResultLine() {
+            if (resultLine) {
+                map.removeLayer(resultLine);
+            }
+
+            if (gameState.guesses.length === 0) return;
+
+            const lastGuess = gameState.guesses[gameState.guesses.length - 1];
+            const guessCoords = COUNTIES[lastGuess.county];
+            const targetCoords = COUNTIES[gameState.targetCounty];
+
+            if (guessCoords && targetCoords && lastGuess.county !== gameState.targetCounty) {
+                resultLine = L.polyline([
+                    [guessCoords.lat, guessCoords.lng],
+                    [targetCoords.lat, targetCoords.lng]
+                ], {
+                    color: lastGuess.distance < 100 ? '#27ae60' : '#e74c3c',
+                    weight: 3,
+                    opacity: 0.8,
+                    dashArray: '10, 10'
+                }).addTo(map);
+
+                // Add distance label at midpoint (only if distance is shown based on difficulty)
+                const showDistance = settings.difficulty === 'easy' || settings.difficulty === 'medium';
+                if (showDistance) {
+                    const midLat = (guessCoords.lat + targetCoords.lat) / 2;
+                    const midLng = (guessCoords.lng + targetCoords.lng) / 2;
+
+                    L.marker([midLat, midLng], {
+                        icon: L.divIcon({
+                            className: 'distance-label',
+                            html: `<div style="background:var(--bg-secondary);padding:4px 8px;border-radius:4px;font-size:12px;white-space:nowrap;">${lastGuess.distance} km</div>`,
+                            iconSize: [60, 20],
+                            iconAnchor: [30, 10]
+                        })
+                    }).addTo(map);
+                }
+            }
+        }
+
+        function clearResultLine() {
+            if (resultLine) {
+                map.removeLayer(resultLine);
+                resultLine = null;
+            }
+            // Also clear any distance labels
+            map.eachLayer(layer => {
+                if (layer instanceof L.Marker && layer.options.icon?.options?.className === 'distance-label') {
+                    map.removeLayer(layer);
+                }
+            });
+        }
+
+        // ============================================
+        // AUTOCOMPLETE
+        // ============================================
+
+        function showAutocomplete(matches) {
+            const list = document.getElementById('autocomplete-list');
+            list.innerHTML = '';
+
+            if (matches.length === 0) {
+                hideAutocomplete();
+                return;
+            }
+
+            matches.forEach((county, index) => {
+                const item = document.createElement('div');
+                item.className = 'autocomplete-item';
+                item.textContent = county;
+                item.dataset.index = index;
+                item.addEventListener('click', () => {
+                    document.getElementById('county-input').value = county;
+                    hideAutocomplete();
+                    processGuess(county);
+                });
+                list.appendChild(item);
+            });
+
+            list.classList.add('visible');
+        }
+
+        function hideAutocomplete() {
+            document.getElementById('autocomplete-list').classList.remove('visible');
+        }
+
+        function getAutocompleteMatches(input) {
+            if (!input) return [];
+            const guessedCounties = gameState.guesses.map(g => g.county);
+            return COUNTY_NAMES.filter(name =>
+                name.toLowerCase().startsWith(input.toLowerCase()) &&
+                !guessedCounties.includes(name)
+            );
+        }
+
+        // NEW: Autocomplete for new floating input dock
+        function showAutocompleteNew(matches) {
+            const list = document.getElementById('autocomplete-list-new');
+            list.innerHTML = '';
+
+            if (matches.length === 0) {
+                hideAutocompleteNew();
+                return;
+            }
+
+            matches.forEach((county, index) => {
+                const item = document.createElement('div');
+                item.className = 'autocomplete-item';
+                item.textContent = county;
+                item.dataset.index = index;
+                item.addEventListener('click', () => {
+                    document.getElementById('county-input-new').value = county;
+                    hideAutocompleteNew();
+                    processGuess(county);
+                });
+                list.appendChild(item);
+            });
+
+            list.classList.add('visible');
+        }
+
+        function hideAutocompleteNew() {
+            document.getElementById('autocomplete-list-new').classList.remove('visible');
+        }
+
+        function updateSubmitButtonStateNew() {
+            const input = document.getElementById('county-input-new');
+            const btn = document.getElementById('submit-btn-new');
+            const value = input.value.trim();
+            const matches = getAutocompleteMatches(value);
+
+            if (matches.length === 1 || COUNTY_NAMES.includes(value)) {
+                btn.classList.add('ready');
+            } else {
+                btn.classList.remove('ready');
+            }
+        }
+
+        // NEW: Update guess rail with horizontal pills
+        function updateGuessRail() {
+            const rail = document.getElementById('guess-rail');
+            rail.innerHTML = '';
+
+            gameState.guesses.forEach((guess, index) => {
+                const pill = document.createElement('div');
+                pill.className = 'guess-pill glass neon-border';
+                pill.style.borderColor = guess.color;
+                pill.style.boxShadow = `0 0 10px ${guess.color}40`;
+
+                const isCorrect = guess.county === gameState.targetCounty;
+                if (isCorrect) {
+                    pill.classList.add('correct');
+                }
+                if (guess.isAdjacent) {
+                    pill.classList.add('adjacent');
+                }
+
+                pill.innerHTML = `
+                    <span class="guess-name">${guess.county}</span>
+                    <span class="guess-direction">${guess.direction}</span>
+                    ${gameState.difficulty !== 'hard' ? `<span class="guess-distance">${guess.distance}km</span>` : ''}
+                `;
+
+                pill.addEventListener('click', () => {
+                    highlightCounty(guess.county);
+                    map.panTo(L.latLng(COUNTIES[guess.county].lat, COUNTIES[guess.county].lng));
+                });
+
+                rail.appendChild(pill);
+            });
+
+            // Scroll to end of rail
+            rail.scrollLeft = rail.scrollWidth;
+        }
+
+        // NEW: Update floating guess counter pill
+        function updateGuessCounterPill() {
+            const pill = document.getElementById('guess-counter-pill');
+            pill.textContent = `${gameState.guesses.length}/6`;
+        }
+
+        // ============================================
+        // MODAL & END GAME
+        // ============================================
+
+        function showEndModal() {
+            const isWin = gameState.status === 'won';
+            const county = COUNTIES[gameState.targetCounty];
+
+            document.getElementById('modal-title').textContent = isWin ? 'Well Done!' : 'Game Over';
+
+            const starsEl = document.getElementById('modal-stars');
+            if (isWin) {
+                const guessCount = gameState.guesses.length;
+                const ratings = ['🤯 Genius!', '🤩 Brilliant!', '😎 Great!', '😀 Good!', '🙂 Solid!', '😅 Phew!'];
+                const stars = ['⭐⭐⭐⭐⭐', '⭐⭐⭐⭐', '⭐⭐⭐', '⭐⭐', '⭐', '✔️'];
+                starsEl.innerHTML = `${stars[guessCount - 1]}<br>${ratings[guessCount - 1]}`;
+            } else {
+                starsEl.textContent = '❌ Better luck next time!';
+            }
+
+            document.getElementById('modal-county').textContent = gameState.targetCounty;
+            document.getElementById('modal-fact').textContent = county.fact;
+
+            document.getElementById('modal-guesses').textContent = isWin ? gameState.guesses.length : 'X';
+            document.getElementById('modal-streak').textContent = statistics.currentStreak;
+            document.getElementById('modal-win-pct').textContent =
+                statistics.gamesPlayed > 0
+                    ? Math.round((statistics.gamesWon / statistics.gamesPlayed) * 100) + '%'
+                    : '0%';
+
+            renderDistribution(isWin ? gameState.guesses.length : null);
+
+            const countdownContainer = document.getElementById('countdown-container');
+            if (gameState.mode === 'daily') {
+                countdownContainer.style.display = 'block';
+                startCountdown();
+            } else {
+                countdownContainer.style.display = 'none';
+            }
+
+            document.getElementById('modal-overlay').classList.add('visible');
+
+            // PRD 8.3: Show line connecting last guess to target
+            if (!isWin) {
+                showResultLine();
+            }
+
+            if (isWin) {
+                createConfetti();
+            }
+        }
+
+        function hideModal() {
+            document.getElementById('modal-overlay').classList.remove('visible');
+        }
+
+        function renderDistribution(currentGuesses) {
+            const bars = document.getElementById('distribution-bars');
+            bars.innerHTML = '';
+
+            const maxCount = Math.max(...statistics.distribution, 1);
+
+            for (let i = 0; i < 6; i++) {
+                const count = statistics.distribution[i];
+                const percentage = (count / maxCount) * 100;
+                const isCurrent = currentGuesses === i + 1;
+
+                const row = document.createElement('div');
+                row.className = 'distribution-row';
+                row.innerHTML = `
+                    <span class="distribution-label">${i + 1}</span>
+                    <div class="distribution-bar-container">
+                        <div class="distribution-bar${isCurrent ? ' current' : ''}"
+                             style="width: ${Math.max(percentage, count > 0 ? 10 : 0)}%">
+                            ${count > 0 ? count : ''}
+                        </div>
+                    </div>
+                `;
+                bars.appendChild(row);
+            }
+        }
+
+        // ============================================
+        // CONFETTI
+        // ============================================
+
+        function createConfetti() {
+            const container = document.getElementById('confetti-container');
+            const colors = ['#27ae60', '#ffffff', '#e67e22'];
+
+            for (let i = 0; i < 100; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.animationDuration = (Math.random() * 3 + 2) + 's';
+                confetti.style.animationDelay = Math.random() * 2 + 's';
+                confetti.style.animation = `confetti-fall ${2 + Math.random() * 3}s ease-out forwards`;
+                container.appendChild(confetti);
+            }
+
+            setTimeout(() => {
+                container.innerHTML = '';
+            }, 6000);
+        }
+
+        // ============================================
+        // COUNTDOWN
+        // ============================================
+
+        let countdownInterval = null;
+
+        function startCountdown() {
+            if (countdownInterval) clearInterval(countdownInterval);
+
+            function updateCountdown() {
+                const now = new Date();
+                const tomorrow = new Date(now);
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                tomorrow.setHours(0, 0, 0, 0);
+
+                const diff = tomorrow - now;
+                const hours = Math.floor(diff / (1000 * 60 * 60));
+                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+                document.getElementById('countdown-time').textContent =
+                    `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }
+
+            updateCountdown();
+            countdownInterval = setInterval(updateCountdown, 1000);
+        }
+
+        // ============================================
+        // SHARE
+        // ============================================
+
+        function shareResult() {
+            const isWin = gameState.status === 'won';
+            // Show 🔗 for adjacent guesses, otherwise use color emoji
+            const emojis = gameState.guesses.map(g => {
+                if (g.isAdjacent && g.county !== gameState.targetCounty) return '🔗';
+                return COLOR_EMOJIS[g.color] || '⬜';
+            }).join('');
+            const score = isWin ? gameState.guesses.length : 'X';
+            const difficultyLabel = settings.difficulty.charAt(0).toUpperCase() + settings.difficulty.slice(1);
+
+            let text = `lokl`;
+            if (gameState.mode === 'daily') {
+                text += ` #${gameState.gameNumber}`;
+            }
+            text += ` (${difficultyLabel})  🎯 ${score}/6\n${emojis}\nlokl.ie`;
+
+            navigator.clipboard.writeText(text).then(() => {
+                showCopyFeedback();
+            }).catch(() => {
+                alert('Result copied to clipboard!');
+            });
+        }
+
+        function showCopyFeedback() {
+            const feedback = document.getElementById('copy-feedback');
+            feedback.classList.add('visible');
+            setTimeout(() => {
+                feedback.classList.remove('visible');
+            }, 2000);
+        }
+
+        // ============================================
+        // PERSISTENCE
+        // ============================================
+
+        function loadStatistics() {
+            try {
+                const saved = localStorage.getItem('loklStats');
+                if (saved) {
+                    statistics = JSON.parse(saved);
+                }
+            } catch (e) {
+                console.error('Failed to load statistics:', e);
+            }
+        }
+
+        function saveStatistics() {
+            try {
+                localStorage.setItem('loklStats', JSON.stringify(statistics));
+            } catch (e) {
+                console.error('Failed to save statistics:', e);
+            }
+        }
+
+        function loadSettings() {
+            try {
+                const saved = localStorage.getItem('loklSettings');
+                if (saved) {
+                    settings = { ...settings, ...JSON.parse(saved) };
+                }
+                // Update UI to match loaded settings
+                const radio = document.getElementById(`diff-${settings.difficulty}`);
+                if (radio) radio.checked = true;
+            } catch (e) {
+                console.error('Failed to load settings:', e);
+            }
+        }
+
+        function saveSettings() {
+            try {
+                localStorage.setItem('loklSettings', JSON.stringify(settings));
+            } catch (e) {
+                console.error('Failed to save settings:', e);
+            }
+        }
+
+        function updateStatistics(won, guessCount = null) {
+            if (gameState.mode !== 'daily') return;
+
+            const today = new Date().toISOString().split('T')[0];
+
+            if (statistics.lastPlayedDate === today) return;
+
+            statistics.gamesPlayed++;
+            statistics.lastPlayedDate = today;
+
+            if (won) {
+                statistics.gamesWon++;
+                statistics.currentStreak++;
+                if (statistics.currentStreak > statistics.bestStreak) {
+                    statistics.bestStreak = statistics.currentStreak;
+                }
+                if (guessCount >= 1 && guessCount <= 6) {
+                    statistics.distribution[guessCount - 1]++;
+                }
+            } else {
+                statistics.currentStreak = 0;
+            }
+
+            saveStatistics();
+        }
+
+        function loadDailyState() {
+            try {
+                const saved = localStorage.getItem('loklDaily');
+                return saved ? JSON.parse(saved) : null;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function saveDailyState() {
+            if (gameState.mode !== 'daily') return;
+
+            try {
+                const state = {
+                    date: new Date().toISOString().split('T')[0],
+                    guesses: gameState.guesses,
+                    status: gameState.status
+                };
+                localStorage.setItem('loklDaily', JSON.stringify(state));
+            } catch (e) {
+                console.error('Failed to save daily state:', e);
+            }
+        }
+
+        // ============================================
+        // EVENT LISTENERS
+        // ============================================
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadStatistics();
+            loadSettings();
+            initStartScreenListeners(); // Set up start screen interactions
+            initMap(); // This will call initGame after GeoJSON loads
+
+            // NEW: Setup new floating UI elements
+            const inputNew = document.getElementById('county-input-new');
+            const submitBtnNew = document.getElementById('submit-btn-new');
+            const autocompleteListNew = document.getElementById('autocomplete-list-new');
+
+            // Legacy elements (kept for compatibility)
+            const input = document.getElementById('county-input');
+            const submitBtn = document.getElementById('submit-btn');
+            const autocompleteList = document.getElementById('autocomplete-list');
+
+            // Setup input handlers for NEW input
+            inputNew.addEventListener('input', (e) => {
+                const matches = getAutocompleteMatches(e.target.value);
+                showAutocompleteNew(matches);
+                updateSubmitButtonStateNew();
+            });
+
+            let selectedIndexNew = -1;
+
+            inputNew.addEventListener('keydown', (e) => {
+                const items = autocompleteListNew.querySelectorAll('.autocomplete-item');
+
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    selectedIndexNew = Math.min(selectedIndexNew + 1, items.length - 1);
+                    updateSelectionNew(items);
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    selectedIndexNew = Math.max(selectedIndexNew - 1, -1);
+                    updateSelectionNew(items);
+                } else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (selectedIndexNew >= 0 && items[selectedIndexNew]) {
+                        const county = items[selectedIndexNew].textContent;
+                        inputNew.value = county;
+                        hideAutocompleteNew();
+                        processGuess(county);
+                    } else if (inputNew.value) {
+                        const matches = getAutocompleteMatches(inputNew.value);
+                        if (matches.length === 1) {
+                            processGuess(matches[0]);
+                        } else if (COUNTY_NAMES.includes(inputNew.value)) {
+                            processGuess(inputNew.value);
+                        }
+                    }
+                    selectedIndexNew = -1;
+                } else if (e.key === 'Escape') {
+                    hideAutocompleteNew();
+                    selectedIndexNew = -1;
+                }
+            });
+
+            function updateSelectionNew(items) {
+                items.forEach((item, i) => {
+                    item.classList.toggle('selected', i === selectedIndexNew);
+                });
+            }
+
+            submitBtnNew.addEventListener('click', () => {
+                const value = inputNew.value.trim();
+                const matches = getAutocompleteMatches(value);
+                if (matches.length === 1) {
+                    processGuess(matches[0]);
+                } else if (COUNTY_NAMES.includes(value)) {
+                    processGuess(value);
+                }
+            });
+
+            // Also setup legacy input for backwards compat
+            input.addEventListener('input', (e) => {
+                const matches = getAutocompleteMatches(e.target.value);
+                showAutocomplete(matches);
+                updateSubmitButtonState();
+            });
+
+            let selectedIndex = -1;
+
+            input.addEventListener('keydown', (e) => {
+                const items = autocompleteList.querySelectorAll('.autocomplete-item');
+
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    selectedIndex = Math.min(selectedIndex + 1, items.length - 1);
+                    updateSelection(items);
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    selectedIndex = Math.max(selectedIndex - 1, -1);
+                    updateSelection(items);
+                } else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (selectedIndex >= 0 && items[selectedIndex]) {
+                        const county = items[selectedIndex].textContent;
+                        input.value = county;
+                        hideAutocomplete();
+                        processGuess(county);
+                    } else if (input.value) {
+                        const matches = getAutocompleteMatches(input.value);
+                        if (matches.length === 1) {
+                            processGuess(matches[0]);
+                        } else if (COUNTY_NAMES.includes(input.value)) {
+                            processGuess(input.value);
+                        }
+                    }
+                    selectedIndex = -1;
+                } else if (e.key === 'Escape') {
+                    hideAutocomplete();
+                    selectedIndex = -1;
+                }
+            });
+
+            function updateSelection(items) {
+                items.forEach((item, i) => {
+                    item.classList.toggle('selected', i === selectedIndex);
+                });
+            }
+
+            submitBtn.addEventListener('click', () => {
+                const value = input.value.trim();
+                const matches = getAutocompleteMatches(value);
+                if (matches.length === 1) {
+                    processGuess(matches[0]);
+                } else if (COUNTY_NAMES.includes(value)) {
+                    processGuess(value);
+                }
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.input-dock') && !e.target.closest('.input-wrapper')) {
+                    hideAutocomplete();
+                    hideAutocompleteNew();
+                }
+            });
+
+            // NEW: Floating menu button opens help/settings
+            document.getElementById('floating-menu-btn').addEventListener('click', showHelp);
+
+            document.getElementById('practice-btn').addEventListener('click', () => {
+                if (gameState.mode === 'locate') {
+                    exitLocateMode();
+                    document.getElementById('practice-btn').innerHTML = '🎯 <span class="btn-text">Practice</span>';
+                    document.getElementById('practice-btn').title = 'Practice Mode (P)';
+                } else if (gameState.mode === 'daily') {
+                    initGame('practice');
+                    document.getElementById('practice-btn').innerHTML = '📅 <span class="btn-text">Daily</span>';
+                    document.getElementById('practice-btn').title = 'Return to Daily Challenge';
+                } else {
+                    initGame('daily', true); // true = suppress modal on completed game
+                    document.getElementById('practice-btn').innerHTML = '🎯 <span class="btn-text">Practice</span>';
+                    document.getElementById('practice-btn').title = 'Practice Mode (P)';
+                }
+            });
+
+            document.getElementById('locate-btn').addEventListener('click', () => {
+                if (gameState.mode === 'locate') {
+                    exitLocateMode();
+                    document.getElementById('locate-btn').innerHTML = '📍 <span class="btn-text">Locate</span>';
+                } else {
+                    initLocateMode();
+                    document.getElementById('locate-btn').innerHTML = '🔙 <span class="btn-text">Back</span>';
+                }
+            });
+
+            document.getElementById('stats-btn').addEventListener('click', () => {
+                if (gameState.status !== 'playing') {
+                    showEndModal();
+                }
+            });
+
+            document.getElementById('share-btn').addEventListener('click', shareResult);
+
+            document.getElementById('play-again-btn').addEventListener('click', () => {
+                hideModal();
+                // Show mode selection screen for a better experience
+                document.getElementById('start-overlay').classList.add('visible');
+                updateStartScreenDifficulty();
+            });
+
+            document.getElementById('modal-overlay').addEventListener('click', (e) => {
+                if (e.target === document.getElementById('modal-overlay')) {
+                    hideModal();
+                    clearResultLine();
+                }
+            });
+
+            // Help button
+            document.getElementById('help-btn').addEventListener('click', showHelp);
+            document.getElementById('close-help').addEventListener('click', hideHelp);
+            document.getElementById('help-overlay').addEventListener('click', (e) => {
+                if (e.target === document.getElementById('help-overlay')) {
+                    hideHelp();
+                }
+            });
+
+            // Settings button
+            const settingsBtn = document.getElementById('settings-btn');
+            const settingsDropdown = document.getElementById('settings-dropdown');
+
+            settingsBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                settingsDropdown.classList.toggle('visible');
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.settings-container')) {
+                    settingsDropdown.classList.remove('visible');
+                }
+            });
+
+            // Difficulty radio buttons
+            document.querySelectorAll('input[name="difficulty"]').forEach(radio => {
+                radio.addEventListener('change', (e) => {
+                    settings.difficulty = e.target.value;
+                    saveSettings();
+                    // Re-render guess history with new settings
+                    refreshGuessHistory();
+                });
+            });
+
+            // Panel toggle
+            document.getElementById('panel-toggle').addEventListener('click', togglePanel);
+
+            // PRD 8.4: Global keyboard shortcuts
+            document.addEventListener('keydown', (e) => {
+                // Ignore if typing in input
+                if (e.target.tagName === 'INPUT') return;
+
+                switch(e.key.toLowerCase()) {
+                    case '?':
+                        e.preventDefault();
+                        showHelp();
+                        break;
+                    case 'p':
+                        e.preventDefault();
+                        document.getElementById('practice-btn').click();
+                        break;
+                    case 'l':
+                        e.preventDefault();
+                        document.getElementById('locate-btn').click();
+                        break;
+                    case 'tab':
+                        e.preventDefault();
+                        togglePanel();
+                        break;
+                    case 'escape':
+                        hideHelp();
+                        hideModal();
+                        clearResultLine();
+                        hideTutorial();
+                        break;
+                }
+            });
+
+            // Show tutorial for first-time users (after map loads)
+            setTimeout(showTutorial, 1000);
+        });
+
+        // ============================================
+        // AUTOMATED TESTS
+        // ============================================
+
+        const tests = {
+            'P1.1 - Responsive layout exists': () => {
+                const app = document.querySelector('.app');
+                const mapPanel = document.querySelector('.map-panel');
+                const gamePanel = document.querySelector('.game-panel');
+                return app && mapPanel && gamePanel;
+            },
+
+            'P1.2 - CSS custom properties defined': () => {
+                const root = getComputedStyle(document.documentElement);
+                return root.getPropertyValue('--color-correct').trim() !== '' &&
+                       root.getPropertyValue('--color-default').trim() !== '';
+            },
+
+            'P1.3 - County data has 32 entries': () => {
+                return Object.keys(COUNTIES).length === 32;
+            },
+
+            'P1.3 - Each county has required properties': () => {
+                return Object.values(COUNTIES).every(c =>
+                    typeof c.lat === 'number' &&
+                    typeof c.lng === 'number' &&
+                    typeof c.province === 'string' &&
+                    typeof c.fact === 'string'
+                );
+            },
+
+            'P1.4 - Leaflet map initialized': () => {
+                return map !== null && typeof map.getCenter === 'function';
+            },
+
+            'P1.4 - GeoJSON loaded with 32 counties': () => {
+                return Object.keys(countyLayers).length === 32;
+            },
+
+            'P2.1 - getDistance returns correct value': () => {
+                const dublin = COUNTIES['Dublin'];
+                const cork = COUNTIES['Cork'];
+                const dist = getDistance(dublin, cork);
+                return dist > 200 && dist < 250;
+            },
+
+            'P2.2 - getBearing returns valid arrow': () => {
+                const arrows = ['↑', '↗', '→', '↘', '↓', '↙', '←', '↖'];
+                const dublin = COUNTIES['Dublin'];
+                const cork = COUNTIES['Cork'];
+                const bearing = getBearing(dublin, cork);
+                return arrows.includes(bearing);
+            },
+
+            'P2.3 - getDailyCounty returns consistent result': () => {
+                const c1 = getDailyCounty();
+                const c2 = getDailyCounty();
+                return c1 === c2 && COUNTY_NAMES.includes(c1);
+            },
+
+            'P2.4 - getProximityColor returns correct colors': () => {
+                return getProximityColor(0) === COLORS.CORRECT &&
+                       getProximityColor(400) === COLORS.COLD_1 &&
+                       getProximityColor(100) === COLORS.WARM_2;
+            },
+
+            'P2.5 - gameState object has required properties': () => {
+                return gameState.hasOwnProperty('targetCounty') &&
+                       gameState.hasOwnProperty('guesses') &&
+                       gameState.hasOwnProperty('status');
+            },
+
+            'P2.6 - Game initializes with target county': () => {
+                return gameState.targetCounty !== null &&
+                       COUNTY_NAMES.includes(gameState.targetCounty);
+            },
+
+            'P3.1 - Input field exists with placeholder': () => {
+                const input = document.getElementById('county-input');
+                return input && input.placeholder === 'Guess a county...';
+            },
+
+            'P3.2 - Autocomplete shows matches': () => {
+                const matches = getAutocompleteMatches('Cor');
+                return matches.includes('Cork');
+            },
+
+            'P3.4 - Submit button exists': () => {
+                return document.getElementById('submit-btn') !== null;
+            },
+
+            'P3.7 - Guess slots exist': () => {
+                const slots = document.querySelectorAll('.guess-slot');
+                return slots.length === 6;
+            },
+
+            'P4.1 - Guess history container exists': () => {
+                return document.getElementById('guess-list') !== null;
+            },
+
+            'P4.4 - Stats bar has 3 stat boxes': () => {
+                const boxes = document.querySelectorAll('.stat-box');
+                return boxes.length === 3;
+            },
+
+            'P5.2 - Modal exists': () => {
+                return document.getElementById('modal-overlay') !== null;
+            },
+
+            'P5.3 - Confetti container exists': () => {
+                return document.getElementById('confetti-container') !== null;
+            },
+
+            'P5.7 - Play again button exists': () => {
+                return document.getElementById('play-again-btn') !== null;
+            },
+
+            'P6.1 - Statistics object has required properties': () => {
+                return statistics.hasOwnProperty('gamesPlayed') &&
+                       statistics.hasOwnProperty('gamesWon') &&
+                       statistics.hasOwnProperty('currentStreak') &&
+                       statistics.hasOwnProperty('distribution');
+            },
+
+            'P6.4 - Distribution histogram container exists': () => {
+                return document.getElementById('distribution-bars') !== null;
+            },
+
+            'P7.1 - Share button exists': () => {
+                return document.getElementById('share-btn') !== null;
+            },
+
+            'P7.4 - Practice mode button exists': () => {
+                return document.getElementById('practice-btn') !== null;
+            },
+
+            'P7.7 - Countdown element exists': () => {
+                return document.getElementById('countdown-time') !== null;
+            },
+
+            // Phase 8 Tests
+            'P8.1 - Panel toggle button exists': () => {
+                return document.getElementById('panel-toggle') !== null;
+            },
+
+            'P8.2 - Submit button has ready state logic': () => {
+                return typeof updateSubmitButtonState === 'function';
+            },
+
+            'P8.4 - Help button exists': () => {
+                return document.getElementById('help-btn') !== null;
+            },
+
+            'P8.4 - Help modal exists': () => {
+                return document.getElementById('help-overlay') !== null;
+            },
+
+            'P8.8 - Start screen overlay exists': () => {
+                return document.getElementById('start-overlay') !== null;
+            },
+
+            'P8.3 - Polyline functions exist': () => {
+                return typeof showResultLine === 'function' && typeof clearResultLine === 'function';
+            }
+        };
+
+        function runTests() {
+            const results = [];
+            let passed = 0;
+            let failed = 0;
+
+            for (const [name, test] of Object.entries(tests)) {
+                try {
+                    const result = test();
+                    if (result) {
+                        passed++;
+                        results.push({ name, status: 'pass' });
+                    } else {
+                        failed++;
+                        results.push({ name, status: 'fail' });
+                    }
+                } catch (e) {
+                    failed++;
+                    results.push({ name, status: 'fail', error: e.message });
+                }
+            }
+
+            return { results, passed, failed, total: passed + failed };
+        }
+
+        function displayTestResults() {
+            const { results, passed, failed, total } = runTests();
+            const output = document.getElementById('test-output');
+
+            output.innerHTML = `<p><strong>Passed: ${passed}/${total}</strong></p>`;
+
+            results.forEach(r => {
+                const div = document.createElement('div');
+                div.className = `test-result ${r.status}`;
+                div.textContent = `${r.status === 'pass' ? '✓' : '✗'} ${r.name}`;
+                if (r.error) {
+                    div.textContent += ` - ${r.error}`;
+                }
+                output.appendChild(div);
+            });
+
+            document.getElementById('test-results').classList.add('visible');
+        }
+
+        document.getElementById('test-btn')?.addEventListener('click', displayTestResults);
+        document.getElementById('close-tests')?.addEventListener('click', () => {
+            document.getElementById('test-results').classList.remove('visible');
+        });
+
+        // Expose for console testing
+        window.gameState = gameState;
+        window.COUNTIES = COUNTIES;
+        window.getDistance = getDistance;
+        window.getBearing = getBearing;
+        window.getProximityColor = getProximityColor;
+        window.getDailyCounty = getDailyCounty;
+        window.runTests = runTests;
+        window.countyLayers = countyLayers;
+    </script>
+</body>
+</html>

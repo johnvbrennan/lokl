@@ -1,0 +1,99 @@
+{
+  "phase": 5,
+  "name": "Win/Loss Screens",
+  "goal": "Handle game completion with appropriate feedback",
+  "prds": [
+    {
+      "id": "5.1",
+      "category": "functional",
+      "description": "Win detection (guess matches target county)",
+      "steps": [
+        "In practice mode, check console for target county",
+        "Guess the target county",
+        "Verify gameState.status changes to 'won'",
+        "Verify game recognizes win condition"
+      ],
+      "passes": true,
+      "manualTest": "Win condition checked in processGuess"
+    },
+    {
+      "id": "5.2",
+      "category": "visual",
+      "description": "Win modal: 'Well Done!' title, star rating, county name, fun fact",
+      "steps": [
+        "Win a game",
+        "Verify modal appears",
+        "Verify 'Well Done!' or similar title",
+        "Verify star rating based on guesses used",
+        "Verify county name is displayed",
+        "Verify fun fact is shown"
+      ],
+      "passes": true,
+      "automatedTest": "P5.2 - Modal exists"
+    },
+    {
+      "id": "5.3",
+      "category": "visual",
+      "description": "Confetti animation (green, white, orange particles)",
+      "steps": [
+        "Win a game",
+        "Verify confetti animation plays",
+        "Verify colors are Irish tricolour (green, white, orange)"
+      ],
+      "passes": true,
+      "automatedTest": "P5.3 - Confetti container exists"
+    },
+    {
+      "id": "5.4",
+      "category": "functional",
+      "description": "Loss detection (6 guesses exhausted without correct answer)",
+      "steps": [
+        "Make 6 incorrect guesses",
+        "Verify gameState.status changes to 'lost'",
+        "Verify game recognizes loss condition"
+      ],
+      "passes": true,
+      "manualTest": "Loss condition checked in processGuess"
+    },
+    {
+      "id": "5.5",
+      "category": "visual",
+      "description": "Loss modal: reveal answer, highlight target on map in green, show fun fact",
+      "steps": [
+        "Lose a game",
+        "Verify modal appears",
+        "Verify target county name is revealed",
+        "Verify target county highlighted green on map",
+        "Verify fun fact is shown"
+      ],
+      "passes": true,
+      "manualTest": "showEndModal reveals target and fun fact"
+    },
+    {
+      "id": "5.6",
+      "category": "visual",
+      "description": "Pulse animation on correct/revealed county (green glow)",
+      "steps": [
+        "Win or lose a game",
+        "Verify target county has pulse/glow animation",
+        "Verify animation is green colored"
+      ],
+      "passes": true,
+      "manualTest": "CSS pulse animation on .county-path.correct"
+    },
+    {
+      "id": "5.7",
+      "category": "functional",
+      "description": "'Play Again' button functionality",
+      "steps": [
+        "Complete a game (win or lose)",
+        "Verify 'Play Again' button is visible in modal",
+        "Click 'Play Again'",
+        "Verify new game starts with fresh state",
+        "Verify map colors reset"
+      ],
+      "passes": true,
+      "automatedTest": "P5.7 - Play again button exists"
+    }
+  ]
+}

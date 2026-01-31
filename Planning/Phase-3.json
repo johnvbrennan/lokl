@@ -1,0 +1,120 @@
+{
+  "phase": 3,
+  "name": "User Input & Visual Feedback",
+  "goal": "Enable player to make guesses and see feedback on the map",
+  "prds": [
+    {
+      "id": "3.1",
+      "category": "functional",
+      "description": "County input field with placeholder 'Guess a county...'",
+      "steps": [
+        "Verify input field is visible in game panel",
+        "Verify placeholder text shows 'Guess a county...'",
+        "Verify input accepts text typing"
+      ],
+      "passes": true,
+      "automatedTest": "P3.1 - Input field exists with placeholder"
+    },
+    {
+      "id": "3.2",
+      "category": "functional",
+      "description": "Autocomplete dropdown showing matching counties (excludes already guessed)",
+      "steps": [
+        "Type 'Cor' in input field",
+        "Verify dropdown appears with 'Cork' as option",
+        "Type 'D' in input field",
+        "Verify dropdown shows Dublin, Donegal, Derry, Down",
+        "Make a guess for Dublin",
+        "Type 'D' again",
+        "Verify Dublin is no longer in dropdown"
+      ],
+      "passes": true,
+      "automatedTest": "P3.2 - Autocomplete shows matches"
+    },
+    {
+      "id": "3.3",
+      "category": "functional",
+      "description": "Keyboard navigation for autocomplete (arrow keys, Enter, Escape)",
+      "steps": [
+        "Type 'C' in input field",
+        "Press down arrow to highlight first option",
+        "Press down arrow again to move to second option",
+        "Press Enter to select",
+        "Verify county is submitted",
+        "Type 'M' in input field",
+        "Press Escape",
+        "Verify dropdown closes"
+      ],
+      "passes": true,
+      "manualTest": "Keyboard navigation implemented in event listeners"
+    },
+    {
+      "id": "3.4",
+      "category": "functional",
+      "description": "Submit button beside input",
+      "steps": [
+        "Verify submit button is visible next to input",
+        "Type a county name",
+        "Click submit button",
+        "Verify guess is processed"
+      ],
+      "passes": true,
+      "automatedTest": "P3.4 - Submit button exists"
+    },
+    {
+      "id": "3.5",
+      "category": "functional",
+      "description": "Process guess: validate, calculate distance/direction/color, update map",
+      "steps": [
+        "Submit a valid county guess",
+        "Verify guess is added to gameState.guesses",
+        "Verify distance is calculated correctly",
+        "Verify direction arrow is determined",
+        "Verify color is assigned based on proximity"
+      ],
+      "passes": true,
+      "manualTest": "processGuess function implements all steps"
+    },
+    {
+      "id": "3.6",
+      "category": "visual",
+      "description": "Color the guessed county on SVG map with proximity color",
+      "steps": [
+        "Submit a county guess",
+        "Verify the county path on SVG map changes color",
+        "Verify color matches proximity band (hot/cold)",
+        "Submit another guess",
+        "Verify new county also changes color"
+      ],
+      "passes": true,
+      "manualTest": "updateMapCounty function changes fill color"
+    },
+    {
+      "id": "3.7",
+      "category": "visual",
+      "description": "Guess counter display (6 visual slots that fill with guess colors)",
+      "steps": [
+        "Verify 6 empty slots are visible",
+        "Make a guess",
+        "Verify first slot fills with guess color",
+        "Make another guess",
+        "Verify second slot fills with that guess color"
+      ],
+      "passes": true,
+      "automatedTest": "P3.7 - Guess slots exist"
+    },
+    {
+      "id": "3.8",
+      "category": "functional",
+      "description": "Disable input when game ends",
+      "steps": [
+        "Win or lose a game",
+        "Verify input field is disabled",
+        "Verify submit button is disabled",
+        "Verify cannot type in input"
+      ],
+      "passes": true,
+      "manualTest": "disableInput function implemented"
+    }
+  ]
+}
