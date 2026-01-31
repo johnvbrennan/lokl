@@ -16,14 +16,14 @@
             --neon-mint-dim: rgba(0, 255, 136, 0.4);
             --neon-mint-glow: rgba(0, 255, 136, 0.2);
 
-            /* Feedback Colors (proximity) */
+            /* Feedback Colors (proximity) - Colorblind-friendly */
             --color-correct: #00ff88;
-            --color-hot: #00ff88;        /* 0-15% */
-            --color-warm-3: #33ff99;     /* 15-25% */
-            --color-warm-2: #ffcc00;     /* 25-40% - Warning Orange */
-            --color-warm-1: #ff8844;     /* 40-55% */
-            --color-cold-2: #ff4b2b;     /* 55-75% - Hot Coral */
-            --color-cold-1: #cc3322;     /* 75-100% */
+            --color-hot: #ff6b6b;        /* 0-15% - Bright red */
+            --color-warm-3: #ffa94d;     /* 15-25% - Orange */
+            --color-warm-2: #ffd43b;     /* 25-40% - Yellow */
+            --color-warm-1: #74c0fc;     /* 40-55% - Light blue */
+            --color-cold-2: #4dabf7;     /* 55-75% - Medium blue */
+            --color-cold-1: #1864ab;     /* 75-100% - Dark blue */
             --color-default: transparent; /* Unguessed county fill */
             --color-stroke: rgba(0, 255, 136, 0.2); /* County border */
 
@@ -153,6 +153,72 @@
         .floating-header .menu-btn:hover {
             background: var(--bg-tertiary);
             color: var(--neon-mint);
+        }
+
+        /* Floating Menu Dropdown */
+        .menu-container {
+            position: relative;
+        }
+
+        .floating-menu {
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--border-radius);
+            backdrop-filter: blur(var(--glass-blur));
+            min-width: 200px;
+            padding: var(--spacing-xs);
+            display: none;
+            z-index: 1001;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 10px var(--neon-mint-glow);
+        }
+
+        .floating-menu.visible {
+            display: block;
+        }
+
+        .floating-menu-item {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            width: 100%;
+            padding: var(--spacing-sm) var(--spacing-md);
+            background: transparent;
+            border: none;
+            border-radius: var(--border-radius);
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: left;
+        }
+
+        .floating-menu-item:hover {
+            background: var(--neon-mint-glow);
+            color: var(--neon-mint);
+        }
+
+        .floating-menu-item.active {
+            background: rgba(0, 255, 136, 0.15);
+            color: var(--neon-mint);
+        }
+
+        .menu-icon {
+            font-size: 1rem;
+            width: 24px;
+            text-align: center;
+        }
+
+        .menu-label {
+            flex: 1;
+        }
+
+        .menu-divider {
+            height: 1px;
+            background: var(--glass-border);
+            margin: var(--spacing-xs) 0;
         }
 
         /* Legacy header styles (hidden but kept for JS compatibility) */
@@ -1608,6 +1674,10 @@
                         <div class="stat-value" id="stat-province">--</div>
                         <div class="stat-label">Province</div>
                     </div>
+                    <div class="stat-box">
+                        <div class="mode-badge" id="mode-badge">Daily</div>
+                        <div class="stat-label">Mode</div>
+                    </div>
                 </div>
 
                 <!-- Guess Counter -->
@@ -1649,7 +1719,32 @@
         <header class="floating-header glass neon-border">
             <img src="assets/images/lokl-logo.png" alt="lokl" class="header-logo">
             <span class="guess-counter-pill" id="guess-counter-pill">0/6</span>
-            <button class="menu-btn" id="floating-menu-btn" title="Menu">&#9776;</button>
+            <div class="menu-container">
+                <button class="menu-btn" id="floating-menu-btn" title="Menu">&#9776;</button>
+                <div class="floating-menu" id="floating-menu">
+                    <button class="floating-menu-item" id="menu-daily">
+                        <span class="menu-icon">📅</span>
+                        <span class="menu-label">Daily Challenge</span>
+                    </button>
+                    <button class="floating-menu-item" id="menu-practice">
+                        <span class="menu-icon">🎯</span>
+                        <span class="menu-label">Practice Mode</span>
+                    </button>
+                    <button class="floating-menu-item" id="menu-locate">
+                        <span class="menu-icon">📍</span>
+                        <span class="menu-label">Locate Mode</span>
+                    </button>
+                    <div class="menu-divider"></div>
+                    <button class="floating-menu-item" id="menu-stats">
+                        <span class="menu-icon">📊</span>
+                        <span class="menu-label">Statistics</span>
+                    </button>
+                    <button class="floating-menu-item" id="menu-help">
+                        <span class="menu-icon">❓</span>
+                        <span class="menu-label">How to Play</span>
+                    </button>
+                </div>
+            </div>
         </header>
 
         <!-- NEW: Guess Rail (horizontal scrolling) -->
@@ -1731,10 +1826,10 @@
             <div class="help-section">
                 <h3>Color Guide</h3>
                 <div class="color-legend">
-                    <div class="legend-item"><span class="legend-color" style="background:#27ae60"></span> Correct!</div>
-                    <div class="legend-item"><span class="legend-color" style="background:#c0392b"></span> Very close</div>
-                    <div class="legend-item"><span class="legend-color" style="background:#e67e22"></span> Getting warmer</div>
-                    <div class="legend-item"><span class="legend-color" style="background:#1a5276"></span> Far away</div>
+                    <div class="legend-item"><span class="legend-color" style="background:#00ff88"></span> Correct!</div>
+                    <div class="legend-item"><span class="legend-color" style="background:#ff6b6b"></span> Very close</div>
+                    <div class="legend-item"><span class="legend-color" style="background:#ffd43b"></span> Getting warmer</div>
+                    <div class="legend-item"><span class="legend-color" style="background:#1864ab"></span> Far away</div>
                 </div>
                 <p>The arrow shows which direction to look!</p>
             </div>
@@ -1825,10 +1920,10 @@
                     <p><strong>1.</strong> Type an Irish county name or click on the map</p>
                     <p><strong>2.</strong> Counties light up showing how close you are</p>
                     <div class="color-legend">
-                        <div class="legend-item"><span class="legend-color" style="background:#27ae60"></span> Correct</div>
-                        <div class="legend-item"><span class="legend-color" style="background:#c0392b"></span> Hot</div>
-                        <div class="legend-item"><span class="legend-color" style="background:#e67e22"></span> Warm</div>
-                        <div class="legend-item"><span class="legend-color" style="background:#2980b9"></span> Cold</div>
+                        <div class="legend-item"><span class="legend-color" style="background:#00ff88"></span> Correct</div>
+                        <div class="legend-item"><span class="legend-color" style="background:#ff6b6b"></span> Hot</div>
+                        <div class="legend-item"><span class="legend-color" style="background:#ffd43b"></span> Warm</div>
+                        <div class="legend-item"><span class="legend-color" style="background:#1864ab"></span> Cold</div>
                     </div>
                     <p><strong>3.</strong> Use distance and direction hints to narrow down</p>
                     <p><strong>4.</strong> Find the county in 6 guesses or fewer!</p>
@@ -1932,26 +2027,26 @@
         }
 
         // ============================================
-        // COLOR CONSTANTS - Cyber-Emerald Theme
+        // COLOR CONSTANTS - Colorblind-friendly with Cyber theme
         // ============================================
         const COLORS = {
-            COLD_1: '#cc3322',   // Deep Red (75-100%)
-            COLD_2: '#ff4b2b',   // Hot Coral (55-75%)
-            WARM_1: '#ff8844',   // Orange (40-55%)
-            WARM_2: '#ffcc00',   // Warning Yellow (25-40%)
-            WARM_3: '#33ff99',   // Light Mint (15-25%)
-            HOT: '#00ff88',      // Neon Mint (5-15%)
+            COLD_1: '#1864ab',   // Dark Blue (75-100%)
+            COLD_2: '#4dabf7',   // Medium Blue (55-75%)
+            WARM_1: '#74c0fc',   // Light Blue (40-55%)
+            WARM_2: '#ffd43b',   // Yellow (25-40%)
+            WARM_3: '#ffa94d',   // Orange (15-25%)
+            HOT: '#ff6b6b',      // Bright Red (5-15%)
             CORRECT: '#00ff88',  // Neon Mint (correct)
             DEFAULT: 'transparent'   // Unguessed
         };
 
         const COLOR_EMOJIS = {
-            [COLORS.COLD_1]: '🔴',
-            [COLORS.COLD_2]: '🟧',
-            [COLORS.WARM_1]: '🟠',
+            [COLORS.COLD_1]: '🔵',
+            [COLORS.COLD_2]: '🔷',
+            [COLORS.WARM_1]: '🟦',
             [COLORS.WARM_2]: '🟡',
-            [COLORS.WARM_3]: '🟢',
-            [COLORS.HOT]: '🟢',
+            [COLORS.WARM_3]: '🟠',
+            [COLORS.HOT]: '🔴',
             [COLORS.CORRECT]: '🎯'
         };
 
@@ -2050,12 +2145,14 @@
         }
 
         function defaultStyle(feature) {
+            // Show more prominent outlines in locate mode to help users find counties
+            const isLocateMode = gameState.mode === 'locate';
             return {
                 fillColor: 'transparent',
                 fillOpacity: 0,
-                weight: 1,
-                opacity: 1,
-                color: 'rgba(0, 255, 136, 0.2)'  // Neon mint border
+                weight: isLocateMode ? 2 : 1,
+                opacity: isLocateMode ? 1 : 0.5,
+                color: isLocateMode ? 'rgba(0, 255, 136, 0.4)' : 'rgba(0, 255, 136, 0.15)'
             };
         }
 
@@ -2080,9 +2177,12 @@
                 },
                 mouseout: function(e) {
                     const layer = e.target;
+                    // Reset to default style based on game mode
+                    const showBorders = gameState.mode === 'locate';
                     layer.setStyle({
-                        weight: 2,
-                        color: '#4a5d7e'
+                        weight: showBorders ? 1 : 0.5,
+                        opacity: showBorders ? 1 : 0.1,
+                        color: 'rgba(0, 255, 136, 0.2)'
                     });
                     const el = layer.getElement();
                     if (el) el.style.cursor = '';
@@ -2417,8 +2517,13 @@
             document.getElementById('stat-closest').textContent = '--';
             document.getElementById('stat-province').textContent = '--';
 
+            // NEW: Reset floating UI elements
+            document.getElementById('guess-rail').innerHTML = '';
+            document.getElementById('guess-counter-pill').textContent = '0/6';
+
             enableInput();
             updateSubmitButtonState();
+            updateSubmitButtonStateNew();
         }
 
         function restoreGameUI() {
@@ -2428,6 +2533,9 @@
                 addGuessToHistory(guess, index + 1);
             });
             updateGuessCounter();
+            // NEW: Restore guess rail
+            updateGuessRail();
+            updateGuessCounterPill();
             updateStatsBar();
 
             if (gameState.status !== 'playing') {
@@ -2496,16 +2604,34 @@
             document.getElementById('stat-province').textContent = closest.province.substring(0, 4);
         }
 
+        // NEW: Update floating menu active state
+        function updateFloatingMenuState() {
+            document.querySelectorAll('.floating-menu-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            if (gameState.mode === 'daily') {
+                document.getElementById('menu-daily').classList.add('active');
+            } else if (gameState.mode === 'practice') {
+                document.getElementById('menu-practice').classList.add('active');
+            } else if (gameState.mode === 'locate') {
+                document.getElementById('menu-locate').classList.add('active');
+            }
+        }
+
         function updateModeBadge() {
             const badge = document.getElementById('mode-badge');
             if (!badge) return;
             badge.classList.remove('practice', 'locate');
+
+            // Also update floating menu state
+            updateFloatingMenuState();
 
             // Build badge text with difficulty for non-locate modes
             let modeText = '';
             if (gameState.mode === 'locate') {
                 modeText = 'Locate';
                 badge.classList.add('locate');
+                badge.title = 'Locate Mode - Click counties to find them';
             } else if (gameState.mode === 'practice') {
                 modeText = 'Practice';
                 badge.classList.add('practice');
@@ -2513,11 +2639,23 @@
                 modeText = 'Daily';
             }
 
-            // Add difficulty indicator for guess modes
+            // Add difficulty indicator for guess modes with full names
             if (gameState.mode !== 'locate') {
-                const diffIcon = settings.difficulty === 'easy' ? ' (E)' :
-                                 settings.difficulty === 'hard' ? ' (H)' : '';
-                modeText += diffIcon;
+                const diffNames = {
+                    'easy': 'Easy',
+                    'medium': 'Medium',
+                    'hard': 'Hard'
+                };
+                const diffDescriptions = {
+                    'easy': 'Distance + Direction',
+                    'medium': 'Distance only',
+                    'hard': 'Direction only'
+                };
+                modeText = `${modeText} (${diffNames[settings.difficulty]})`;
+                badge.title = `${modeText} - ${diffDescriptions[settings.difficulty]}. Click to change difficulty.`;
+                badge.style.cursor = 'pointer';
+            } else {
+                badge.style.cursor = 'default';
             }
 
             badge.textContent = modeText;
@@ -2643,7 +2781,8 @@
                     initLocateMode();
                     document.getElementById('locate-btn').innerHTML = '&#128281; <span class="btn-text">Back</span>';
                 } else {
-                    initGame(selectedStartMode);
+                    // Pass suppressModal=true to prevent loop when daily game is already complete
+                    initGame(selectedStartMode, true);
                     // Update practice button label
                     if (selectedStartMode === 'practice') {
                         document.getElementById('practice-btn').innerHTML = '&#128197; <span class="btn-text">Daily</span>';
@@ -3270,8 +3409,56 @@
                 }
             });
 
-            // NEW: Floating menu button opens help/settings
-            document.getElementById('floating-menu-btn').addEventListener('click', showHelp);
+            // NEW: Floating menu dropdown
+            const floatingMenu = document.getElementById('floating-menu');
+            document.getElementById('floating-menu-btn').addEventListener('click', (e) => {
+                e.stopPropagation();
+                floatingMenu.classList.toggle('visible');
+                updateFloatingMenuState();
+            });
+
+            // Close menu when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.menu-container')) {
+                    floatingMenu.classList.remove('visible');
+                }
+            });
+
+            // Menu item handlers
+            document.getElementById('menu-daily').addEventListener('click', () => {
+                floatingMenu.classList.remove('visible');
+                if (gameState.mode === 'locate') {
+                    // Reset locate UI first
+                    document.getElementById('input-dock').style.display = 'flex';
+                    document.getElementById('locate-dock').style.display = 'none';
+                }
+                initGame('daily', true);  // suppressModal=true to prevent loop
+            });
+
+            document.getElementById('menu-practice').addEventListener('click', () => {
+                floatingMenu.classList.remove('visible');
+                if (gameState.mode === 'locate') {
+                    // Reset locate UI first
+                    document.getElementById('input-dock').style.display = 'flex';
+                    document.getElementById('locate-dock').style.display = 'none';
+                }
+                initGame('practice');
+            });
+
+            document.getElementById('menu-locate').addEventListener('click', () => {
+                floatingMenu.classList.remove('visible');
+                initLocateMode();
+            });
+
+            document.getElementById('menu-stats').addEventListener('click', () => {
+                floatingMenu.classList.remove('visible');
+                showEndModal();
+            });
+
+            document.getElementById('menu-help').addEventListener('click', () => {
+                floatingMenu.classList.remove('visible');
+                showHelp();
+            });
 
             document.getElementById('practice-btn').addEventListener('click', () => {
                 if (gameState.mode === 'locate') {
@@ -3352,7 +3539,28 @@
                     saveSettings();
                     // Re-render guess history with new settings
                     refreshGuessHistory();
+                    updateModeBadge();
                 });
+            });
+
+            // Mode badge click to cycle difficulty
+            document.getElementById('mode-badge')?.addEventListener('click', () => {
+                // Only allow cycling in non-locate modes
+                if (gameState.mode === 'locate') return;
+
+                // Cycle through difficulties: easy -> medium -> hard -> easy
+                const difficulties = ['easy', 'medium', 'hard'];
+                const currentIndex = difficulties.indexOf(settings.difficulty);
+                const nextIndex = (currentIndex + 1) % difficulties.length;
+                settings.difficulty = difficulties[nextIndex];
+
+                // Update radio buttons
+                const radio = document.getElementById(`diff-${settings.difficulty}`);
+                if (radio) radio.checked = true;
+
+                saveSettings();
+                refreshGuessHistory();
+                updateModeBadge();
             });
 
             // Panel toggle
