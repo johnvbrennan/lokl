@@ -234,10 +234,19 @@
             gap: var(--spacing-sm);
         }
 
-        .header-logo {
-            height: 40px;
-            width: auto;
-            border-radius: 6px;
+        .lokl-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--neon-mint);
+            text-shadow: 0 0 20px var(--neon-mint-glow);
+            margin: 0;
+        }
+
+        .lokl-title-small {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--neon-mint);
+            text-shadow: 0 0 10px var(--neon-mint-glow);
         }
 
         .mode-badge {
@@ -282,6 +291,16 @@
             background: var(--neon-mint-dim);
             border-color: var(--neon-mint);
             color: var(--neon-mint);
+        }
+
+        #difficulty-toggle-btn {
+            background: rgba(0, 255, 136, 0.1);
+            border-color: var(--neon-mint-dim);
+            font-weight: 600;
+        }
+
+        #difficulty-toggle-btn:hover {
+            background: rgba(0, 255, 136, 0.2);
         }
 
         /* Main Content - Full Screen Map */
@@ -1618,9 +1637,7 @@
     <div class="app">
         <!-- Header -->
         <header class="header">
-            <h1>
-                <img src="assets/images/lokl-logo.png" alt="lokl" class="header-logo">
-            </h1>
+            <h1 class="lokl-title">lokl</h1>
             <div class="header-actions">
                 <button class="header-btn" id="help-btn" title="How to Play (?)">?</button>
                 <button class="header-btn" id="practice-btn" title="Practice Mode (P)">🎯 <span class="btn-text">Practice</span></button>
@@ -1720,22 +1737,14 @@
 
         <!-- NEW: Floating Header Pill -->
         <header class="floating-header glass neon-border">
-            <img src="assets/images/lokl-logo.png" alt="lokl" class="header-logo">
+            <span class="lokl-title-small">lokl</span>
             <span class="guess-counter-pill" id="guess-counter-pill">0/6</span>
             <div class="menu-container">
                 <button class="menu-btn" id="floating-menu-btn" title="Menu">&#9776;</button>
                 <div class="floating-menu" id="floating-menu">
-                    <button class="floating-menu-item" id="menu-daily">
-                        <span class="menu-icon">📅</span>
-                        <span class="menu-label">Daily Challenge</span>
-                    </button>
-                    <button class="floating-menu-item" id="menu-practice">
-                        <span class="menu-icon">🎯</span>
-                        <span class="menu-label">Practice Mode</span>
-                    </button>
-                    <button class="floating-menu-item" id="menu-locate">
-                        <span class="menu-icon">📍</span>
-                        <span class="menu-label">Locate Mode</span>
+                    <button class="floating-menu-item" id="menu-new-game">
+                        <span class="menu-icon">🎮</span>
+                        <span class="menu-label">New Game</span>
                     </button>
                     <div class="menu-divider"></div>
                     <button class="floating-menu-item" id="menu-stats">
@@ -1863,7 +1872,7 @@
     <!-- Start/Mode Selection Overlay -->
     <div class="start-overlay" id="start-overlay">
         <div class="start-content">
-            <img src="assets/images/lokl-logo.png" alt="lokl" class="start-logo">
+            <h1 class="lokl-title">lokl</h1>
             <h2>Welcome to lokl!</h2>
             <p class="start-tagline">Can you find the mystery Irish county?</p>
 
@@ -2077,6 +2086,8 @@
             lastPlayedDate: null
         };
 
+        let currentHighlightedCounty = null;
+
         // ============================================
         // LEAFLET MAP
         // ============================================
@@ -2133,8 +2144,8 @@
 
                     console.log('County layers loaded:', Object.keys(countyLayers).length);
 
-                    // Initialize game after map is ready
-                    initGame('daily');
+                    // Initialize game after map is ready (suppress modal on page load)
+                    initGame('daily', true);
                 })
                 .catch(error => {
                     console.error('Failed to load GeoJSON:', error);
@@ -2148,14 +2159,15 @@
         }
 
         function defaultStyle(feature) {
-            // Show more prominent outlines in locate mode to help users find counties
+            // Locate mode: bright borders to help find counties
+            // Practice/Daily: visible borders so you can see the map
             const isLocateMode = gameState.mode === 'locate';
             return {
                 fillColor: 'transparent',
                 fillOpacity: 0,
                 weight: isLocateMode ? 2 : 1,
-                opacity: isLocateMode ? 1 : 0.5,
-                color: isLocateMode ? 'rgba(0, 255, 136, 0.4)' : 'rgba(0, 255, 136, 0.15)'
+                opacity: isLocateMode ? 1 : 0.6,
+                color: isLocateMode ? 'rgba(0, 255, 136, 0.6)' : 'rgba(0, 255, 136, 0.3)'
             };
         }
 
@@ -2184,8 +2196,8 @@
                     const isLocateMode = gameState.mode === 'locate';
                     layer.setStyle({
                         weight: isLocateMode ? 2 : 1,
-                        opacity: isLocateMode ? 1 : 0.5,
-                        color: isLocateMode ? 'rgba(0, 255, 136, 0.4)' : 'rgba(0, 255, 136, 0.15)'
+                        opacity: isLocateMode ? 1 : 0.6,
+                        color: isLocateMode ? 'rgba(0, 255, 136, 0.6)' : 'rgba(0, 255, 136, 0.3)'
                     });
                     const el = layer.getElement();
                     if (el) el.style.cursor = '';
@@ -2228,6 +2240,11 @@
         }
 
         function highlightCounty(countyName) {
+            // Unhighlight previous county first
+            if (currentHighlightedCounty && currentHighlightedCounty !== countyName) {
+                unhighlightCounty(currentHighlightedCounty);
+            }
+
             const layer = countyLayers[countyName];
             if (layer) {
                 layer.setStyle({
@@ -2236,6 +2253,8 @@
                     opacity: 1
                 });
                 layer.bringToFront();
+                currentHighlightedCounty = countyName;
+
                 // Also pan to county if not in view
                 const bounds = layer.getBounds();
                 if (!map.getBounds().contains(bounds)) {
@@ -2247,12 +2266,18 @@
         function unhighlightCounty(countyName) {
             const layer = countyLayers[countyName];
             if (layer) {
-                // Restore original border style
+                // Restore to default border style based on game mode
+                const isLocateMode = gameState.mode === 'locate';
                 layer.setStyle({
-                    weight: 2,
-                    color: '#4a5d7e',
-                    opacity: 1
+                    weight: isLocateMode ? 2 : 1,
+                    opacity: isLocateMode ? 1 : 0.6,
+                    color: isLocateMode ? 'rgba(0, 255, 136, 0.6)' : 'rgba(0, 255, 136, 0.3)'
                 });
+
+                // If it's no longer the highlighted county, clear the tracking
+                if (currentHighlightedCounty === countyName) {
+                    currentHighlightedCounty = null;
+                }
             }
         }
 
@@ -2555,8 +2580,10 @@
 
             // Determine what to show based on difficulty
             // Easy: distance + direction, Medium: distance only, Hard: direction only
+            console.log('[DEBUG] Current difficulty:', settings.difficulty);
             const showDistance = settings.difficulty === 'easy' || settings.difficulty === 'medium';
             const showDirection = settings.difficulty === 'easy' || settings.difficulty === 'hard';
+            console.log('[DEBUG] showDistance:', showDistance, 'showDirection:', showDirection);
 
             const item = document.createElement('div');
             item.className = `guess-item${isCorrect ? ' correct' : ''}${guess.isAdjacent ? ' adjacent' : ''}`;
@@ -2607,18 +2634,9 @@
             document.getElementById('stat-province').textContent = closest.province.substring(0, 4);
         }
 
-        // NEW: Update floating menu active state
+        // NEW: Update floating menu active state (simplified - no longer needed)
         function updateFloatingMenuState() {
-            document.querySelectorAll('.floating-menu-item').forEach(item => {
-                item.classList.remove('active');
-            });
-            if (gameState.mode === 'daily') {
-                document.getElementById('menu-daily').classList.add('active');
-            } else if (gameState.mode === 'practice') {
-                document.getElementById('menu-practice').classList.add('active');
-            } else if (gameState.mode === 'locate') {
-                document.getElementById('menu-locate').classList.add('active');
-            }
+            // No longer tracking active menu items since we only have "New Game"
         }
 
         function updateDifficultyDisplay() {
@@ -2636,7 +2654,8 @@
                 'hard': 'Direction only'
             };
 
-            display.textContent = diffNames[settings.difficulty];
+            console.log('Current difficulty:', settings.difficulty);
+            display.textContent = diffNames[settings.difficulty] || settings.difficulty;
             const btn = document.getElementById('difficulty-toggle-btn');
             if (btn) {
                 btn.title = `Difficulty: ${diffNames[settings.difficulty]} (${diffDescriptions[settings.difficulty]}). Click to change.`;
@@ -2756,10 +2775,40 @@
         let selectedStartDifficulty = 'medium';
 
         function showStartScreen() {
-            if (!localStorage.getItem('loklTutorialSeen')) {
-                document.getElementById('start-overlay').classList.add('visible');
-                // Sync difficulty button with current settings
-                updateStartScreenDifficulty();
+            document.getElementById('start-overlay').classList.add('visible');
+            // Sync difficulty button with current settings
+            updateStartScreenDifficulty();
+
+            // Check if daily challenge is already complete
+            const savedDaily = loadDailyState();
+            const today = new Date().toISOString().split('T')[0];
+            const dailyCard = document.querySelector('.mode-card[data-mode="daily"]');
+
+            if (savedDaily && savedDaily.date === today && savedDaily.status !== 'playing') {
+                // Daily already completed - disable it
+                if (dailyCard) {
+                    dailyCard.style.opacity = '0.5';
+                    dailyCard.style.pointerEvents = 'none';
+                    dailyCard.style.cursor = 'not-allowed';
+                    const desc = dailyCard.querySelector('.mode-desc');
+                    if (desc) desc.textContent = 'Already completed today! Come back tomorrow.';
+                }
+                // Auto-select practice mode instead
+                document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('selected'));
+                const practiceCard = document.querySelector('.mode-card[data-mode="practice"]');
+                if (practiceCard) {
+                    practiceCard.classList.add('selected');
+                    selectedStartMode = 'practice';
+                }
+            } else {
+                // Daily available - reset card appearance
+                if (dailyCard) {
+                    dailyCard.style.opacity = '1';
+                    dailyCard.style.pointerEvents = 'auto';
+                    dailyCard.style.cursor = 'pointer';
+                    const desc = dailyCard.querySelector('.mode-desc');
+                    if (desc) desc.textContent = 'Same county for everyone, one puzzle per day.';
+                }
             }
         }
 
@@ -3003,10 +3052,14 @@
                     pill.classList.add('adjacent');
                 }
 
+                // Respect difficulty settings: Easy = both, Medium = distance only, Hard = direction only
+                const showDistance = settings.difficulty === 'easy' || settings.difficulty === 'medium';
+                const showDirection = settings.difficulty === 'easy' || settings.difficulty === 'hard';
+
                 pill.innerHTML = `
                     <span class="guess-name">${guess.county}</span>
-                    <span class="guess-direction">${guess.direction}</span>
-                    ${gameState.difficulty !== 'hard' ? `<span class="guess-distance">${guess.distance}km</span>` : ''}
+                    ${showDirection ? `<span class="guess-direction">${guess.direction}</span>` : ''}
+                    ${showDistance ? `<span class="guess-distance">${guess.distance}km</span>` : ''}
                 `;
 
                 pill.addEventListener('click', () => {
@@ -3225,9 +3278,17 @@
                 if (saved) {
                     settings = { ...settings, ...JSON.parse(saved) };
                 }
+                // Validate difficulty is valid
+                if (!['easy', 'medium', 'hard'].includes(settings.difficulty)) {
+                    console.warn('Invalid difficulty found, resetting to medium');
+                    settings.difficulty = 'medium';
+                    saveSettings();
+                }
+                console.log('Settings loaded:', settings);
                 // Update UI to match loaded settings
                 const radio = document.getElementById(`diff-${settings.difficulty}`);
                 if (radio) radio.checked = true;
+                updateDifficultyDisplay();
             } catch (e) {
                 console.error('Failed to load settings:', e);
             }
@@ -3450,29 +3511,11 @@
             });
 
             // Menu item handlers
-            document.getElementById('menu-daily').addEventListener('click', () => {
+            document.getElementById('menu-new-game').addEventListener('click', () => {
                 floatingMenu.classList.remove('visible');
-                if (gameState.mode === 'locate') {
-                    // Reset locate UI first
-                    document.getElementById('input-dock').style.display = 'flex';
-                    document.getElementById('locate-dock').style.display = 'none';
-                }
-                initGame('daily', true);  // suppressModal=true to prevent loop
-            });
-
-            document.getElementById('menu-practice').addEventListener('click', () => {
-                floatingMenu.classList.remove('visible');
-                if (gameState.mode === 'locate') {
-                    // Reset locate UI first
-                    document.getElementById('input-dock').style.display = 'flex';
-                    document.getElementById('locate-dock').style.display = 'none';
-                }
-                initGame('practice');
-            });
-
-            document.getElementById('menu-locate').addEventListener('click', () => {
-                floatingMenu.classList.remove('visible');
-                initLocateMode();
+                // Show the start screen to let user choose game type
+                document.getElementById('start-overlay').classList.add('visible');
+                updateStartScreenDifficulty();
             });
 
             document.getElementById('menu-stats').addEventListener('click', () => {
@@ -3598,6 +3641,8 @@
                 const nextIndex = (currentIndex + 1) % difficulties.length;
                 settings.difficulty = difficulties[nextIndex];
 
+                console.log('Difficulty changed to:', settings.difficulty);
+
                 // Update radio buttons to keep in sync
                 const radio = document.getElementById(`diff-${settings.difficulty}`);
                 if (radio) radio.checked = true;
@@ -3606,6 +3651,9 @@
                 refreshGuessHistory();
                 updateModeBadge();
                 updateDifficultyDisplay();
+
+                // Force UI update
+                updateStats();
             });
 
             // Panel toggle
