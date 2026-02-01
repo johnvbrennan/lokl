@@ -1,0 +1,195 @@
+{
+  "phase": 14,
+  "name": "Code Separation & Build System",
+  "goal": "Split monolithic index.html into separate files and add Vite build system while maintaining all functionality",
+  "prds": [
+    {
+      "id": "14.1",
+      "category": "structural",
+      "description": "Install Node.js dependencies and initialize package.json with Vite",
+      "steps": [
+        "Run 'npm init -y' to create package.json",
+        "Run 'npm install vite --save-dev' to install Vite",
+        "Add 'npm install --save-dev @vitejs/plugin-legacy' for browser compatibility",
+        "Verify package.json has correct dependencies",
+        "Verify node_modules folder created"
+      ],
+      "passes": false,
+      "automatedTest": "P14.1 - package.json exists with vite dependency"
+    },
+    {
+      "id": "14.2",
+      "category": "structural",
+      "description": "Create vite.config.js with proper build configuration for static site",
+      "steps": [
+        "Create vite.config.js in project root",
+        "Configure build output to 'dist' folder",
+        "Configure public assets directory",
+        "Set base path for Azure Static Web Apps",
+        "Verify configuration syntax is valid"
+      ],
+      "passes": false,
+      "automatedTest": "P14.2 - vite.config.js exists"
+    },
+    {
+      "id": "14.3",
+      "category": "structural",
+      "description": "Extract CSS from index.html into src/styles/main.css",
+      "steps": [
+        "Create src/styles directory",
+        "Create main.css file",
+        "Copy all CSS from <style> tag (lines 10-1807) to main.css",
+        "Verify CSS custom properties preserved",
+        "Verify all media queries preserved",
+        "Verify theme styling preserved"
+      ],
+      "passes": false,
+      "automatedTest": "P14.3 - src/styles/main.css exists"
+    },
+    {
+      "id": "14.4",
+      "category": "structural",
+      "description": "Extract JavaScript from index.html into src/main.js",
+      "steps": [
+        "Create src directory",
+        "Create main.js file",
+        "Copy all JavaScript from <script> tag (lines 2133-4242) to main.js",
+        "Verify all functions preserved",
+        "Verify all constants preserved",
+        "Verify all event listeners preserved"
+      ],
+      "passes": false,
+      "automatedTest": "P14.4 - src/main.js exists"
+    },
+    {
+      "id": "14.5",
+      "category": "structural",
+      "description": "Create new index.html with imports for CSS and JS",
+      "steps": [
+        "Move current index.html to index-old.html for reference",
+        "Create new index.html with HTML structure only (lines 1809-2131)",
+        "Add <link rel='stylesheet' href='/src/styles/main.css'> in head",
+        "Add <script type='module' src='/src/main.js'></script> before </body>",
+        "Verify Leaflet CSS and JS imports preserved",
+        "Verify all HTML elements preserved"
+      ],
+      "passes": false,
+      "automatedTest": "P14.5 - New index.html exists with separate imports"
+    },
+    {
+      "id": "14.6",
+      "category": "structural",
+      "description": "Move ireland.json to public/assets directory",
+      "steps": [
+        "Create public/assets directory",
+        "Move assets/ireland.json to public/assets/ireland.json",
+        "Update GeoJSON fetch path in main.js",
+        "Delete old assets directory",
+        "Verify GeoJSON loads correctly"
+      ],
+      "passes": false,
+      "automatedTest": "P14.6 - public/assets/ireland.json exists"
+    },
+    {
+      "id": "14.7",
+      "category": "functional",
+      "description": "Add npm scripts for development and production builds",
+      "steps": [
+        "Add 'dev' script: 'vite' for development server",
+        "Add 'build' script: 'vite build' for production",
+        "Add 'preview' script: 'vite preview' to test build locally",
+        "Run 'npm run dev' and verify app loads at localhost",
+        "Run 'npm run build' and verify dist folder created",
+        "Run 'npm run preview' and verify built app works"
+      ],
+      "passes": false,
+      "automatedTest": "P14.7 - npm scripts defined in package.json"
+    },
+    {
+      "id": "14.8",
+      "category": "functional",
+      "description": "Verify all game functionality works with separated files in dev mode",
+      "steps": [
+        "Run 'npm run dev'",
+        "Test daily challenge mode - verify county loads",
+        "Test practice mode - verify random county selection",
+        "Test locate mode - verify map clicking works",
+        "Test guess submission and proximity colors",
+        "Test statistics persistence",
+        "Test theme toggle",
+        "Test share functionality",
+        "Test all modals (help, end game, start screen)",
+        "Test autocomplete",
+        "Test responsive layout on mobile width"
+      ],
+      "passes": false,
+      "automatedTest": "P14.8 - All game modes functional in dev server"
+    },
+    {
+      "id": "14.9",
+      "category": "functional",
+      "description": "Verify production build works correctly",
+      "steps": [
+        "Run 'npm run build' to create production bundle",
+        "Check dist folder contains index.html, CSS, and JS files",
+        "Verify bundle is minified",
+        "Run 'npm run preview' to test production build",
+        "Test daily challenge mode in production build",
+        "Test practice mode in production build",
+        "Test locate mode in production build",
+        "Verify no console errors in production"
+      ],
+      "passes": false,
+      "automatedTest": "P14.9 - Production build successful"
+    },
+    {
+      "id": "14.10",
+      "category": "deployment",
+      "description": "Update GitHub Actions workflow for Vite build",
+      "steps": [
+        "Open .github/workflows/azure-static-web-apps-icy-mud-0603e4a03.yml",
+        "Add Node.js setup step (node-version: 20)",
+        "Add 'npm install' step before deployment",
+        "Add 'npm run build' step",
+        "Update app_location to 'dist'",
+        "Commit workflow changes",
+        "Push and verify GitHub Actions runs successfully",
+        "Verify deployed site works on Azure"
+      ],
+      "passes": false,
+      "automatedTest": "P14.10 - GitHub Actions workflow updated"
+    },
+    {
+      "id": "14.11",
+      "category": "deployment",
+      "description": "Test deployed production build on Azure Static Web Apps",
+      "steps": [
+        "Navigate to production URL",
+        "Test all three game modes (daily, practice, locate)",
+        "Test on desktop browser",
+        "Test on mobile browser",
+        "Verify statistics persist across page reloads",
+        "Verify theme preference persists",
+        "Verify no console errors",
+        "Test share functionality generates correct URLs"
+      ],
+      "passes": false,
+      "automatedTest": "P14.11 - Production deployment functional"
+    },
+    {
+      "id": "14.12",
+      "category": "cleanup",
+      "description": "Clean up old files and update .gitignore",
+      "steps": [
+        "Add 'node_modules/' to .gitignore",
+        "Add 'dist/' to .gitignore",
+        "Add '.env' to .gitignore (for future use)",
+        "Delete index-old.html (after verifying new version works)",
+        "Delete assets/ie.json (unused file)",
+        "Commit cleanup changes"
+      ],
+      "passes": false,
+      "automatedTest": "P14.12 - Cleanup complete, .gitignore updated"
+    }
+  ]
+}

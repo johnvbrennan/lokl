@@ -1,0 +1,268 @@
+{
+  "phase": 18,
+  "name": "Integration & E2E Testing",
+  "goal": "Add end-to-end testing with Playwright to verify complete user journeys and cross-browser compatibility",
+  "prds": [
+    {
+      "id": "18.1",
+      "category": "setup",
+      "description": "Install Playwright and testing dependencies",
+      "steps": [
+        "Run 'npm init playwright@latest'",
+        "Select TypeScript config: No (use JavaScript)",
+        "Install browsers (Chromium, Firefox, WebKit)",
+        "Verify @playwright/test installed",
+        "Verify playwright.config.js created"
+      ],
+      "passes": false,
+      "automatedTest": "P18.1 - Playwright installed"
+    },
+    {
+      "id": "18.2",
+      "category": "setup",
+      "description": "Configure playwright.config.js for local and CI testing",
+      "steps": [
+        "Set testDir to 'tests/e2e'",
+        "Configure baseURL to 'http://localhost:5173' (Vite dev server)",
+        "Enable video recording on failure",
+        "Enable screenshot on failure",
+        "Configure test timeout (30s default)",
+        "Set up projects for chromium, firefox, webkit",
+        "Configure CI detection for GitHub Actions"
+      ],
+      "passes": false,
+      "automatedTest": "P18.2 - playwright.config.js configured"
+    },
+    {
+      "id": "18.3",
+      "category": "setup",
+      "description": "Add E2E test scripts to package.json",
+      "steps": [
+        "Add 'test:e2e' script: 'playwright test'",
+        "Add 'test:e2e:ui' script: 'playwright test --ui'",
+        "Add 'test:e2e:debug' script: 'playwright test --debug'",
+        "Add 'test:e2e:headed' script: 'playwright test --headed'",
+        "Verify scripts work"
+      ],
+      "passes": false,
+      "automatedTest": "P18.3 - E2E test scripts defined"
+    },
+    {
+      "id": "18.4",
+      "category": "structural",
+      "description": "Create E2E test directory structure and helpers",
+      "steps": [
+        "Create tests/e2e directory",
+        "Create tests/e2e/fixtures directory for test data",
+        "Create tests/e2e/helpers/pageObjects.js for page models",
+        "Create tests/e2e/helpers/testHelpers.js for utilities",
+        "Create tests/e2e/helpers/mockData.js for fixtures"
+      ],
+      "passes": false,
+      "automatedTest": "P18.4 - E2E directory structure created"
+    },
+    {
+      "id": "18.5",
+      "category": "testing",
+      "description": "Create page object model for main game page",
+      "steps": [
+        "Create tests/e2e/helpers/GamePage.js",
+        "Add methods for interacting with map",
+        "Add methods for typing guesses",
+        "Add methods for submitting guesses",
+        "Add methods for checking guess history",
+        "Add methods for modal interactions",
+        "Add methods for theme toggle",
+        "Add methods for mode switching"
+      ],
+      "passes": false,
+      "automatedTest": "P18.5 - GamePage object created"
+    },
+    {
+      "id": "18.6",
+      "category": "testing",
+      "description": "Write E2E test for daily challenge complete flow",
+      "steps": [
+        "Create tests/e2e/dailyChallenge.spec.js",
+        "Test: Load page and verify daily mode selected",
+        "Test: Start new daily game",
+        "Test: Submit incorrect guess and verify proximity color",
+        "Test: Submit another guess and verify guess history",
+        "Test: Submit correct guess and verify win modal",
+        "Test: Verify statistics updated correctly",
+        "Test: Share functionality works",
+        "Test: Reload page and verify game state persisted"
+      ],
+      "passes": false,
+      "automatedTest": "P18.6 - Daily challenge E2E test passes"
+    },
+    {
+      "id": "18.7",
+      "category": "testing",
+      "description": "Write E2E test for practice mode flow",
+      "steps": [
+        "Create tests/e2e/practiceMode.spec.js",
+        "Test: Switch to practice mode",
+        "Test: Start practice game",
+        "Test: Complete full game (win scenario)",
+        "Test: Start another practice game immediately",
+        "Test: Complete full game (loss scenario - 6 guesses)",
+        "Test: Verify statistics track practice games",
+        "Test: Verify no daily game restriction"
+      ],
+      "passes": false,
+      "automatedTest": "P18.7 - Practice mode E2E test passes"
+    },
+    {
+      "id": "18.8",
+      "category": "testing",
+      "description": "Write E2E test for locate mode flow",
+      "steps": [
+        "Create tests/e2e/locateMode.spec.js",
+        "Test: Switch to locate mode",
+        "Test: Verify target county displayed",
+        "Test: Click incorrect county on map",
+        "Test: Verify adjacent county hints appear",
+        "Test: Click correct county on map",
+        "Test: Verify win modal shows",
+        "Test: Start new locate game"
+      ],
+      "passes": false,
+      "automatedTest": "P18.8 - Locate mode E2E test passes"
+    },
+    {
+      "id": "18.9",
+      "category": "testing",
+      "description": "Write E2E test for autocomplete functionality",
+      "steps": [
+        "Create tests/e2e/autocomplete.spec.js",
+        "Test: Type partial county name",
+        "Test: Verify autocomplete dropdown appears",
+        "Test: Verify matching counties shown",
+        "Test: Click autocomplete suggestion",
+        "Test: Verify input filled correctly",
+        "Test: Verify submit button enabled",
+        "Test: Test keyboard navigation (arrow keys, Enter)"
+      ],
+      "passes": false,
+      "automatedTest": "P18.9 - Autocomplete E2E test passes"
+    },
+    {
+      "id": "18.10",
+      "category": "testing",
+      "description": "Write E2E test for theme switching",
+      "steps": [
+        "Create tests/e2e/theme.spec.js",
+        "Test: Load page with default theme",
+        "Test: Toggle theme to light mode",
+        "Test: Verify CSS variables changed",
+        "Test: Verify map tiles updated",
+        "Test: Toggle back to dark mode",
+        "Test: Reload page and verify theme persisted"
+      ],
+      "passes": false,
+      "automatedTest": "P18.10 - Theme E2E test passes"
+    },
+    {
+      "id": "18.11",
+      "category": "testing",
+      "description": "Write E2E test for statistics and persistence",
+      "steps": [
+        "Create tests/e2e/statistics.spec.js",
+        "Test: Complete multiple games",
+        "Test: Verify win/loss statistics update",
+        "Test: Verify streak tracking",
+        "Test: Verify distribution chart updates",
+        "Test: Clear browser storage",
+        "Test: Reload and verify statistics reset",
+        "Test: Play game and verify new statistics saved"
+      ],
+      "passes": false,
+      "automatedTest": "P18.11 - Statistics E2E test passes"
+    },
+    {
+      "id": "18.12",
+      "category": "testing",
+      "description": "Write E2E test for responsive mobile layout",
+      "steps": [
+        "Create tests/e2e/responsive.spec.js",
+        "Test: Load page with mobile viewport (375x667)",
+        "Test: Verify stacked layout (map on top)",
+        "Test: Verify touch-friendly button sizes",
+        "Test: Test game play on mobile",
+        "Test: Switch to tablet viewport (768x1024)",
+        "Test: Switch to desktop viewport (1920x1080)",
+        "Test: Verify layout adapts correctly"
+      ],
+      "passes": false,
+      "automatedTest": "P18.12 - Responsive E2E test passes"
+    },
+    {
+      "id": "18.13",
+      "category": "testing",
+      "description": "Write E2E test for accessibility (a11y)",
+      "steps": [
+        "Install @axe-core/playwright",
+        "Create tests/e2e/accessibility.spec.js",
+        "Test: Run axe accessibility scan on main page",
+        "Test: Verify no critical a11y violations",
+        "Test: Test keyboard navigation (Tab, Enter, Escape)",
+        "Test: Verify ARIA labels present",
+        "Test: Test screen reader landmarks",
+        "Test: Verify color contrast meets WCAG AA"
+      ],
+      "passes": false,
+      "automatedTest": "P18.13 - Accessibility E2E test passes"
+    },
+    {
+      "id": "18.14",
+      "category": "testing",
+      "description": "Write E2E test for error handling and edge cases",
+      "steps": [
+        "Create tests/e2e/edgeCases.spec.js",
+        "Test: Handle network failure loading GeoJSON",
+        "Test: Handle localStorage quota exceeded",
+        "Test: Handle corrupted localStorage data",
+        "Test: Submit empty guess",
+        "Test: Submit invalid county name",
+        "Test: Test with JavaScript disabled (graceful degradation)"
+      ],
+      "passes": false,
+      "automatedTest": "P18.14 - Edge cases E2E test passes"
+    },
+    {
+      "id": "18.15",
+      "category": "testing",
+      "description": "Add visual regression testing",
+      "steps": [
+        "Install @playwright/test with screenshot comparison",
+        "Create tests/e2e/visual.spec.js",
+        "Take baseline screenshots for key pages",
+        "Test: Compare daily mode UI",
+        "Test: Compare practice mode UI",
+        "Test: Compare locate mode UI",
+        "Test: Compare modals (help, end game, start)",
+        "Test: Compare light/dark themes",
+        "Store baseline images in tests/e2e/screenshots"
+      ],
+      "passes": false,
+      "automatedTest": "P18.15 - Visual regression tests created"
+    },
+    {
+      "id": "18.16",
+      "category": "functional",
+      "description": "Run all E2E tests across browsers and verify passing",
+      "steps": [
+        "Run 'npm run test:e2e' and verify all tests pass",
+        "Verify tests pass in Chromium",
+        "Verify tests pass in Firefox",
+        "Verify tests pass in WebKit (Safari)",
+        "Review test reports and videos for failures",
+        "Fix any cross-browser issues",
+        "Verify 100% E2E test pass rate"
+      ],
+      "passes": false,
+      "automatedTest": "P18.16 - All E2E tests pass across browsers"
+    }
+  ]
+}

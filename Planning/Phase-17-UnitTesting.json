@@ -1,0 +1,262 @@
+{
+  "phase": 17,
+  "name": "Unit Testing Infrastructure",
+  "goal": "Add comprehensive unit testing with Vitest to achieve 80%+ code coverage",
+  "prds": [
+    {
+      "id": "17.1",
+      "category": "setup",
+      "description": "Install Vitest and testing dependencies",
+      "steps": [
+        "Run 'npm install --save-dev vitest' for test runner",
+        "Run 'npm install --save-dev @vitest/ui' for test UI",
+        "Run 'npm install --save-dev @vitest/coverage-v8' for coverage",
+        "Run 'npm install --save-dev jsdom' for DOM simulation",
+        "Verify all packages installed correctly"
+      ],
+      "passes": false,
+      "automatedTest": "P17.1 - Vitest dependencies installed"
+    },
+    {
+      "id": "17.2",
+      "category": "setup",
+      "description": "Create vitest.config.js with proper configuration",
+      "steps": [
+        "Create vitest.config.js in project root",
+        "Configure jsdom environment for DOM testing",
+        "Configure coverage thresholds (80% minimum)",
+        "Configure test file patterns (**/*.test.js)",
+        "Set up globals for test utilities",
+        "Add coverage reporters (text, html, json)"
+      ],
+      "passes": false,
+      "automatedTest": "P17.2 - vitest.config.js exists"
+    },
+    {
+      "id": "17.3",
+      "category": "setup",
+      "description": "Add test scripts to package.json",
+      "steps": [
+        "Add 'test' script: 'vitest'",
+        "Add 'test:ui' script: 'vitest --ui'",
+        "Add 'test:coverage' script: 'vitest --coverage'",
+        "Add 'test:run' script: 'vitest run' (single run for CI)",
+        "Verify scripts work"
+      ],
+      "passes": false,
+      "automatedTest": "P17.3 - Test scripts defined"
+    },
+    {
+      "id": "17.4",
+      "category": "structural",
+      "description": "Create test directory structure and utilities",
+      "steps": [
+        "Create tests/unit directory",
+        "Create tests/unit/game directory",
+        "Create tests/unit/utils directory",
+        "Create tests/unit/storage directory",
+        "Create tests/unit/map directory",
+        "Create tests/unit/ui directory",
+        "Create tests/helpers/testUtils.js for shared utilities",
+        "Create tests/helpers/mockData.js for fixtures"
+      ],
+      "passes": false,
+      "automatedTest": "P17.4 - Test directory structure created"
+    },
+    {
+      "id": "17.5",
+      "category": "testing",
+      "description": "Write unit tests for src/utils/calculations.js (target: 100% coverage)",
+      "steps": [
+        "Create tests/unit/utils/calculations.test.js",
+        "Test getDistance with known lat/lng pairs",
+        "Test getBearing for all 8 compass directions",
+        "Test getProximityColor for all distance ranges",
+        "Test areAdjacent with actual adjacency data",
+        "Test edge cases (same county, max distance, etc.)",
+        "Run 'npm run test:coverage' and verify 100% for calculations"
+      ],
+      "passes": false,
+      "automatedTest": "P17.5 - calculations.js has 100% coverage"
+    },
+    {
+      "id": "17.6",
+      "category": "testing",
+      "description": "Write unit tests for src/utils/dateUtils.js (target: 95% coverage)",
+      "steps": [
+        "Create tests/unit/utils/dateUtils.test.js",
+        "Test getDailyCounty returns same county for same date",
+        "Test getDailyCounty returns different county for different dates",
+        "Test getGameNumber increments correctly",
+        "Test getTodaysDateString format",
+        "Test getTimeUntilNextDay calculation",
+        "Verify 95%+ coverage"
+      ],
+      "passes": false,
+      "automatedTest": "P17.6 - dateUtils.js has 95%+ coverage"
+    },
+    {
+      "id": "17.7",
+      "category": "testing",
+      "description": "Write unit tests for src/game/gameLogic.js (target: 95% coverage)",
+      "steps": [
+        "Create tests/unit/game/gameLogic.test.js",
+        "Test initGame initializes state correctly",
+        "Test processGuess adds guess to state",
+        "Test processGuess calculates distance/bearing correctly",
+        "Test processGuess updates game status on win",
+        "Test processGuess updates game status on loss (6 guesses)",
+        "Test getRandomCounty returns valid county",
+        "Mock store for isolated testing",
+        "Verify 95%+ coverage"
+      ],
+      "passes": false,
+      "automatedTest": "P17.7 - gameLogic.js has 95%+ coverage"
+    },
+    {
+      "id": "17.8",
+      "category": "testing",
+      "description": "Write unit tests for src/game/locateMode.js (target: 90% coverage)",
+      "steps": [
+        "Create tests/unit/game/locateMode.test.js",
+        "Test initLocateMode sets up correctly",
+        "Test processLocateGuess handles correct guess",
+        "Test processLocateGuess handles incorrect guess",
+        "Test getAdjacentHints returns correct counties",
+        "Verify 90%+ coverage"
+      ],
+      "passes": false,
+      "automatedTest": "P17.8 - locateMode.js has 90%+ coverage"
+    },
+    {
+      "id": "17.9",
+      "category": "testing",
+      "description": "Write unit tests for src/storage/persistence.js (target: 90% coverage)",
+      "steps": [
+        "Create tests/unit/storage/persistence.test.js",
+        "Mock localStorage for testing",
+        "Test loadStatistics loads from localStorage",
+        "Test saveStatistics writes to localStorage",
+        "Test loadDailyState loads game state",
+        "Test saveDailyState writes game state",
+        "Test loadSettings loads user preferences",
+        "Test saveSettings writes preferences",
+        "Test handling of missing/corrupted data",
+        "Verify 90%+ coverage"
+      ],
+      "passes": false,
+      "automatedTest": "P17.9 - persistence.js has 90%+ coverage"
+    },
+    {
+      "id": "17.10",
+      "category": "testing",
+      "description": "Write unit tests for src/store/store.js (target: 95% coverage)",
+      "steps": [
+        "Create tests/unit/store/store.test.js",
+        "Test createStore initializes with state",
+        "Test getState returns current state",
+        "Test setState updates state",
+        "Test setState maintains immutability",
+        "Test subscribe registers listeners",
+        "Test listeners fire on state changes",
+        "Test unsubscribe removes listeners",
+        "Verify 95%+ coverage"
+      ],
+      "passes": false,
+      "automatedTest": "P17.10 - store.js has 95%+ coverage"
+    },
+    {
+      "id": "17.11",
+      "category": "testing",
+      "description": "Write unit tests for src/ui/autocomplete.js (target: 80% coverage)",
+      "steps": [
+        "Create tests/unit/ui/autocomplete.test.js",
+        "Test getAutocompleteMatches with various inputs",
+        "Test case-insensitive matching",
+        "Test showAutocomplete displays matches",
+        "Test hideAutocomplete clears list",
+        "Test updateSubmitButtonState enables/disables button",
+        "Mock DOM elements for testing",
+        "Verify 80%+ coverage"
+      ],
+      "passes": false,
+      "automatedTest": "P17.11 - autocomplete.js has 80%+ coverage"
+    },
+    {
+      "id": "17.12",
+      "category": "testing",
+      "description": "Write unit tests for src/ui/theme.js (target: 85% coverage)",
+      "steps": [
+        "Create tests/unit/ui/theme.test.js",
+        "Test initTheme loads saved preference",
+        "Test setTheme updates DOM class",
+        "Test toggleTheme switches themes",
+        "Test updateThemeButton reflects current theme",
+        "Mock DOM and store",
+        "Verify 85%+ coverage"
+      ],
+      "passes": false,
+      "automatedTest": "P17.12 - theme.js has 85%+ coverage"
+    },
+    {
+      "id": "17.13",
+      "category": "testing",
+      "description": "Write unit tests for src/data/counties.js and adjacency.js (target: 100% coverage)",
+      "steps": [
+        "Create tests/unit/data/counties.test.js",
+        "Test COUNTIES has 32 entries",
+        "Test each county has required properties",
+        "Test lat/lng values are valid",
+        "Test COUNTY_ADJACENCY completeness",
+        "Test adjacency is bidirectional",
+        "Verify 100% coverage"
+      ],
+      "passes": false,
+      "automatedTest": "P17.13 - Data modules have 100% coverage"
+    },
+    {
+      "id": "17.14",
+      "category": "testing",
+      "description": "Achieve overall 80%+ code coverage across all modules",
+      "steps": [
+        "Run 'npm run test:coverage'",
+        "Review coverage report",
+        "Identify uncovered code paths",
+        "Add tests for uncovered branches",
+        "Verify overall coverage is 80% or higher",
+        "Generate HTML coverage report"
+      ],
+      "passes": false,
+      "automatedTest": "P17.14 - Overall coverage >= 80%"
+    },
+    {
+      "id": "17.15",
+      "category": "cleanup",
+      "description": "Remove old built-in test framework from codebase",
+      "steps": [
+        "Remove runTests function from main.js",
+        "Remove displayTestResults function",
+        "Remove test results modal from HTML",
+        "Remove test button from UI",
+        "Clean up any window.* debug exports not needed",
+        "Verify app still works without old tests"
+      ],
+      "passes": false,
+      "automatedTest": "P17.15 - Old test framework removed"
+    },
+    {
+      "id": "17.16",
+      "category": "functional",
+      "description": "Verify all tests pass and build succeeds",
+      "steps": [
+        "Run 'npm run test:run' and verify all tests pass",
+        "Run 'npm run test:coverage' and verify thresholds met",
+        "Run 'npm run build' and verify no errors",
+        "Run 'npm run preview' and verify app works",
+        "Check for no console errors"
+      ],
+      "passes": false,
+      "automatedTest": "P17.16 - All tests pass, build succeeds"
+    }
+  ]
+}

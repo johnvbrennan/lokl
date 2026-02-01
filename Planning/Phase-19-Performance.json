@@ -1,0 +1,245 @@
+{
+  "phase": 19,
+  "name": "Performance Optimization",
+  "goal": "Optimize asset loading, bundle size, and runtime performance to achieve <1.5s total load time",
+  "prds": [
+    {
+      "id": "19.1",
+      "category": "optimization",
+      "description": "Optimize ireland.json GeoJSON file (target: 715KB -> ~200KB)",
+      "steps": [
+        "Install mapshaper CLI: 'npm install -g mapshaper'",
+        "Simplify geometry: 'mapshaper ireland.json -simplify 15% -o simplified.json'",
+        "Test simplified version renders correctly",
+        "Compare file sizes (target: 70% reduction)",
+        "Compress with gzip: verify ~50KB gzipped",
+        "Replace ireland.json with simplified version"
+      ],
+      "passes": false,
+      "automatedTest": "P19.1 - GeoJSON optimized to ~200KB"
+    },
+    {
+      "id": "19.2",
+      "category": "optimization",
+      "description": "Configure Vite for optimal production builds",
+      "steps": [
+        "Update vite.config.js",
+        "Enable minification (terser for better compression)",
+        "Configure code splitting for vendor chunks",
+        "Enable CSS code splitting",
+        "Configure asset inlining threshold (4kb)",
+        "Enable source map generation for debugging",
+        "Set target to modern browsers (es2020)"
+      ],
+      "passes": false,
+      "automatedTest": "P19.2 - Vite build configuration optimized"
+    },
+    {
+      "id": "19.3",
+      "category": "optimization",
+      "description": "Implement code splitting and lazy loading",
+      "steps": [
+        "Lazy load confetti.js (only on win)",
+        "Lazy load locate mode module (only when switched to locate)",
+        "Lazy load help modal content",
+        "Lazy load GeoJSON (defer until map initialization)",
+        "Add loading states for lazy-loaded modules",
+        "Verify chunks created in build output"
+      ],
+      "passes": false,
+      "automatedTest": "P19.3 - Code splitting implemented"
+    },
+    {
+      "id": "19.4",
+      "category": "optimization",
+      "description": "Optimize CSS with PurgeCSS and minification",
+      "steps": [
+        "Install postcss and cssnano",
+        "Configure PostCSS in vite.config.js",
+        "Remove unused CSS rules",
+        "Merge duplicate selectors",
+        "Minify CSS in production",
+        "Verify CSS size reduction (target: 50KB -> ~25KB)"
+      ],
+      "passes": false,
+      "automatedTest": "P19.4 - CSS optimized and minified"
+    },
+    {
+      "id": "19.5",
+      "category": "optimization",
+      "description": "Implement service worker for offline support and caching",
+      "steps": [
+        "Install vite-plugin-pwa",
+        "Configure PWA plugin in vite.config.js",
+        "Define caching strategy for static assets",
+        "Cache GeoJSON for offline use",
+        "Add offline fallback page",
+        "Generate web app manifest",
+        "Test offline functionality"
+      ],
+      "passes": false,
+      "automatedTest": "P19.5 - Service worker implemented"
+    },
+    {
+      "id": "19.6",
+      "category": "optimization",
+      "description": "Optimize Leaflet loading and map initialization",
+      "steps": [
+        "Consider switching to lightweight map alternative (or stick with Leaflet)",
+        "Load Leaflet from CDN with defer attribute",
+        "Initialize map only when visible (intersection observer)",
+        "Defer non-critical map features",
+        "Optimize tile loading strategy",
+        "Preload critical map tiles"
+      ],
+      "passes": false,
+      "automatedTest": "P19.6 - Map loading optimized"
+    },
+    {
+      "id": "19.7",
+      "category": "optimization",
+      "description": "Implement resource hints and preloading",
+      "steps": [
+        "Add <link rel='preconnect'> for Leaflet CDN",
+        "Add <link rel='preconnect'> for map tile servers",
+        "Add <link rel='dns-prefetch'> for external resources",
+        "Preload critical fonts (if any)",
+        "Preload GeoJSON file",
+        "Add modulepreload for critical chunks"
+      ],
+      "passes": false,
+      "automatedTest": "P19.7 - Resource hints configured"
+    },
+    {
+      "id": "19.8",
+      "category": "optimization",
+      "description": "Configure compression and caching headers",
+      "steps": [
+        "Configure Azure Static Web Apps for gzip/brotli compression",
+        "Add staticwebapp.config.json with caching rules",
+        "Set cache headers for static assets (1 year)",
+        "Set cache headers for HTML (no-cache)",
+        "Set cache headers for GeoJSON (1 week)",
+        "Verify compression working in production"
+      ],
+      "passes": false,
+      "automatedTest": "P19.8 - Compression and caching configured"
+    },
+    {
+      "id": "19.9",
+      "category": "optimization",
+      "description": "Analyze bundle size and create bundle report",
+      "steps": [
+        "Install rollup-plugin-visualizer",
+        "Configure plugin in vite.config.js",
+        "Run build and generate stats.html",
+        "Analyze bundle composition",
+        "Identify large dependencies",
+        "Verify no duplicate dependencies",
+        "Document bundle sizes in report"
+      ],
+      "passes": false,
+      "automatedTest": "P19.9 - Bundle analysis completed"
+    },
+    {
+      "id": "19.10",
+      "category": "optimization",
+      "description": "Optimize runtime performance with React-like optimizations",
+      "steps": [
+        "Debounce autocomplete input (300ms)",
+        "Throttle map interactions",
+        "Optimize DOM updates in guess history",
+        "Use requestAnimationFrame for animations",
+        "Minimize reflows and repaints",
+        "Profile with Chrome DevTools",
+        "Fix any performance bottlenecks"
+      ],
+      "passes": false,
+      "automatedTest": "P19.10 - Runtime performance optimized"
+    },
+    {
+      "id": "19.11",
+      "category": "measurement",
+      "description": "Measure baseline performance metrics with Lighthouse",
+      "steps": [
+        "Run Lighthouse audit on production URL (before optimizations)",
+        "Record Performance score",
+        "Record First Contentful Paint (FCP)",
+        "Record Largest Contentful Paint (LCP)",
+        "Record Time to Interactive (TTI)",
+        "Record Total Blocking Time (TBT)",
+        "Record Cumulative Layout Shift (CLS)",
+        "Save baseline report"
+      ],
+      "passes": false,
+      "automatedTest": "P19.11 - Baseline performance measured"
+    },
+    {
+      "id": "19.12",
+      "category": "measurement",
+      "description": "Verify performance improvements with Lighthouse",
+      "steps": [
+        "Run Lighthouse audit on optimized production URL",
+        "Verify Performance score >= 90",
+        "Verify FCP < 0.5s (target)",
+        "Verify LCP < 1.0s (target)",
+        "Verify TTI < 1.2s (target)",
+        "Verify TBT < 150ms",
+        "Verify CLS < 0.1",
+        "Compare with baseline and document improvements"
+      ],
+      "passes": false,
+      "automatedTest": "P19.12 - Performance targets met"
+    },
+    {
+      "id": "19.13",
+      "category": "optimization",
+      "description": "Optimize for Core Web Vitals",
+      "steps": [
+        "Ensure LCP element loads quickly (map or game panel)",
+        "Minimize layout shifts during loading",
+        "Optimize input responsiveness (FID < 100ms)",
+        "Test on real devices (mobile)",
+        "Use field data from Chrome UX Report",
+        "Fix any CWV issues",
+        "Verify all three metrics in 'Good' range"
+      ],
+      "passes": false,
+      "automatedTest": "P19.13 - Core Web Vitals optimized"
+    },
+    {
+      "id": "19.14",
+      "category": "functional",
+      "description": "Verify all functionality works after optimizations",
+      "steps": [
+        "Run 'npm run build'",
+        "Run 'npm run preview' and test locally",
+        "Test daily challenge mode",
+        "Test practice mode",
+        "Test locate mode",
+        "Test offline functionality (service worker)",
+        "Verify no regressions in functionality",
+        "Check console for errors"
+      ],
+      "passes": false,
+      "automatedTest": "P19.14 - All features work after optimization"
+    },
+    {
+      "id": "19.15",
+      "category": "deployment",
+      "description": "Deploy optimized build and verify production performance",
+      "steps": [
+        "Push optimized code to GitHub",
+        "Verify build succeeds in GitHub Actions",
+        "Deploy to Azure Static Web Apps",
+        "Run Lighthouse on production URL",
+        "Test on multiple devices (desktop, mobile, tablet)",
+        "Test on slow 3G connection",
+        "Verify performance improvements live",
+        "Monitor for errors in production"
+      ],
+      "passes": false,
+      "automatedTest": "P19.15 - Optimized build deployed successfully"
+    }
+  ]
+}

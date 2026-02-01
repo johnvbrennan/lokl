@@ -1,0 +1,237 @@
+{
+  "phase": 20,
+  "name": "CI/CD Pipeline Improvements",
+  "goal": "Enhance deployment pipeline with automated testing, staging environment, and quality gates",
+  "prds": [
+    {
+      "id": "20.1",
+      "category": "ci",
+      "description": "Add automated unit tests to GitHub Actions workflow",
+      "steps": [
+        "Open .github/workflows/azure-static-web-apps-*.yml",
+        "Add step to run 'npm run test:run' (unit tests)",
+        "Configure test failure to block deployment",
+        "Add test results reporting",
+        "Upload test artifacts",
+        "Verify tests run in CI"
+      ],
+      "passes": false,
+      "automatedTest": "P20.1 - Unit tests run in CI"
+    },
+    {
+      "id": "20.2",
+      "category": "ci",
+      "description": "Add E2E tests to GitHub Actions workflow",
+      "steps": [
+        "Add Playwright installation step",
+        "Add 'npm run test:e2e' step",
+        "Configure headless browser testing",
+        "Add test retry logic (max 2 retries)",
+        "Upload test videos and screenshots on failure",
+        "Configure E2E failure to block deployment"
+      ],
+      "passes": false,
+      "automatedTest": "P20.2 - E2E tests run in CI"
+    },
+    {
+      "id": "20.3",
+      "category": "ci",
+      "description": "Add code coverage reporting to CI",
+      "steps": [
+        "Add 'npm run test:coverage' step",
+        "Install codecov or coveralls GitHub action",
+        "Upload coverage report to service",
+        "Configure coverage threshold (80% minimum)",
+        "Add coverage badge to README",
+        "Fail build if coverage drops below threshold"
+      ],
+      "passes": false,
+      "automatedTest": "P20.3 - Coverage reporting configured"
+    },
+    {
+      "id": "20.4",
+      "category": "ci",
+      "description": "Add linting and code quality checks",
+      "steps": [
+        "Install ESLint: 'npm install --save-dev eslint'",
+        "Create .eslintrc.js with rules",
+        "Add 'lint' script to package.json",
+        "Add lint step to GitHub Actions",
+        "Configure lint failure to block deployment",
+        "Fix any linting errors in codebase"
+      ],
+      "passes": false,
+      "automatedTest": "P20.4 - Linting configured in CI"
+    },
+    {
+      "id": "20.5",
+      "category": "ci",
+      "description": "Add code formatting checks with Prettier",
+      "steps": [
+        "Install Prettier: 'npm install --save-dev prettier'",
+        "Create .prettierrc config file",
+        "Add 'format' script to package.json",
+        "Add 'format:check' script for CI",
+        "Add format check to GitHub Actions",
+        "Format existing codebase"
+      ],
+      "passes": false,
+      "automatedTest": "P20.5 - Formatting checks in CI"
+    },
+    {
+      "id": "20.6",
+      "category": "ci",
+      "description": "Add bundle size tracking and alerts",
+      "steps": [
+        "Install size-limit: 'npm install --save-dev size-limit'",
+        "Configure size limits in package.json",
+        "Add size-limit check to CI",
+        "Configure alerts if bundle exceeds thresholds",
+        "Track bundle size over time",
+        "Fail build if bundle size increases >10%"
+      ],
+      "passes": false,
+      "automatedTest": "P20.6 - Bundle size tracking configured"
+    },
+    {
+      "id": "20.7",
+      "category": "deployment",
+      "description": "Set up staging environment in Azure",
+      "steps": [
+        "Create staging slot in Azure Static Web Apps",
+        "Configure separate staging URL",
+        "Update GitHub Actions to deploy to staging first",
+        "Add manual approval gate for production",
+        "Test staging deployment",
+        "Verify staging URL accessible"
+      ],
+      "passes": false,
+      "automatedTest": "P20.7 - Staging environment configured"
+    },
+    {
+      "id": "20.8",
+      "category": "deployment",
+      "description": "Add smoke tests for deployed environments",
+      "steps": [
+        "Create tests/smoke directory",
+        "Create smoke.spec.js with basic checks",
+        "Test: Verify app loads",
+        "Test: Verify game starts",
+        "Test: Verify critical functionality",
+        "Add smoke test step after staging deployment",
+        "Block production deploy if smoke tests fail"
+      ],
+      "passes": false,
+      "automatedTest": "P20.8 - Smoke tests configured"
+    },
+    {
+      "id": "20.9",
+      "category": "ci",
+      "description": "Add Lighthouse CI for performance monitoring",
+      "steps": [
+        "Install @lhci/cli: 'npm install --save-dev @lhci/cli'",
+        "Create lighthouserc.js config",
+        "Configure performance budgets",
+        "Add Lighthouse CI step to workflow",
+        "Upload results to Lighthouse CI server or GitHub",
+        "Warn if performance degrades"
+      ],
+      "passes": false,
+      "automatedTest": "P20.9 - Lighthouse CI configured"
+    },
+    {
+      "id": "20.10",
+      "category": "ci",
+      "description": "Add dependency security scanning",
+      "steps": [
+        "Enable Dependabot in GitHub repository",
+        "Configure Dependabot.yml for npm updates",
+        "Add npm audit step to CI workflow",
+        "Configure to fail on high/critical vulnerabilities",
+        "Set up automated PR for dependency updates",
+        "Review and merge security updates"
+      ],
+      "passes": false,
+      "automatedTest": "P20.10 - Security scanning configured"
+    },
+    {
+      "id": "20.11",
+      "category": "ci",
+      "description": "Add branch protection rules and quality gates",
+      "steps": [
+        "Enable branch protection for master branch",
+        "Require status checks to pass before merge",
+        "Require pull request reviews",
+        "Require up-to-date branches",
+        "Enable required status checks (tests, lint, format)",
+        "Configure CODEOWNERS file"
+      ],
+      "passes": false,
+      "automatedTest": "P20.11 - Branch protection enabled"
+    },
+    {
+      "id": "20.12",
+      "category": "ci",
+      "description": "Add build notifications and status badges",
+      "steps": [
+        "Configure GitHub Actions status badge",
+        "Add badge to README.md",
+        "Add coverage badge to README.md",
+        "Add license badge",
+        "Configure build failure notifications",
+        "Test notification delivery"
+      ],
+      "passes": false,
+      "automatedTest": "P20.12 - Status badges added"
+    },
+    {
+      "id": "20.13",
+      "category": "ci",
+      "description": "Optimize CI pipeline performance",
+      "steps": [
+        "Enable npm package caching in workflow",
+        "Enable Playwright browser caching",
+        "Enable build artifact caching",
+        "Run unit tests in parallel with E2E tests",
+        "Optimize job dependencies",
+        "Measure CI run time (target: <5 minutes)"
+      ],
+      "passes": false,
+      "automatedTest": "P20.13 - CI pipeline optimized"
+    },
+    {
+      "id": "20.14",
+      "category": "deployment",
+      "description": "Add rollback capability",
+      "steps": [
+        "Document rollback procedure",
+        "Test rollback to previous deployment",
+        "Add rollback script to package.json",
+        "Configure Azure deployment history retention",
+        "Test manual rollback",
+        "Document steps in README"
+      ],
+      "passes": false,
+      "automatedTest": "P20.14 - Rollback capability documented"
+    },
+    {
+      "id": "20.15",
+      "category": "functional",
+      "description": "Verify complete CI/CD pipeline with production deployment",
+      "steps": [
+        "Create feature branch",
+        "Make small code change",
+        "Push and verify CI runs all checks",
+        "Create pull request",
+        "Verify branch protection blocks merge if checks fail",
+        "Merge to master",
+        "Verify deployment to staging",
+        "Verify smoke tests pass",
+        "Approve production deployment",
+        "Verify production deployment succeeds"
+      ],
+      "passes": false,
+      "automatedTest": "P20.15 - Full CI/CD pipeline working"
+    }
+  ]
+}

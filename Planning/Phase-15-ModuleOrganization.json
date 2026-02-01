@@ -1,0 +1,288 @@
+{
+  "phase": 15,
+  "name": "Module Organization",
+  "goal": "Organize JavaScript into ES6 modules by feature and concern for better maintainability",
+  "prds": [
+    {
+      "id": "15.1",
+      "category": "structural",
+      "description": "Extract county data into src/data/counties.js module",
+      "steps": [
+        "Create src/data directory",
+        "Create counties.js with COUNTIES object export",
+        "Export COUNTIES as named export",
+        "Import in main.js and verify data accessible",
+        "Verify 32 counties with lat/lng/province/fact",
+        "Remove COUNTIES from main.js"
+      ],
+      "passes": false,
+      "automatedTest": "P15.1 - src/data/counties.js exists and exports COUNTIES"
+    },
+    {
+      "id": "15.2",
+      "category": "structural",
+      "description": "Extract adjacency data into src/data/adjacency.js module",
+      "steps": [
+        "Create adjacency.js in src/data",
+        "Export COUNTY_ADJACENCY object",
+        "Import in main.js",
+        "Verify adjacency hints still work in locate mode",
+        "Remove COUNTY_ADJACENCY from main.js"
+      ],
+      "passes": false,
+      "automatedTest": "P15.2 - src/data/adjacency.js exists"
+    },
+    {
+      "id": "15.3",
+      "category": "structural",
+      "description": "Extract constants into src/utils/constants.js",
+      "steps": [
+        "Create src/utils directory",
+        "Create constants.js",
+        "Export COLORS object (proximity colors)",
+        "Export MAX_GUESSES constant",
+        "Export other game constants",
+        "Import in modules that need them",
+        "Remove constants from main.js"
+      ],
+      "passes": false,
+      "automatedTest": "P15.3 - src/utils/constants.js exists"
+    },
+    {
+      "id": "15.4",
+      "category": "structural",
+      "description": "Extract calculation utilities into src/utils/calculations.js",
+      "steps": [
+        "Create calculations.js in src/utils",
+        "Export getDistance function (Haversine formula)",
+        "Export getBearing function",
+        "Export getProximityColor function",
+        "Export areAdjacent function",
+        "Import in game logic modules",
+        "Remove from main.js"
+      ],
+      "passes": false,
+      "automatedTest": "P15.4 - src/utils/calculations.js exists with exports"
+    },
+    {
+      "id": "15.5",
+      "category": "structural",
+      "description": "Extract date utilities into src/utils/dateUtils.js",
+      "steps": [
+        "Create dateUtils.js in src/utils",
+        "Export getDailyCounty function (date-based seeding)",
+        "Export getGameNumber function",
+        "Export getTodaysDateString function",
+        "Export getTimeUntilNextDay function",
+        "Import in game modules",
+        "Remove from main.js"
+      ],
+      "passes": false,
+      "automatedTest": "P15.5 - src/utils/dateUtils.js exists"
+    },
+    {
+      "id": "15.6",
+      "category": "structural",
+      "description": "Extract map controller into src/map/mapController.js",
+      "steps": [
+        "Create src/map directory",
+        "Create mapController.js",
+        "Export initMap function",
+        "Export loadGeoJSON function",
+        "Export updateMapCounty function (color/highlight)",
+        "Export resetMapColors function",
+        "Export handleMapClick function",
+        "Manage countyLayers state internally",
+        "Import Leaflet dependency",
+        "Import in main.js",
+        "Remove map functions from main.js"
+      ],
+      "passes": false,
+      "automatedTest": "P15.6 - src/map/mapController.js exists"
+    },
+    {
+      "id": "15.7",
+      "category": "structural",
+      "description": "Extract storage layer into src/storage/persistence.js",
+      "steps": [
+        "Create src/storage directory",
+        "Create persistence.js",
+        "Export loadStatistics / saveStatistics",
+        "Export loadDailyState / saveDailyState",
+        "Export loadSettings / saveSettings",
+        "Encapsulate localStorage keys as constants",
+        "Import in main.js",
+        "Remove storage functions from main.js"
+      ],
+      "passes": false,
+      "automatedTest": "P15.7 - src/storage/persistence.js exists"
+    },
+    {
+      "id": "15.8",
+      "category": "structural",
+      "description": "Extract game state management into src/game/gameState.js",
+      "steps": [
+        "Create src/game directory",
+        "Create gameState.js",
+        "Export createGameState function (factory)",
+        "Export gameState object (will be replaced in Phase 16)",
+        "Export statistics object",
+        "Export settings object",
+        "Import in main.js",
+        "Remove state objects from main.js"
+      ],
+      "passes": false,
+      "automatedTest": "P15.8 - src/game/gameState.js exists"
+    },
+    {
+      "id": "15.9",
+      "category": "structural",
+      "description": "Extract game logic into src/game/gameLogic.js",
+      "steps": [
+        "Create gameLogic.js in src/game",
+        "Export initGame function",
+        "Export processGuess function",
+        "Export checkWinCondition function",
+        "Export getRandomCounty function",
+        "Import calculations, constants, state modules",
+        "Import in main.js",
+        "Remove game logic functions from main.js"
+      ],
+      "passes": false,
+      "automatedTest": "P15.9 - src/game/gameLogic.js exists"
+    },
+    {
+      "id": "15.10",
+      "category": "structural",
+      "description": "Extract locate mode into src/game/locateMode.js",
+      "steps": [
+        "Create locateMode.js in src/game",
+        "Export initLocateMode function",
+        "Export processLocateGuess function",
+        "Export getAdjacentHints function",
+        "Import in main.js",
+        "Remove locate mode functions from main.js"
+      ],
+      "passes": false,
+      "automatedTest": "P15.10 - src/game/locateMode.js exists"
+    },
+    {
+      "id": "15.11",
+      "category": "structural",
+      "description": "Extract UI components into src/ui/components.js",
+      "steps": [
+        "Create src/ui directory",
+        "Create components.js",
+        "Export updateGuessCounter function",
+        "Export updateStatsBar function",
+        "Export updateGuessHistory function",
+        "Export updateModeBadge function",
+        "Export showEndModal / hideModal functions",
+        "Export showHelp / hideHelp functions",
+        "Export showStartScreen / hideStartScreen functions",
+        "Import in main.js",
+        "Remove UI functions from main.js"
+      ],
+      "passes": false,
+      "automatedTest": "P15.11 - src/ui/components.js exists"
+    },
+    {
+      "id": "15.12",
+      "category": "structural",
+      "description": "Extract autocomplete into src/ui/autocomplete.js",
+      "steps": [
+        "Create autocomplete.js in src/ui",
+        "Export getAutocompleteMatches function",
+        "Export showAutocomplete function",
+        "Export hideAutocomplete function",
+        "Export updateSubmitButtonState function",
+        "Import counties data",
+        "Import in main.js",
+        "Remove autocomplete functions from main.js"
+      ],
+      "passes": false,
+      "automatedTest": "P15.12 - src/ui/autocomplete.js exists"
+    },
+    {
+      "id": "15.13",
+      "category": "structural",
+      "description": "Extract theme management into src/ui/theme.js",
+      "steps": [
+        "Create theme.js in src/ui",
+        "Export initTheme function",
+        "Export setTheme function",
+        "Export toggleTheme function",
+        "Export updateThemeButton function",
+        "Export updateAllMapBorders function",
+        "Import in main.js",
+        "Remove theme functions from main.js"
+      ],
+      "passes": false,
+      "automatedTest": "P15.13 - src/ui/theme.js exists"
+    },
+    {
+      "id": "15.14",
+      "category": "structural",
+      "description": "Extract confetti and animations into src/ui/confetti.js",
+      "steps": [
+        "Create confetti.js in src/ui",
+        "Export createConfetti function",
+        "Import in components.js for win modal",
+        "Remove from main.js"
+      ],
+      "passes": false,
+      "automatedTest": "P15.14 - src/ui/confetti.js exists"
+    },
+    {
+      "id": "15.15",
+      "category": "structural",
+      "description": "Refactor main.js to orchestrate modules and handle initialization",
+      "steps": [
+        "Import all necessary modules",
+        "Keep only initialization code in main.js",
+        "Keep only event listener wiring in main.js",
+        "Remove all exported functions (now in modules)",
+        "Verify main.js is under 200 lines",
+        "Verify main.js only coordinates between modules"
+      ],
+      "passes": false,
+      "automatedTest": "P15.15 - main.js is entry point only (<300 lines)"
+    },
+    {
+      "id": "15.16",
+      "category": "functional",
+      "description": "Verify all game functionality works with modular structure",
+      "steps": [
+        "Run 'npm run dev'",
+        "Test daily challenge mode end-to-end",
+        "Test practice mode end-to-end",
+        "Test locate mode end-to-end",
+        "Test statistics persistence",
+        "Test theme toggle",
+        "Test share functionality",
+        "Test autocomplete",
+        "Test all modals",
+        "Verify no console errors",
+        "Test on mobile responsive layout"
+      ],
+      "passes": false,
+      "automatedTest": "P15.16 - All functionality works with modules"
+    },
+    {
+      "id": "15.17",
+      "category": "functional",
+      "description": "Build and deploy modular version to verify production",
+      "steps": [
+        "Run 'npm run build'",
+        "Verify build completes without errors",
+        "Run 'npm run preview' and test locally",
+        "Push to GitHub",
+        "Verify GitHub Actions build succeeds",
+        "Test deployed version on Azure",
+        "Verify all game modes work in production"
+      ],
+      "passes": false,
+      "automatedTest": "P15.17 - Modular build deploys successfully"
+    }
+  ]
+}

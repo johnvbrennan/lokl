@@ -1,0 +1,241 @@
+{
+  "phase": 22,
+  "name": "Monitoring & Observability",
+  "goal": "Add error tracking, analytics, and performance monitoring for production insights",
+  "prds": [
+    {
+      "id": "22.1",
+      "category": "setup",
+      "description": "Choose and set up error tracking service (Sentry)",
+      "steps": [
+        "Create Sentry account (free tier)",
+        "Create new project for lokl",
+        "Install @sentry/browser: 'npm install @sentry/browser'",
+        "Get DSN (Data Source Name) from Sentry",
+        "Store DSN in environment variable",
+        "Verify Sentry dashboard accessible"
+      ],
+      "passes": false,
+      "automatedTest": "P22.1 - Sentry account and project created"
+    },
+    {
+      "id": "22.2",
+      "category": "integration",
+      "description": "Integrate Sentry for error tracking",
+      "steps": [
+        "Create src/services/monitoring.ts",
+        "Initialize Sentry with DSN",
+        "Configure environment (production/staging/dev)",
+        "Set release version from package.json",
+        "Configure sample rate (100% errors, 10% performance)",
+        "Add user context (anonymous ID)",
+        "Test error capture"
+      ],
+      "passes": false,
+      "automatedTest": "P22.2 - Sentry initialized"
+    },
+    {
+      "id": "22.3",
+      "category": "integration",
+      "description": "Add global error boundaries and handlers",
+      "steps": [
+        "Add window.onerror handler",
+        "Add unhandledrejection handler for Promise errors",
+        "Wrap game logic in try-catch with Sentry capture",
+        "Add breadcrumbs for user actions",
+        "Configure Sentry to ignore known errors",
+        "Test error capture in dev"
+      ],
+      "passes": false,
+      "automatedTest": "P22.3 - Error handlers configured"
+    },
+    {
+      "id": "22.4",
+      "category": "integration",
+      "description": "Add Sentry performance monitoring",
+      "steps": [
+        "Enable Sentry performance monitoring",
+        "Track page load performance",
+        "Track game initialization time",
+        "Track guess submission time",
+        "Track map rendering time",
+        "Add custom performance transactions",
+        "Verify performance data in Sentry dashboard"
+      ],
+      "passes": false,
+      "automatedTest": "P22.4 - Performance monitoring enabled"
+    },
+    {
+      "id": "22.5",
+      "category": "setup",
+      "description": "Choose and set up analytics service (Plausible or Umami - privacy-friendly)",
+      "steps": [
+        "Create Plausible or Umami account",
+        "Add site to analytics platform",
+        "Get tracking script URL",
+        "Decide on self-hosted vs cloud",
+        "Verify GDPR compliance (no cookies)",
+        "Verify dashboard access"
+      ],
+      "passes": false,
+      "automatedTest": "P22.5 - Analytics platform configured"
+    },
+    {
+      "id": "22.6",
+      "category": "integration",
+      "description": "Integrate privacy-friendly analytics",
+      "steps": [
+        "Add analytics script to index.html (or main.ts)",
+        "Configure to respect DNT (Do Not Track)",
+        "Track page views automatically",
+        "Create custom events wrapper",
+        "Add analytics to monitoring.ts service",
+        "Test event tracking in dev"
+      ],
+      "passes": false,
+      "automatedTest": "P22.6 - Analytics integrated"
+    },
+    {
+      "id": "22.7",
+      "category": "tracking",
+      "description": "Add custom event tracking for key user actions",
+      "steps": [
+        "Track game_started event (with mode: daily/practice/locate)",
+        "Track game_won event (with guesses: number)",
+        "Track game_lost event",
+        "Track guess_submitted event",
+        "Track theme_toggled event",
+        "Track share_clicked event",
+        "Track help_viewed event",
+        "Verify events appear in analytics dashboard"
+      ],
+      "passes": false,
+      "automatedTest": "P22.7 - Custom events tracked"
+    },
+    {
+      "id": "22.8",
+      "category": "tracking",
+      "description": "Add performance tracking to analytics",
+      "steps": [
+        "Track page load time",
+        "Track time to first interaction",
+        "Track game completion time",
+        "Track average guesses per game",
+        "Track difficulty level usage",
+        "Create performance dashboard view"
+      ],
+      "passes": false,
+      "automatedTest": "P22.8 - Performance metrics tracked"
+    },
+    {
+      "id": "22.9",
+      "category": "health",
+      "description": "Add application health monitoring",
+      "steps": [
+        "Create health check endpoint (/_health)",
+        "Check localStorage availability",
+        "Check GeoJSON load status",
+        "Check Leaflet initialization",
+        "Return health status JSON",
+        "Add uptime monitoring (UptimeRobot or similar)"
+      ],
+      "passes": false,
+      "automatedTest": "P22.9 - Health check endpoint created"
+    },
+    {
+      "id": "22.10",
+      "category": "feedback",
+      "description": "Add user feedback mechanism",
+      "steps": [
+        "Add feedback button to UI",
+        "Create feedback modal",
+        "Integrate with Sentry feedback widget (or custom form)",
+        "Collect user feedback with context",
+        "Send to Sentry or email endpoint",
+        "Test feedback submission"
+      ],
+      "passes": false,
+      "automatedTest": "P22.10 - User feedback available"
+    },
+    {
+      "id": "22.11",
+      "category": "alerts",
+      "description": "Configure alerting for critical errors",
+      "steps": [
+        "Set up Sentry alerts for error rate spikes",
+        "Configure email notifications",
+        "Set threshold for alert (e.g., >10 errors/hour)",
+        "Add alert for performance degradation",
+        "Test alert delivery",
+        "Document alert response procedure"
+      ],
+      "passes": false,
+      "automatedTest": "P22.11 - Alerts configured"
+    },
+    {
+      "id": "22.12",
+      "category": "dashboard",
+      "description": "Create monitoring dashboard",
+      "steps": [
+        "Set up Grafana or use Sentry/Analytics dashboards",
+        "Add panel for error rate",
+        "Add panel for active users",
+        "Add panel for game completion rate",
+        "Add panel for performance metrics",
+        "Add panel for feature usage",
+        "Share dashboard with team"
+      ],
+      "passes": false,
+      "automatedTest": "P22.12 - Dashboard created"
+    },
+    {
+      "id": "22.13",
+      "category": "compliance",
+      "description": "Add privacy policy and data collection disclosure",
+      "steps": [
+        "Create privacy policy page",
+        "Disclose Sentry error tracking",
+        "Disclose analytics (page views only)",
+        "Explain localStorage usage",
+        "Add opt-out mechanism",
+        "Link privacy policy in footer",
+        "Ensure GDPR/CCPA compliance"
+      ],
+      "passes": false,
+      "automatedTest": "P22.13 - Privacy policy added"
+    },
+    {
+      "id": "22.14",
+      "category": "environment",
+      "description": "Configure environment-specific monitoring",
+      "steps": [
+        "Disable Sentry in development",
+        "Use debug mode for Sentry in staging",
+        "Enable full monitoring in production",
+        "Configure different sample rates per environment",
+        "Use environment tags in Sentry",
+        "Test environment detection"
+      ],
+      "passes": false,
+      "automatedTest": "P22.14 - Environment-specific config working"
+    },
+    {
+      "id": "22.15",
+      "category": "functional",
+      "description": "Verify monitoring and analytics in production",
+      "steps": [
+        "Deploy to production with monitoring enabled",
+        "Generate test error to verify Sentry capture",
+        "Perform user actions to verify analytics tracking",
+        "Check Sentry dashboard for errors",
+        "Check analytics dashboard for events",
+        "Verify performance data collected",
+        "Test alert delivery",
+        "Monitor for false positives",
+        "Document monitoring setup in README"
+      ],
+      "passes": false,
+      "automatedTest": "P22.15 - Monitoring verified in production"
+    }
+  ]
+}

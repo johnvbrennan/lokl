@@ -1,0 +1,250 @@
+{
+  "phase": 21,
+  "name": "TypeScript Migration (Optional)",
+  "goal": "Add type safety with TypeScript to improve developer experience and catch errors at compile time",
+  "prds": [
+    {
+      "id": "21.1",
+      "category": "setup",
+      "description": "Install TypeScript and type definitions",
+      "steps": [
+        "Run 'npm install --save-dev typescript'",
+        "Run 'npm install --save-dev @types/leaflet'",
+        "Run 'npm install --save-dev @types/node'",
+        "Verify TypeScript installed correctly"
+      ],
+      "passes": false,
+      "automatedTest": "P21.1 - TypeScript dependencies installed"
+    },
+    {
+      "id": "21.2",
+      "category": "setup",
+      "description": "Create TypeScript configuration file",
+      "steps": [
+        "Create tsconfig.json in project root",
+        "Configure target: ES2020",
+        "Configure module: ESNext",
+        "Configure moduleResolution: bundler",
+        "Enable strict mode",
+        "Configure paths for absolute imports",
+        "Set outDir to dist",
+        "Configure source maps"
+      ],
+      "passes": false,
+      "automatedTest": "P21.2 - tsconfig.json created"
+    },
+    {
+      "id": "21.3",
+      "category": "setup",
+      "description": "Update Vite configuration for TypeScript",
+      "steps": [
+        "Rename vite.config.js to vite.config.ts",
+        "Update import statements with types",
+        "Verify Vite dev server works with TS config",
+        "Verify build works with TypeScript"
+      ],
+      "passes": false,
+      "automatedTest": "P21.3 - Vite configured for TypeScript"
+    },
+    {
+      "id": "21.4",
+      "category": "types",
+      "description": "Define core type definitions in src/types/index.ts",
+      "steps": [
+        "Create src/types directory",
+        "Create index.ts",
+        "Define County interface",
+        "Define GameState interface",
+        "Define Statistics interface",
+        "Define Settings interface",
+        "Define Guess interface",
+        "Define GameMode type union",
+        "Define GameStatus type union",
+        "Define ProximityColor type"
+      ],
+      "passes": false,
+      "automatedTest": "P21.4 - Core types defined"
+    },
+    {
+      "id": "21.5",
+      "category": "migration",
+      "description": "Migrate src/data files to TypeScript",
+      "steps": [
+        "Rename counties.js to counties.ts",
+        "Add County type to COUNTIES object",
+        "Rename adjacency.js to adjacency.ts",
+        "Add type for COUNTY_ADJACENCY",
+        "Verify no type errors",
+        "Update imports in dependent files"
+      ],
+      "passes": false,
+      "automatedTest": "P21.5 - Data files migrated to TS"
+    },
+    {
+      "id": "21.6",
+      "category": "migration",
+      "description": "Migrate src/utils files to TypeScript",
+      "steps": [
+        "Rename constants.js to constants.ts",
+        "Add types for all constants",
+        "Rename calculations.js to calculations.ts",
+        "Add function signatures with types",
+        "Rename dateUtils.js to dateUtils.ts",
+        "Add return types and parameter types",
+        "Verify type checking passes"
+      ],
+      "passes": false,
+      "automatedTest": "P21.6 - Utils files migrated to TS"
+    },
+    {
+      "id": "21.7",
+      "category": "migration",
+      "description": "Migrate src/store files to TypeScript",
+      "steps": [
+        "Rename store.js to store.ts",
+        "Add generic type for store state",
+        "Rename initialState.js to initialState.ts",
+        "Type initial state object",
+        "Rename actions.js to actions.ts",
+        "Type action creators and return types",
+        "Rename selectors.js to selectors.ts",
+        "Type selector functions"
+      ],
+      "passes": false,
+      "automatedTest": "P21.7 - Store files migrated to TS"
+    },
+    {
+      "id": "21.8",
+      "category": "migration",
+      "description": "Migrate src/game files to TypeScript",
+      "steps": [
+        "Rename gameState.js to gameState.ts",
+        "Type store instance and exports",
+        "Rename gameLogic.js to gameLogic.ts",
+        "Add function signatures and return types",
+        "Rename locateMode.js to locateMode.ts",
+        "Type all functions",
+        "Verify game logic type safety"
+      ],
+      "passes": false,
+      "automatedTest": "P21.8 - Game files migrated to TS"
+    },
+    {
+      "id": "21.9",
+      "category": "migration",
+      "description": "Migrate src/map files to TypeScript",
+      "steps": [
+        "Rename mapController.js to mapController.ts",
+        "Import Leaflet types",
+        "Type map instance and layer objects",
+        "Add types for GeoJSON handling",
+        "Verify Leaflet integration works with types"
+      ],
+      "passes": false,
+      "automatedTest": "P21.9 - Map files migrated to TS"
+    },
+    {
+      "id": "21.10",
+      "category": "migration",
+      "description": "Migrate src/storage files to TypeScript",
+      "steps": [
+        "Rename persistence.js to persistence.ts",
+        "Type localStorage keys as const",
+        "Type load/save functions with proper generics",
+        "Add error handling types",
+        "Verify type safety for storage operations"
+      ],
+      "passes": false,
+      "automatedTest": "P21.10 - Storage files migrated to TS"
+    },
+    {
+      "id": "21.11",
+      "category": "migration",
+      "description": "Migrate src/ui files to TypeScript",
+      "steps": [
+        "Rename components.js to components.ts",
+        "Type DOM element references",
+        "Type function parameters and returns",
+        "Rename autocomplete.js to autocomplete.ts",
+        "Rename theme.js to theme.ts",
+        "Rename confetti.js to confetti.ts",
+        "Add HTMLElement types throughout"
+      ],
+      "passes": false,
+      "automatedTest": "P21.11 - UI files migrated to TS"
+    },
+    {
+      "id": "21.12",
+      "category": "migration",
+      "description": "Migrate main.js and index.html to TypeScript",
+      "steps": [
+        "Rename main.js to main.ts",
+        "Update index.html script src to main.ts",
+        "Type all imports and references",
+        "Verify Vite processes TypeScript correctly",
+        "Test dev server with full TS setup"
+      ],
+      "passes": false,
+      "automatedTest": "P21.12 - Entry point migrated to TS"
+    },
+    {
+      "id": "21.13",
+      "category": "migration",
+      "description": "Update test files for TypeScript",
+      "steps": [
+        "Rename .test.js files to .test.ts",
+        "Update vitest config for TypeScript",
+        "Add types to test files",
+        "Type mock functions and fixtures",
+        "Verify all unit tests pass with TS"
+      ],
+      "passes": false,
+      "automatedTest": "P21.13 - Test files support TypeScript"
+    },
+    {
+      "id": "21.14",
+      "category": "quality",
+      "description": "Enable strict TypeScript checking",
+      "steps": [
+        "Enable strictNullChecks in tsconfig.json",
+        "Enable noImplicitAny",
+        "Enable strictFunctionTypes",
+        "Enable strictPropertyInitialization",
+        "Fix all strict mode errors",
+        "Verify no type errors remain"
+      ],
+      "passes": false,
+      "automatedTest": "P21.14 - Strict mode enabled, no errors"
+    },
+    {
+      "id": "21.15",
+      "category": "tooling",
+      "description": "Add TypeScript to CI/CD pipeline",
+      "steps": [
+        "Add 'tsc --noEmit' step to GitHub Actions (type check only)",
+        "Configure type checking to run before tests",
+        "Fail build on type errors",
+        "Add TypeScript badge to README",
+        "Document TypeScript usage in contribution guide"
+      ],
+      "passes": false,
+      "automatedTest": "P21.15 - TypeScript checking in CI"
+    },
+    {
+      "id": "21.16",
+      "category": "functional",
+      "description": "Verify all functionality works with TypeScript",
+      "steps": [
+        "Run 'npm run dev' and test app",
+        "Verify no type errors in console",
+        "Test all game modes",
+        "Run 'npm run test' and verify all tests pass",
+        "Run 'npm run build' and verify clean build",
+        "Deploy and test in production",
+        "Verify IntelliSense works in VS Code"
+      ],
+      "passes": false,
+      "automatedTest": "P21.16 - Full TypeScript migration complete"
+    }
+  ]
+}

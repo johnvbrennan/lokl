@@ -1,0 +1,208 @@
+{
+  "phase": 16,
+  "name": "State Management Refactoring",
+  "goal": "Implement centralized state management pattern to eliminate global variables and provide single source of truth",
+  "prds": [
+    {
+      "id": "16.1",
+      "category": "structural",
+      "description": "Create state store implementation in src/store/store.js",
+      "steps": [
+        "Create src/store directory",
+        "Create store.js",
+        "Implement createStore function with subscribe/getState/setState methods",
+        "Add state update listeners (observer pattern)",
+        "Add state immutability enforcement",
+        "Add dev tools for state debugging"
+      ],
+      "passes": false,
+      "automatedTest": "P16.1 - src/store/store.js exists with createStore"
+    },
+    {
+      "id": "16.2",
+      "category": "structural",
+      "description": "Define state shape and initial state in src/store/initialState.js",
+      "steps": [
+        "Create initialState.js in src/store",
+        "Define gameState shape (targetCounty, guesses, status, mode, gameNumber)",
+        "Define statistics shape (gamesPlayed, gamesWon, streaks, distribution)",
+        "Define settings shape (difficulty, theme)",
+        "Define ui shape (modals, loading states)",
+        "Export getInitialState function"
+      ],
+      "passes": false,
+      "automatedTest": "P16.2 - src/store/initialState.js exists"
+    },
+    {
+      "id": "16.3",
+      "category": "structural",
+      "description": "Create actions for game state updates in src/store/actions.js",
+      "steps": [
+        "Create actions.js in src/store",
+        "Export startNewGame action",
+        "Export submitGuess action",
+        "Export endGame action",
+        "Export updateStatistics action",
+        "Export updateSettings action",
+        "Export toggleTheme action",
+        "Each action returns state update object"
+      ],
+      "passes": false,
+      "automatedTest": "P16.3 - src/store/actions.js exists with action creators"
+    },
+    {
+      "id": "16.4",
+      "category": "structural",
+      "description": "Create selectors for reading state in src/store/selectors.js",
+      "steps": [
+        "Create selectors.js in src/store",
+        "Export getGameState selector",
+        "Export getStatistics selector",
+        "Export getSettings selector",
+        "Export getCurrentGuesses selector",
+        "Export getTargetCounty selector",
+        "Export getGameStatus selector",
+        "Selectors take full state and return specific slice"
+      ],
+      "passes": false,
+      "automatedTest": "P16.4 - src/store/selectors.js exists"
+    },
+    {
+      "id": "16.5",
+      "category": "refactoring",
+      "description": "Refactor src/game/gameState.js to use centralized store",
+      "steps": [
+        "Import createStore from store.js",
+        "Initialize store with initial state",
+        "Replace direct state mutations with store.setState",
+        "Export store instance",
+        "Remove standalone gameState/statistics/settings objects",
+        "Update all getters to use selectors"
+      ],
+      "passes": false,
+      "automatedTest": "P16.5 - gameState.js uses store"
+    },
+    {
+      "id": "16.6",
+      "category": "refactoring",
+      "description": "Refactor src/game/gameLogic.js to use store actions",
+      "steps": [
+        "Import store from gameState.js",
+        "Import actions from actions.js",
+        "Update initGame to dispatch startNewGame action",
+        "Update processGuess to dispatch submitGuess action",
+        "Update game end logic to dispatch endGame action",
+        "Remove direct state mutations"
+      ],
+      "passes": false,
+      "automatedTest": "P16.6 - gameLogic.js uses store actions"
+    },
+    {
+      "id": "16.7",
+      "category": "refactoring",
+      "description": "Refactor src/ui/components.js to subscribe to store updates",
+      "steps": [
+        "Import store from gameState.js",
+        "Import selectors from selectors.js",
+        "Subscribe to store changes for UI updates",
+        "Update UI functions to read from selectors instead of globals",
+        "Trigger re-renders on state changes",
+        "Remove direct state access"
+      ],
+      "passes": false,
+      "automatedTest": "P16.7 - components.js subscribes to store"
+    },
+    {
+      "id": "16.8",
+      "category": "refactoring",
+      "description": "Refactor src/storage/persistence.js to sync with store",
+      "steps": [
+        "Import store from gameState.js",
+        "Subscribe to state changes for auto-save",
+        "Update load functions to initialize store state",
+        "Update save functions to read from store",
+        "Remove direct localStorage writes from other modules"
+      ],
+      "passes": false,
+      "automatedTest": "P16.8 - persistence.js syncs with store"
+    },
+    {
+      "id": "16.9",
+      "category": "refactoring",
+      "description": "Refactor src/ui/theme.js to use store for theme state",
+      "steps": [
+        "Import store and theme actions",
+        "Update setTheme to dispatch action",
+        "Update toggleTheme to dispatch action",
+        "Subscribe to theme changes",
+        "Remove theme from localStorage (move to store)"
+      ],
+      "passes": false,
+      "automatedTest": "P16.9 - theme.js uses store"
+    },
+    {
+      "id": "16.10",
+      "category": "refactoring",
+      "description": "Update main.js to initialize store and subscriptions",
+      "steps": [
+        "Import store from gameState.js",
+        "Load persisted state from localStorage on init",
+        "Initialize store with loaded state",
+        "Set up store subscriptions for persistence",
+        "Set up store subscriptions for UI updates",
+        "Remove global variable references"
+      ],
+      "passes": false,
+      "automatedTest": "P16.10 - main.js initializes store"
+    },
+    {
+      "id": "16.11",
+      "category": "functional",
+      "description": "Add state debugging tools for development",
+      "steps": [
+        "Add getState method to window in dev mode",
+        "Add store history tracking (last 10 states)",
+        "Add state change logging in dev mode",
+        "Add performance monitoring for state updates",
+        "Verify debugging tools work in dev server"
+      ],
+      "passes": false,
+      "automatedTest": "P16.11 - State debugging available in dev mode"
+    },
+    {
+      "id": "16.12",
+      "category": "functional",
+      "description": "Verify all game functionality with centralized state management",
+      "steps": [
+        "Run 'npm run dev'",
+        "Open browser console and verify store is accessible",
+        "Test daily challenge - verify state updates correctly",
+        "Test practice mode - verify independent game state",
+        "Test locate mode - verify mode switching",
+        "Test guess submission - verify state changes",
+        "Test statistics updates - verify persistence",
+        "Test theme toggle - verify state sync",
+        "Verify no global variables leak",
+        "Check for console errors"
+      ],
+      "passes": false,
+      "automatedTest": "P16.12 - All features work with store"
+    },
+    {
+      "id": "16.13",
+      "category": "functional",
+      "description": "Build and deploy state management refactor",
+      "steps": [
+        "Run 'npm run build'",
+        "Verify production build excludes debug code",
+        "Run 'npm run preview' and test",
+        "Push to GitHub",
+        "Verify deployment succeeds",
+        "Test production site",
+        "Monitor for state-related errors"
+      ],
+      "passes": false,
+      "automatedTest": "P16.13 - State management deployed successfully"
+    }
+  ]
+}
