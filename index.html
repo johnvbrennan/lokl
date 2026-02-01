@@ -2687,20 +2687,23 @@
             resetMapColors();
             clearResultLine();
 
+            const maxGuesses = getMaxGuesses();
             for (let i = 0; i < 6; i++) {
                 const slot = document.getElementById(`slot-${i}`);
                 slot.style.backgroundColor = '';
                 slot.classList.remove('filled', 'warning');
+                // Show/hide slots based on difficulty
+                slot.style.display = i < maxGuesses ? '' : 'none';
             }
 
             document.getElementById('guess-list').innerHTML = '';
-            document.getElementById('stat-guesses').textContent = '0/6';
+            document.getElementById('stat-guesses').textContent = `0/${maxGuesses}`;
             document.getElementById('stat-closest').textContent = '--';
             document.getElementById('stat-province').textContent = '--';
 
             // NEW: Reset floating UI elements
             document.getElementById('guess-rail').innerHTML = '';
-            document.getElementById('guess-counter-pill').textContent = '0/6';
+            document.getElementById('guess-counter-pill').textContent = `0/${maxGuesses}`;
 
             enableInput();
             updateSubmitButtonState();
