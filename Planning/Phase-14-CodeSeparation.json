@@ -14,7 +14,7 @@
         "Verify package.json has correct dependencies",
         "Verify node_modules folder created"
       ],
-      "passes": false,
+      "passes": true,
       "automatedTest": "P14.1 - package.json exists with vite dependency"
     },
     {
@@ -28,7 +28,7 @@
         "Set base path for Azure Static Web Apps",
         "Verify configuration syntax is valid"
       ],
-      "passes": false,
+      "passes": true,
       "automatedTest": "P14.2 - vite.config.js exists"
     },
     {
@@ -43,7 +43,7 @@
         "Verify all media queries preserved",
         "Verify theme styling preserved"
       ],
-      "passes": false,
+      "passes": true,
       "automatedTest": "P14.3 - src/styles/main.css exists"
     },
     {
@@ -58,7 +58,7 @@
         "Verify all constants preserved",
         "Verify all event listeners preserved"
       ],
-      "passes": false,
+      "passes": true,
       "automatedTest": "P14.4 - src/main.js exists"
     },
     {
@@ -73,7 +73,7 @@
         "Verify Leaflet CSS and JS imports preserved",
         "Verify all HTML elements preserved"
       ],
-      "passes": false,
+      "passes": true,
       "automatedTest": "P14.5 - New index.html exists with separate imports"
     },
     {
@@ -87,7 +87,7 @@
         "Delete old assets directory",
         "Verify GeoJSON loads correctly"
       ],
-      "passes": false,
+      "passes": true,
       "automatedTest": "P14.6 - public/assets/ireland.json exists"
     },
     {
@@ -102,7 +102,7 @@
         "Run 'npm run build' and verify dist folder created",
         "Run 'npm run preview' and verify built app works"
       ],
-      "passes": false,
+      "passes": true,
       "automatedTest": "P14.7 - npm scripts defined in package.json"
     },
     {
@@ -122,7 +122,7 @@
         "Test autocomplete",
         "Test responsive layout on mobile width"
       ],
-      "passes": false,
+      "passes": true,
       "automatedTest": "P14.8 - All game modes functional in dev server"
     },
     {
@@ -139,7 +139,7 @@
         "Test locate mode in production build",
         "Verify no console errors in production"
       ],
-      "passes": false,
+      "passes": true,
       "automatedTest": "P14.9 - Production build successful"
     },
     {
@@ -156,7 +156,7 @@
         "Push and verify GitHub Actions runs successfully",
         "Verify deployed site works on Azure"
       ],
-      "passes": false,
+      "passes": true,
       "automatedTest": "P14.10 - GitHub Actions workflow updated"
     },
     {
@@ -173,7 +173,7 @@
         "Verify no console errors",
         "Test share functionality generates correct URLs"
       ],
-      "passes": false,
+      "passes": true,
       "automatedTest": "P14.11 - Production deployment functional"
     },
     {
@@ -188,7 +188,7 @@
         "Delete assets/ie.json (unused file)",
         "Commit cleanup changes"
       ],
-      "passes": false,
+      "passes": true,
       "automatedTest": "P14.12 - Cleanup complete, .gitignore updated"
     }
   ]
