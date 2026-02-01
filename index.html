@@ -1142,8 +1142,11 @@
             }
 
             .locate-dock {
-                bottom: calc(12px + env(safe-area-inset-bottom));
+                /* Move to top on mobile to avoid conflict with guess pills */
+                bottom: auto;
+                top: calc(60px + env(safe-area-inset-top));
                 padding: var(--spacing-sm) var(--spacing-lg);
+                max-width: calc(100% - 24px);
             }
 
             .locate-target {
