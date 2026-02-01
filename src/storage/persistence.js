@@ -11,6 +11,37 @@ const KEYS = {
     THEME: 'loklTheme'
 };
 
+/**
+ * Set up store subscriptions for auto-save
+ * Call this from main.js after store initialization
+ * @param {Object} store - The application store
+ */
+export function setupPersistenceSubscriptions(store) {
+    // Subscribe to state changes for auto-save
+    store.subscribe((newState, oldState) => {
+        // Save statistics if changed
+        if (newState.statistics !== oldState.statistics) {
+            saveStatistics(newState.statistics);
+        }
+
+        // Save settings if changed
+        if (newState.settings !== oldState.settings) {
+            saveSettings(newState.settings);
+            saveTheme(newState.settings.theme);
+        }
+
+        // Save daily game state if in daily mode and game state changed
+        if (newState.game.mode === 'daily' && newState.game !== oldState.game) {
+            const dailyState = {
+                date: new Date().toISOString().split('T')[0],
+                guesses: newState.game.guesses,
+                status: newState.game.status
+            };
+            saveDailyState(dailyState);
+        }
+    });
+}
+
 // ============================================
 // STATISTICS
 // ============================================

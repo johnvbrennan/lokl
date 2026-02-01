@@ -15,7 +15,7 @@
         "Add state immutability enforcement",
         "Add dev tools for state debugging"
       ],
-      "passes": false,
+      "passes": true,
       "automatedTest": "P16.1 - src/store/store.js exists with createStore"
     },
     {
@@ -30,7 +30,7 @@
         "Define ui shape (modals, loading states)",
         "Export getInitialState function"
       ],
-      "passes": false,
+      "passes": true,
       "automatedTest": "P16.2 - src/store/initialState.js exists"
     },
     {
@@ -47,7 +47,7 @@
         "Export toggleTheme action",
         "Each action returns state update object"
       ],
-      "passes": false,
+      "passes": true,
       "automatedTest": "P16.3 - src/store/actions.js exists with action creators"
     },
     {
@@ -64,7 +64,7 @@
         "Export getGameStatus selector",
         "Selectors take full state and return specific slice"
       ],
-      "passes": false,
+      "passes": true,
       "automatedTest": "P16.4 - src/store/selectors.js exists"
     },
     {
@@ -79,7 +79,7 @@
         "Remove standalone gameState/statistics/settings objects",
         "Update all getters to use selectors"
       ],
-      "passes": false,
+      "passes": true,
       "automatedTest": "P16.5 - gameState.js uses store"
     },
     {
@@ -94,7 +94,7 @@
         "Update game end logic to dispatch endGame action",
         "Remove direct state mutations"
       ],
-      "passes": false,
+      "passes": true,
       "automatedTest": "P16.6 - gameLogic.js uses store actions"
     },
     {
@@ -109,7 +109,7 @@
         "Trigger re-renders on state changes",
         "Remove direct state access"
       ],
-      "passes": false,
+      "passes": true,
       "automatedTest": "P16.7 - components.js subscribes to store"
     },
     {
@@ -123,7 +123,7 @@
         "Update save functions to read from store",
         "Remove direct localStorage writes from other modules"
       ],
-      "passes": false,
+      "passes": true,
       "automatedTest": "P16.8 - persistence.js syncs with store"
     },
     {
@@ -137,7 +137,7 @@
         "Subscribe to theme changes",
         "Remove theme from localStorage (move to store)"
       ],
-      "passes": false,
+      "passes": true,
       "automatedTest": "P16.9 - theme.js uses store"
     },
     {
@@ -152,7 +152,7 @@
         "Set up store subscriptions for UI updates",
         "Remove global variable references"
       ],
-      "passes": false,
+      "passes": true,
       "automatedTest": "P16.10 - main.js initializes store"
     },
     {
@@ -166,7 +166,7 @@
         "Add performance monitoring for state updates",
         "Verify debugging tools work in dev server"
       ],
-      "passes": false,
+      "passes": true,
       "automatedTest": "P16.11 - State debugging available in dev mode"
     },
     {
@@ -185,7 +185,7 @@
         "Verify no global variables leak",
         "Check for console errors"
       ],
-      "passes": false,
+      "passes": true,
       "automatedTest": "P16.12 - All features work with store"
     },
     {
@@ -201,7 +201,7 @@
         "Test production site",
         "Monitor for state-related errors"
       ],
-      "passes": false,
+      "passes": true,
       "automatedTest": "P16.13 - State management deployed successfully"
     }
   ]

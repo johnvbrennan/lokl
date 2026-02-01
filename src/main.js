@@ -22,12 +22,18 @@ import {
 } from './map/mapController.js';
 
 // Storage imports
-import { loadStatistics, loadSettings, saveSettings } from './storage/persistence.js';
+import { loadStatistics, loadSettings, saveSettings, setupPersistenceSubscriptions } from './storage/persistence.js';
 
 // Game imports
-import { gameState, statistics, settings, getMaxGuesses, setStatistics, setSettings } from './game/gameState.js';
+import { store, getMaxGuesses } from './game/gameState.js';
+import { setDifficulty } from './store/actions.js';
 import { initGame, processGuess } from './game/gameLogic.js';
 import { initLocateMode, exitLocateMode, startNextLocateRound } from './game/locateMode.js';
+
+// Helper functions to get state
+const getGame = () => store.getState().game;
+const getSettings = () => store.getState().settings;
+const getStats = () => store.getState().statistics;
 
 // UI imports
 import {
@@ -88,7 +94,7 @@ function updateDifficultyDisplay() {
         'hard': 'Hard'
     };
 
-    diffBtn.textContent = diffNames[settings.difficulty] || settings.difficulty;
+    diffBtn.textContent = diffNames[getSettings().difficulty] || getSettings().difficulty;
 }
 
 /**
@@ -161,7 +167,7 @@ function updateFloatingMenuState() {
     // Update any dynamic menu items based on current game state
     const menuStats = document.getElementById('menu-stats');
     if (menuStats) {
-        menuStats.style.display = gameState.status !== 'playing' ? '' : 'none';
+        menuStats.style.display = getGame().status !== 'playing' ? '' : 'none';
     }
 }
 
@@ -211,7 +217,7 @@ function resetUI() {
     if (list) list.innerHTML = '';
 
     clearGuessRail();
-    resetMapColors(gameState.mode);
+    resetMapColors(getGame().mode);
     clearResultLine();
     enableInput();
     clearInput();
@@ -233,10 +239,10 @@ function restoreGameUI() {
     const list = document.getElementById('guess-list');
     if (list) list.innerHTML = '';
 
-    resetMapColors(gameState.mode);
+    resetMapColors(getGame().mode);
 
-    gameState.guesses.forEach((guess, index) => {
-        updateMapCounty(guess.county, guess.color, guess.county === gameState.targetCounty);
+    getGame().guesses.forEach((guess, index) => {
+        updateMapCounty(guess.county, guess.color, guess.county === getGame().targetCounty);
         addGuessToHistory(guess, index + 1, highlightCounty, unhighlightCounty);
     });
 
@@ -245,7 +251,7 @@ function restoreGameUI() {
     updateGuessRail();
     updateGuessCounterPill();
 
-    if (gameState.status !== 'playing') {
+    if (getGame().status !== 'playing') {
         disableInput();
     }
 }
@@ -311,7 +317,7 @@ function handleExitLocateMode() {
     exitLocateMode(handleInitGame);
 
     // Update map click handler back to normal
-    setMapClickHandler(null, gameState.mode, gameState.status);
+    setMapClickHandler(null, getGame().mode, getGame().status);
 }
 
 // ============================================
@@ -319,13 +325,11 @@ function handleExitLocateMode() {
 // ============================================
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Initialize theme, statistics, and settings
-    initTheme(updateMapTiles, () => updateAllMapBorders(gameState.mode));
+    // Set up persistence subscriptions for auto-save
+    setupPersistenceSubscriptions(store);
 
-    const loadedStats = loadStatistics();
-    const loadedSettings = loadSettings();
-    setStatistics(loadedStats);
-    setSettings(loadedSettings);
+    // Initialize theme (reads from store, sets up subscriptions)
+    initTheme(updateMapTiles, () => updateAllMapBorders(getGame().mode));
 
     // Initialize start screen listeners
     initStartScreenListeners();
@@ -333,7 +337,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize map (this will call handleInitGame after GeoJSON loads)
     initMap(() => {
         handleInitGame('daily', true);
-        setMapClickHandler(null, gameState.mode, gameState.status);
+        setMapClickHandler(null, getGame().mode, getGame().status);
     });
 
     // ============================================
@@ -510,7 +514,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.getElementById('theme-toggle-btn').addEventListener('click', () => {
-        toggleTheme(updateMapTiles, () => updateAllMapBorders(gameState.mode));
+        toggleTheme(updateMapTiles, () => updateAllMapBorders(getGame().mode));
     });
 
     // ============================================
@@ -518,11 +522,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // ============================================
 
     document.getElementById('practice-btn').addEventListener('click', () => {
-        if (gameState.mode === 'locate') {
+        if (getGame().mode === 'locate') {
             handleExitLocateMode();
             document.getElementById('practice-btn').innerHTML = '🎯 <span class="btn-text">Practice</span>';
             document.getElementById('practice-btn').title = 'Practice Mode (P)';
-        } else if (gameState.mode === 'daily') {
+        } else if (getGame().mode === 'daily') {
             handleInitGame('practice');
             document.getElementById('practice-btn').innerHTML = '📅 <span class="btn-text">Daily</span>';
             document.getElementById('practice-btn').title = 'Return to Daily Challenge';
@@ -534,7 +538,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.getElementById('locate-btn').addEventListener('click', () => {
-        if (gameState.mode === 'locate') {
+        if (getGame().mode === 'locate') {
             handleExitLocateMode();
             document.getElementById('locate-btn').innerHTML = '📍 <span class="btn-text">Locate</span>';
         } else {
@@ -548,7 +552,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ============================================
 
     document.getElementById('stats-btn').addEventListener('click', () => {
-        if (gameState.status !== 'playing') {
+        if (getGame().status !== 'playing') {
             showEndModal(showResultLine);
         }
     });
@@ -602,8 +606,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Difficulty radio buttons
     document.querySelectorAll('input[name="difficulty"]').forEach(radio => {
         radio.addEventListener('change', (e) => {
-            settings.difficulty = e.target.value;
-            saveSettings(settings);
+            store.setState(setDifficulty(e.target.value), 'setDifficulty');
             refreshGuessHistory(highlightCounty, unhighlightCounty);
             updateModeBadge();
             updateDifficultyDisplay();
@@ -614,17 +617,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Mode badge click to cycle difficulty
     document.getElementById('mode-badge')?.addEventListener('click', () => {
-        if (gameState.mode === 'locate') return;
+        if (getGame().mode === 'locate') return;
 
         const difficulties = ['easy', 'medium', 'hard'];
-        const currentIndex = difficulties.indexOf(settings.difficulty);
+        const currentIndex = difficulties.indexOf(getSettings().difficulty);
         const nextIndex = (currentIndex + 1) % difficulties.length;
-        settings.difficulty = difficulties[nextIndex];
+        const newDifficulty = difficulties[nextIndex];
 
-        const radio = document.getElementById(`diff-${settings.difficulty}`);
+        store.setState(setDifficulty(newDifficulty), 'setDifficulty');
+
+        const radio = document.getElementById(`diff-${newDifficulty}`);
         if (radio) radio.checked = true;
 
-        saveSettings(settings);
         refreshGuessHistory(highlightCounty, unhighlightCounty);
         updateModeBadge();
         updateDifficultyDisplay();
@@ -635,14 +639,15 @@ document.addEventListener('DOMContentLoaded', () => {
     // Difficulty toggle button in header
     document.getElementById('difficulty-toggle-btn')?.addEventListener('click', () => {
         const difficulties = ['easy', 'medium', 'hard'];
-        const currentIndex = difficulties.indexOf(settings.difficulty);
+        const currentIndex = difficulties.indexOf(getSettings().difficulty);
         const nextIndex = (currentIndex + 1) % difficulties.length;
-        settings.difficulty = difficulties[nextIndex];
+        const newDifficulty = difficulties[nextIndex];
 
-        const radio = document.getElementById(`diff-${settings.difficulty}`);
+        store.setState(setDifficulty(newDifficulty), 'setDifficulty');
+
+        const radio = document.getElementById(`diff-${newDifficulty}`);
         if (radio) radio.checked = true;
 
-        saveSettings(settings);
         refreshGuessHistory(highlightCounty, unhighlightCounty);
         updateModeBadge();
         updateDifficultyDisplay();

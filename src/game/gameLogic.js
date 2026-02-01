@@ -7,8 +7,10 @@ import { COUNTIES } from '../data/counties.js';
 import { COLORS } from '../utils/constants.js';
 import { getDistance, getBearing, getProximityColor, areAdjacent } from '../utils/calculations.js';
 import { getDailyCounty, getGameNumber, getTodaysDateString, getRandomCounty } from '../utils/dateUtils.js';
-import { gameState, statistics, settings, getMaxGuesses, setGameState } from './gameState.js';
-import { loadDailyState, saveDailyState, saveStatistics } from '../storage/persistence.js';
+import { store, getMaxGuesses } from './gameState.js';
+import { startNewGame, restoreGame, submitGuess, endGame, updateStatistics as updateStatsAction } from '../store/actions.js';
+import { getGameState, getGameStatus, getGameMode, getTargetCounty, getCurrentGuesses } from '../store/selectors.js';
+import { loadDailyState, saveDailyState as persistDailyState, saveStatistics as persistStatistics } from '../storage/persistence.js';
 
 /**
  * Initialize a new game
@@ -29,40 +31,51 @@ export function initGame(mode = 'daily', suppressModal = false, callbacks = {}) 
     // Clear guess pills immediately
     if (clearGuessRail) clearGuessRail();
 
-    gameState.mode = mode;
-    gameState.guesses = [];
-    gameState.status = 'playing';
-
     if (mode === 'daily') {
-        gameState.targetCounty = getDailyCounty();
-        gameState.gameNumber = getGameNumber();
+        const targetCounty = getDailyCounty();
+        const gameNumber = getGameNumber();
 
+        // Check for saved daily state
         const savedState = loadDailyState();
         if (savedState && savedState.date === getTodaysDateString()) {
-            gameState.guesses = savedState.guesses;
-            gameState.status = savedState.status;
+            // Restore saved game
+            store.setState(
+                restoreGame({
+                    targetCounty,
+                    guesses: savedState.guesses,
+                    status: savedState.status,
+                    mode,
+                    gameNumber
+                }),
+                'restoreGame'
+            );
 
             if (restoreGameUI) restoreGameUI();
 
-            if (gameState.status !== 'playing' && !suppressModal && showEndModal) {
+            const state = store.getState();
+            if (state.game.status !== 'playing' && !suppressModal && showEndModal) {
                 // Show end modal with a note that this is today's completed challenge
                 setTimeout(() => {
                     showEndModal();
                     // Add a note to the modal
                     const modal = document.querySelector('.modal');
                     const subtitle = modal?.querySelector('.modal-subtitle');
-                    if (subtitle && gameState.status === 'won') {
+                    if (subtitle && state.game.status === 'won') {
                         subtitle.textContent = `You already completed today's challenge! Come back tomorrow for a new one.`;
-                    } else if (subtitle && gameState.status === 'lost') {
+                    } else if (subtitle && state.game.status === 'lost') {
                         subtitle.textContent = `You already attempted today's challenge. Come back tomorrow for a new one.`;
                     }
                 }, 300);
             }
             return false;
         }
+
+        // Start new daily game
+        store.setState(startNewGame(mode, targetCounty, gameNumber), 'startNewGame');
     } else {
-        gameState.targetCounty = getRandomCounty();
-        gameState.gameNumber = 0;
+        // Start practice or locate game
+        const targetCounty = getRandomCounty();
+        store.setState(startNewGame(mode, targetCounty, 0), 'startNewGame');
     }
 
     if (resetUI) resetUI();
@@ -92,6 +105,10 @@ export function processGuess(countyName, callbacks = {}) {
         hideAutocomplete
     } = callbacks;
 
+    // Get current state
+    const state = store.getState();
+    const gameState = state.game;
+
     // Validate guess
     if (gameState.status !== 'playing') return null;
     if (gameState.guesses.some(g => g.county === countyName)) return null;
@@ -118,11 +135,16 @@ export function processGuess(countyName, callbacks = {}) {
         isAdjacent
     };
 
-    gameState.guesses.push(guess);
+    // Add guess to store
+    store.setState(submitGuess(guess), 'submitGuess');
+
+    // Get updated state
+    const updatedState = store.getState();
+    const currentGuesses = updatedState.game.guesses;
 
     // Update UI
     if (updateMapCounty) updateMapCounty(countyName, color, isCorrect);
-    if (addGuessToHistory) addGuessToHistory(guess, gameState.guesses.length);
+    if (addGuessToHistory) addGuessToHistory(guess, currentGuesses.length);
     if (updateGuessCounter) updateGuessCounter();
     if (updateStatsBar) updateStatsBar();
     if (updateGuessRail) updateGuessRail();
@@ -130,43 +152,58 @@ export function processGuess(countyName, callbacks = {}) {
 
     // Check win/loss conditions
     if (isCorrect) {
-        gameState.status = 'won';
-        if (gameState.mode === 'locate') {
+        store.setState(endGame('won'), 'endGame');
+
+        if (updatedState.game.mode === 'locate') {
             // Locate mode: auto-start next round after delay
             if (startNextLocateRound) {
                 setTimeout(() => startNextLocateRound(), 1500);
             }
         } else {
-            updateStatistics(true, gameState.guesses.length);
-            saveDailyState();
+            updateStatistics(true, currentGuesses.length);
+            persistDailyState({
+                date: getTodaysDateString(),
+                guesses: currentGuesses,
+                status: 'won'
+            });
             if (showEndModal) {
                 setTimeout(() => showEndModal(), 500);
             }
         }
-    } else if (gameState.guesses.length >= getMaxGuesses()) {
-        gameState.status = 'lost';
+    } else if (currentGuesses.length >= getMaxGuesses()) {
+        store.setState(endGame('lost'), 'endGame');
+
         if (updateMapCounty) {
-            updateMapCounty(gameState.targetCounty, COLORS.CORRECT, true);
+            updateMapCounty(updatedState.game.targetCounty, COLORS.CORRECT, true);
         }
-        if (gameState.mode === 'locate') {
+
+        if (updatedState.game.mode === 'locate') {
             // Locate mode: show correct answer, then next round
             if (startNextLocateRound) {
                 setTimeout(() => startNextLocateRound(), 2000);
             }
         } else {
             updateStatistics(false);
-            saveDailyState();
+            persistDailyState({
+                date: getTodaysDateString(),
+                guesses: currentGuesses,
+                status: 'lost'
+            });
             if (showEndModal) {
                 setTimeout(() => showEndModal(), 500);
             }
         }
     }
 
-    if (gameState.mode === 'daily') {
-        saveDailyState();
+    if (updatedState.game.mode === 'daily') {
+        persistDailyState({
+            date: getTodaysDateString(),
+            guesses: currentGuesses,
+            status: updatedState.game.status
+        });
     }
 
-    if (gameState.status !== 'playing' && disableInput) {
+    if (updatedState.game.status !== 'playing' && disableInput) {
         disableInput();
     }
 
@@ -182,7 +219,8 @@ export function processGuess(countyName, callbacks = {}) {
  * @returns {boolean} True if player has won
  */
 export function checkWinCondition() {
-    return gameState.status === 'won';
+    const state = store.getState();
+    return state.game.status === 'won';
 }
 
 /**
@@ -191,19 +229,28 @@ export function checkWinCondition() {
  * @param {number|null} guessCount - Number of guesses (null if lost)
  */
 export function updateStatistics(won, guessCount = null) {
-    statistics.gamesPlayed++;
+    const state = store.getState();
+    const stats = state.statistics;
+
+    const updates = {
+        gamesPlayed: stats.gamesPlayed + 1,
+        lastPlayedDate: getTodaysDateString()
+    };
 
     if (won) {
-        statistics.gamesWon++;
-        statistics.currentStreak++;
-        statistics.bestStreak = Math.max(statistics.bestStreak, statistics.currentStreak);
+        updates.gamesWon = stats.gamesWon + 1;
+        updates.currentStreak = stats.currentStreak + 1;
+        updates.bestStreak = Math.max(stats.bestStreak, stats.currentStreak + 1);
+
         if (guessCount && guessCount >= 1 && guessCount <= 6) {
-            statistics.distribution[guessCount - 1]++;
+            const newDistribution = [...stats.distribution];
+            newDistribution[guessCount - 1]++;
+            updates.distribution = newDistribution;
         }
     } else {
-        statistics.currentStreak = 0;
+        updates.currentStreak = 0;
     }
 
-    statistics.lastPlayedDate = getTodaysDateString();
-    saveStatistics();
+    store.setState(updateStatsAction(updates), 'updateStatistics');
+    persistStatistics(store.getState().statistics);
 }

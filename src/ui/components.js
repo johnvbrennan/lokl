@@ -5,10 +5,15 @@
 
 import { COUNTIES } from '../data/counties.js';
 import { COLORS, COLOR_EMOJIS } from '../utils/constants.js';
-import { gameState, statistics, settings, getMaxGuesses } from '../game/gameState.js';
+import { store, getMaxGuesses } from '../game/gameState.js';
 import { loadDailyState } from '../storage/persistence.js';
 import { getTodaysDateString, getTimeUntilNextDay, formatTimeRemaining } from '../utils/dateUtils.js';
 import { createConfetti } from './confetti.js';
+
+// Helper functions to get state slices
+const getGame = () => store.getState().game;
+const getStats = () => store.getState().statistics;
+const getSettings = () => store.getState().settings;
 
 /**
  * Update the guess counter display
@@ -19,7 +24,7 @@ export function updateGuessCounter(highlightCounty, unhighlightCounty) {
     const maxGuesses = getMaxGuesses();
     const statGuesses = document.getElementById('stat-guesses');
     if (statGuesses) {
-        statGuesses.textContent = `${gameState.guesses.length}/${maxGuesses}`;
+        statGuesses.textContent = `${getGame().guesses.length}/${maxGuesses}`;
     }
 
     // Update slot visibility based on max guesses
@@ -30,7 +35,7 @@ export function updateGuessCounter(highlightCounty, unhighlightCounty) {
         }
     }
 
-    gameState.guesses.forEach((guess, index) => {
+    getGame().guesses.forEach((guess, index) => {
         const slot = document.getElementById(`slot-${index}`);
         if (slot) {
             slot.style.backgroundColor = guess.color;
@@ -45,10 +50,10 @@ export function updateGuessCounter(highlightCounty, unhighlightCounty) {
  * Update the stats bar with closest guess and province
  */
 export function updateStatsBar() {
-    if (gameState.guesses.length === 0) return;
+    if (getGame().guesses.length === 0) return;
 
-    const closest = gameState.guesses.reduce((min, g) => g.distance < min.distance ? g : min);
-    const showDistance = settings.difficulty === 'easy' || settings.difficulty === 'medium';
+    const closest = getGame().guesses.reduce((min, g) => g.distance < min.distance ? g : min);
+    const showDistance = getSettings().difficulty === 'easy' || getSettings().difficulty === 'medium';
 
     const statClosest = document.getElementById('stat-closest');
     const statProvince = document.getElementById('stat-province');
@@ -72,11 +77,11 @@ export function addGuessToHistory(guess, number, highlightCounty, unhighlightCou
     const list = document.getElementById('guess-list');
     if (!list) return;
 
-    const isCorrect = guess.county === gameState.targetCounty;
+    const isCorrect = guess.county === getGame().targetCounty;
 
     // Determine what to show based on difficulty
-    const showDistance = settings.difficulty === 'easy' || settings.difficulty === 'medium';
-    const showDirection = settings.difficulty === 'easy' || settings.difficulty === 'hard';
+    const showDistance = getSettings().difficulty === 'easy' || getSettings().difficulty === 'medium';
+    const showDirection = getSettings().difficulty === 'easy' || getSettings().difficulty === 'hard';
 
     const item = document.createElement('div');
     item.className = `guess-item${isCorrect ? ' correct' : ''}${guess.isAdjacent ? ' adjacent' : ''}`;
@@ -110,7 +115,7 @@ export function refreshGuessHistory(highlightCounty, unhighlightCounty) {
     if (!list) return;
 
     list.innerHTML = '';
-    gameState.guesses.forEach((guess, index) => {
+    getGame().guesses.forEach((guess, index) => {
         addGuessToHistory(guess, index + 1, highlightCounty, unhighlightCounty);
     });
 }
@@ -126,11 +131,11 @@ export function updateModeBadge() {
 
     // Build badge text with difficulty for non-locate modes
     let modeText = '';
-    if (gameState.mode === 'locate') {
+    if (getGame().mode === 'locate') {
         modeText = 'Locate';
         badge.classList.add('locate');
         badge.title = 'Locate Mode - Click counties to find them';
-    } else if (gameState.mode === 'practice') {
+    } else if (getGame().mode === 'practice') {
         modeText = 'Practice';
         badge.classList.add('practice');
     } else {
@@ -138,7 +143,7 @@ export function updateModeBadge() {
     }
 
     // Add difficulty indicator for guess modes with full names
-    if (gameState.mode !== 'locate') {
+    if (getGame().mode !== 'locate') {
         const diffNames = {
             'easy': 'Easy',
             'medium': 'Medium',
@@ -150,9 +155,9 @@ export function updateModeBadge() {
             'hard': 'Direction only, 4 guesses'
         };
 
-        const diffName = diffNames[settings.difficulty] || settings.difficulty;
+        const diffName = diffNames[getSettings().difficulty] || getSettings().difficulty;
         modeText += ` • ${diffName}`;
-        badge.title = `${modeText} (${diffDescriptions[settings.difficulty]})`;
+        badge.title = `${modeText} (${diffDescriptions[getSettings().difficulty]})`;
     }
 
     badge.textContent = modeText;
@@ -163,8 +168,8 @@ export function updateModeBadge() {
  * @param {Function} showResultLine - Callback to show result line on map
  */
 export function showEndModal(showResultLine) {
-    const isWin = gameState.status === 'won';
-    const county = COUNTIES[gameState.targetCounty];
+    const isWin = getGame().status === 'won';
+    const county = COUNTIES[getGame().targetCounty];
 
     const modalTitle = document.getElementById('modal-title');
     const starsEl = document.getElementById('modal-stars');
@@ -178,7 +183,7 @@ export function showEndModal(showResultLine) {
 
     if (starsEl) {
         if (isWin) {
-            const guessCount = gameState.guesses.length;
+            const guessCount = getGame().guesses.length;
             const ratings = ['🤯 Genius!', '🤩 Brilliant!', '😎 Great!', '😀 Good!', '🙂 Solid!', '😅 Phew!'];
             const stars = ['⭐⭐⭐⭐⭐', '⭐⭐⭐⭐', '⭐⭐⭐', '⭐⭐', '⭐', '✔️'];
             starsEl.innerHTML = `${stars[guessCount - 1]}<br>${ratings[guessCount - 1]}`;
@@ -187,21 +192,21 @@ export function showEndModal(showResultLine) {
         }
     }
 
-    if (modalCounty) modalCounty.textContent = gameState.targetCounty;
+    if (modalCounty) modalCounty.textContent = getGame().targetCounty;
     if (modalFact) modalFact.textContent = county.fact;
-    if (modalGuesses) modalGuesses.textContent = isWin ? gameState.guesses.length : 'X';
-    if (modalStreak) modalStreak.textContent = statistics.currentStreak;
+    if (modalGuesses) modalGuesses.textContent = isWin ? getGame().guesses.length : 'X';
+    if (modalStreak) modalStreak.textContent = getStats().currentStreak;
     if (modalWinPct) {
-        modalWinPct.textContent = statistics.gamesPlayed > 0
-            ? Math.round((statistics.gamesWon / statistics.gamesPlayed) * 100) + '%'
+        modalWinPct.textContent = getStats().gamesPlayed > 0
+            ? Math.round((getStats().gamesWon / getStats().gamesPlayed) * 100) + '%'
             : '0%';
     }
 
-    renderDistribution(isWin ? gameState.guesses.length : null);
+    renderDistribution(isWin ? getGame().guesses.length : null);
 
     const countdownContainer = document.getElementById('countdown-container');
     if (countdownContainer) {
-        if (gameState.mode === 'daily') {
+        if (getGame().mode === 'daily') {
             countdownContainer.style.display = 'block';
             startCountdown();
         } else {
@@ -240,10 +245,10 @@ export function renderDistribution(currentGuesses) {
 
     bars.innerHTML = '';
 
-    const maxCount = Math.max(...statistics.distribution, 1);
+    const maxCount = Math.max(...getStats().distribution, 1);
 
     for (let i = 0; i < 6; i++) {
-        const count = statistics.distribution[i];
+        const count = getStats().distribution[i];
         const percentage = (count / maxCount) * 100;
         const isCurrent = currentGuesses === i + 1;
 
@@ -336,7 +341,7 @@ export function hideStartScreen() {
  */
 export function updateStartScreenDifficulty() {
     document.querySelectorAll('.difficulty-btn').forEach(btn => {
-        btn.classList.toggle('selected', btn.dataset.difficulty === settings.difficulty);
+        btn.classList.toggle('selected', btn.dataset.difficulty === getSettings().difficulty);
     });
 }
 
@@ -380,14 +385,14 @@ export function disableInput() {
  * Update warning state for low guesses remaining
  */
 export function updateWarningState() {
-    const guessCount = gameState.guesses.length;
+    const guessCount = getGame().guesses.length;
     for (let i = 0; i < 6; i++) {
         const slot = document.getElementById(`slot-${i}`);
         if (slot) slot.classList.remove('warning');
     }
 
     // Warn on guess 5 and 6
-    if (guessCount >= 4 && gameState.status === 'playing') {
+    if (guessCount >= 4 && getGame().status === 'playing') {
         const nextSlot = document.getElementById(`slot-${guessCount}`);
         if (nextSlot) nextSlot.classList.add('warning');
     }
@@ -421,13 +426,13 @@ export function updateGuessRail() {
 
     rail.innerHTML = '';
 
-    gameState.guesses.forEach((guess, index) => {
+    getGame().guesses.forEach((guess, index) => {
         const pill = document.createElement('div');
         pill.className = 'guess-pill glass neon-border';
         pill.style.borderColor = guess.color;
         pill.style.boxShadow = `0 0 10px ${guess.color}40`;
 
-        const isCorrect = guess.county === gameState.targetCounty;
+        const isCorrect = guess.county === getGame().targetCounty;
         if (isCorrect) {
             pill.classList.add('correct');
         }
@@ -443,7 +448,7 @@ export function updateGuessRail() {
 export function updateGuessCounterPill() {
     const pill = document.getElementById('guess-counter-pill');
     if (pill) {
-        pill.textContent = `${gameState.guesses.length}/${getMaxGuesses()}`;
+        pill.textContent = `${getGame().guesses.length}/${getMaxGuesses()}`;
     }
 }
 
@@ -497,9 +502,9 @@ export function resetUI(resetMapColors, clearResultLine, updateSubmitButtonState
 export function restoreGameUI(updateMapCounty, highlightCounty, unhighlightCounty, resetUI) {
     if (resetUI) resetUI();
 
-    gameState.guesses.forEach((guess, index) => {
+    getGame().guesses.forEach((guess, index) => {
         if (updateMapCounty) {
-            updateMapCounty(guess.county, guess.color, guess.county === gameState.targetCounty);
+            updateMapCounty(guess.county, guess.color, guess.county === getGame().targetCounty);
         }
         addGuessToHistory(guess, index + 1, highlightCounty, unhighlightCounty);
     });
@@ -509,10 +514,10 @@ export function restoreGameUI(updateMapCounty, highlightCounty, unhighlightCount
     updateGuessCounterPill();
     updateStatsBar();
 
-    if (gameState.status !== 'playing') {
+    if (getGame().status !== 'playing') {
         disableInput();
-        if (gameState.status === 'lost' && updateMapCounty) {
-            updateMapCounty(gameState.targetCounty, COLORS.CORRECT, true);
+        if (getGame().status === 'lost' && updateMapCounty) {
+            updateMapCounty(getGame().targetCounty, COLORS.CORRECT, true);
         }
     }
 }
@@ -521,15 +526,15 @@ export function restoreGameUI(updateMapCounty, highlightCounty, unhighlightCount
  * Share game result
  */
 export function shareResult() {
-    const isWin = gameState.status === 'won';
-    const emojis = gameState.guesses.map(g => {
-        if (g.isAdjacent && g.county !== gameState.targetCounty) return '🔗';
+    const isWin = getGame().status === 'won';
+    const emojis = getGame().guesses.map(g => {
+        if (g.isAdjacent && g.county !== getGame().targetCounty) return '🔗';
         return COLOR_EMOJIS[g.color] || '⬜';
     }).join('');
-    const score = isWin ? gameState.guesses.length : 'X';
-    const difficultyLabel = settings.difficulty.charAt(0).toUpperCase() + settings.difficulty.slice(1);
+    const score = isWin ? getGame().guesses.length : 'X';
+    const difficultyLabel = getSettings().difficulty.charAt(0).toUpperCase() + getSettings().difficulty.slice(1);
 
-    const text = `Locle #${gameState.gameNumber} ${score}/6 (${difficultyLabel})\n${emojis}\nhttps://locle.app`;
+    const text = `Locle #${getGame().gameNumber} ${score}/6 (${difficultyLabel})\n${emojis}\nhttps://locle.app`;
 
     if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(text)

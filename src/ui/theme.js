@@ -3,19 +3,27 @@
 // Functions for light/dark theme toggling
 // ============================================
 
-import { loadTheme, saveTheme } from '../storage/persistence.js';
-
-// Track current theme
-let currentTheme = 'light';
+import { store } from '../game/gameState.js';
+import { setTheme as setThemeAction, toggleTheme as toggleThemeAction } from '../store/actions.js';
 
 /**
- * Initialize theme from localStorage
+ * Initialize theme from store and set up DOM
  * @param {Function} updateMapTiles - Callback to update map tiles
  * @param {Function} updateAllMapBorders - Callback to update map borders
  */
 export function initTheme(updateMapTiles, updateAllMapBorders) {
-    const savedTheme = loadTheme();
-    setTheme(savedTheme, updateMapTiles, updateAllMapBorders);
+    const state = store.getState();
+    const theme = state.settings.theme;
+
+    // Apply theme to DOM
+    applyThemeToDOM(theme, updateMapTiles, updateAllMapBorders);
+
+    // Subscribe to theme changes
+    store.subscribe((newState, oldState) => {
+        if (newState.settings.theme !== oldState.settings.theme) {
+            applyThemeToDOM(newState.settings.theme, updateMapTiles, updateAllMapBorders);
+        }
+    });
 }
 
 /**
@@ -25,13 +33,8 @@ export function initTheme(updateMapTiles, updateAllMapBorders) {
  * @param {Function} updateAllMapBorders - Callback to update map borders
  */
 export function setTheme(theme, updateMapTiles, updateAllMapBorders) {
-    currentTheme = theme;
-    document.documentElement.setAttribute('data-theme', theme);
-    saveTheme(theme);
-    updateThemeButton();
-
-    if (updateMapTiles) updateMapTiles(theme);
-    if (updateAllMapBorders) updateAllMapBorders();
+    store.setState(setThemeAction(theme), 'setTheme');
+    // DOM update happens via subscription
 }
 
 /**
@@ -40,28 +43,49 @@ export function setTheme(theme, updateMapTiles, updateAllMapBorders) {
  * @param {Function} updateAllMapBorders - Callback to update map borders
  */
 export function toggleTheme(updateMapTiles, updateAllMapBorders) {
-    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-    setTheme(newTheme, updateMapTiles, updateAllMapBorders);
+    store.setState(toggleThemeAction(), 'toggleTheme');
+    // DOM update happens via subscription
+}
+
+/**
+ * Apply theme to DOM
+ * @param {string} theme - Theme to apply
+ * @param {Function} updateMapTiles - Callback to update map tiles
+ * @param {Function} updateAllMapBorders - Callback to update map borders
+ */
+function applyThemeToDOM(theme, updateMapTiles, updateAllMapBorders) {
+    document.documentElement.setAttribute('data-theme', theme);
+    updateThemeButton(theme);
+
+    if (updateMapTiles) updateMapTiles(theme);
+    if (updateAllMapBorders) updateAllMapBorders();
 }
 
 /**
  * Update theme button icon and tooltip
+ * @param {string} theme - Current theme (optional, reads from store if not provided)
  */
-export function updateThemeButton() {
+export function updateThemeButton(theme) {
+    if (!theme) {
+        const state = store.getState();
+        theme = state.settings.theme;
+    }
+
     const btn = document.getElementById('theme-toggle-btn');
     if (!btn) return;
 
     const icon = btn.querySelector('.menu-icon');
     if (icon) {
-        icon.textContent = currentTheme === 'dark' ? '☀️' : '🌙';
+        icon.textContent = theme === 'dark' ? '☀️' : '🌙';
     }
-    btn.title = currentTheme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode';
+    btn.title = theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode';
 }
 
 /**
- * Get current theme
+ * Get current theme from store
  * @returns {string} Current theme ('light' or 'dark')
  */
 export function getCurrentTheme() {
-    return currentTheme;
+    const state = store.getState();
+    return state.settings.theme;
 }
