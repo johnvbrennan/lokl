@@ -3731,6 +3731,8 @@
             // Menu item handlers
             document.getElementById('menu-new-game').addEventListener('click', () => {
                 floatingMenu.classList.remove('visible');
+                // Clear previous game UI before showing start screen
+                document.getElementById('guess-rail').innerHTML = '';
                 // Show the start screen to let user choose game type
                 document.getElementById('start-overlay').classList.add('visible');
                 updateStartScreenDifficulty();
