@@ -2500,7 +2500,18 @@
                     gameState.status = savedState.status;
                     restoreGameUI();
                     if (gameState.status !== 'playing' && !suppressModal) {
-                        showEndModal();
+                        // Show end modal with a note that this is today's completed challenge
+                        setTimeout(() => {
+                            showEndModal();
+                            // Add a note to the modal
+                            const modal = document.querySelector('.modal');
+                            const subtitle = modal?.querySelector('.modal-subtitle');
+                            if (subtitle && gameState.status === 'won') {
+                                subtitle.textContent = `You already completed today's challenge! Come back tomorrow for a new one.`;
+                            } else if (subtitle && gameState.status === 'lost') {
+                                subtitle.textContent = `You already attempted today's challenge. Come back tomorrow for a new one.`;
+                            }
+                        }, 300);
                     }
                     return;
                 }
