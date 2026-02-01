@@ -2162,6 +2162,7 @@
         let map = null;
         let countyLayers = {}; // Store layer references by county name
         let geoJsonLayer = null;
+        let tileLayer = null; // Store reference to current tile layer
 
         function initMap() {
             // Create map centered on Ireland
@@ -2174,15 +2175,35 @@
                 attributionControl: true
             });
 
-            // Add dark tile layer WITHOUT labels (CartoDB Dark Matter No Labels)
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
-                subdomains: 'abcd',
-                maxZoom: 20
-            }).addTo(map);
+            // Add initial tile layer based on current theme
+            updateMapTiles();
 
             // Load GeoJSON after tiles
             loadGeoJSON();
+        }
+
+        function updateMapTiles() {
+            // Remove existing tile layer if it exists
+            if (tileLayer && map) {
+                map.removeLayer(tileLayer);
+            }
+
+            // Choose tile layer based on current theme
+            const isDark = currentTheme === 'dark';
+            const tileUrl = isDark
+                ? 'https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png'
+                : 'https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png';
+
+            // Create and add the appropriate tile layer
+            tileLayer = L.tileLayer(tileUrl, {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+                subdomains: 'abcd',
+                maxZoom: 20
+            });
+
+            if (map) {
+                tileLayer.addTo(map);
+            }
         }
 
         function loadGeoJSON() {
@@ -3454,7 +3475,7 @@
             document.documentElement.setAttribute('data-theme', theme);
             localStorage.setItem('loklTheme', theme);
             updateThemeButton();
-            updateMapTileFilters();
+            updateMapTiles();
             updateAllMapBorders();
         }
 
@@ -3472,20 +3493,6 @@
                 }
                 btn.title = currentTheme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode';
             }
-        }
-
-        function updateMapTileFilters() {
-            // Wait a bit for the map to be initialized
-            setTimeout(() => {
-                const tilePane = document.querySelector('.leaflet-tile-pane');
-                if (tilePane) {
-                    if (currentTheme === 'light') {
-                        tilePane.style.filter = 'brightness(1) contrast(1) saturate(1)';
-                    } else {
-                        tilePane.style.filter = 'brightness(0.7) contrast(1.2) saturate(0.8)';
-                    }
-                }
-            }, 100);
         }
 
         function updateAllMapBorders() {
