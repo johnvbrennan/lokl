@@ -2489,6 +2489,9 @@
         // ============================================
 
         function initGame(mode = 'daily', suppressModal = false) {
+            // Clear guess pills immediately
+            document.getElementById('guess-rail').innerHTML = '';
+
             gameState.mode = mode;
             gameState.guesses = [];
             gameState.status = 'playing';
@@ -2532,6 +2535,9 @@
         // ============================================
 
         function initLocateMode() {
+            // Clear guess pills immediately
+            document.getElementById('guess-rail').innerHTML = '';
+
             gameState.mode = 'locate';
             gameState.guesses = [];
             gameState.status = 'playing';
@@ -2945,6 +2951,9 @@
         let selectedStartDifficulty = 'medium';
 
         function showStartScreen() {
+            // Clear any previous game UI
+            document.getElementById('guess-rail').innerHTML = '';
+
             document.getElementById('start-overlay').classList.add('visible');
             // Sync difficulty button with current settings
             updateStartScreenDifficulty();
