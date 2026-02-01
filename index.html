@@ -1218,6 +1218,36 @@
             max-width: 500px;
         }
 
+        .modal-close-btn {
+            position: absolute;
+            top: var(--spacing-md);
+            right: var(--spacing-md);
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 2rem;
+            line-height: 1;
+            cursor: pointer;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+            z-index: 1;
+        }
+
+        .modal-close-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+        }
+
+        .modal-close-btn:active {
+            transform: scale(0.95);
+        }
+
         .help-section {
             text-align: left;
             margin-bottom: var(--spacing-lg);
@@ -1725,7 +1755,7 @@
                             </div>
                             <div class="settings-option">
                                 <input type="radio" name="difficulty" id="diff-hard" value="hard">
-                                <label for="diff-hard">Hard <span class="diff-desc">Direction only</span></label>
+                                <label for="diff-hard">Hard <span class="diff-desc">Direction only, 4 guesses</span></label>
                             </div>
                         </div>
                     </div>
@@ -1896,6 +1926,7 @@
     <!-- Help Modal -->
     <div class="modal-overlay" id="help-overlay">
         <div class="modal help-modal">
+            <button class="modal-close-btn" id="close-help-x" aria-label="Close help">&times;</button>
             <h2 class="modal-title">How to Play</h2>
 
             <div class="help-section">
@@ -1983,7 +2014,7 @@
                     </button>
                     <button class="difficulty-btn" data-difficulty="hard">
                         <span class="diff-name">Hard</span>
-                        <span class="diff-hint">Direction only</span>
+                        <span class="diff-hint">Direction only, 4 guesses</span>
                     </button>
                 </div>
             </div>
@@ -2144,6 +2175,10 @@
         let settings = {
             difficulty: 'medium' // 'easy', 'medium', 'hard'
         };
+
+        function getMaxGuesses() {
+            return settings.difficulty === 'hard' ? 4 : 6;
+        }
 
         let statistics = {
             gamesPlayed: 0,
@@ -2606,7 +2641,7 @@
                     saveDailyState();
                     setTimeout(() => showEndModal(), 500);
                 }
-            } else if (gameState.guesses.length >= 6) {
+            } else if (gameState.guesses.length >= getMaxGuesses()) {
                 gameState.status = 'lost';
                 updateMapCounty(gameState.targetCounty, COLORS.CORRECT, true);
                 if (gameState.mode === 'locate') {
@@ -2721,12 +2756,23 @@
         }
 
         function updateGuessCounter() {
-            document.getElementById('stat-guesses').textContent = `${gameState.guesses.length}/6`;
+            const maxGuesses = getMaxGuesses();
+            document.getElementById('stat-guesses').textContent = `${gameState.guesses.length}/${maxGuesses}`;
+
+            // Update slot visibility based on max guesses
+            for (let i = 0; i < 6; i++) {
+                const slot = document.getElementById(`slot-${i}`);
+                if (slot) {
+                    slot.style.display = i < maxGuesses ? '' : 'none';
+                }
+            }
 
             gameState.guesses.forEach((guess, index) => {
                 const slot = document.getElementById(`slot-${index}`);
-                slot.style.backgroundColor = guess.color;
-                slot.classList.add('filled');
+                if (slot) {
+                    slot.style.backgroundColor = guess.color;
+                    slot.classList.add('filled');
+                }
             });
 
             updateWarningState();
@@ -2758,7 +2804,7 @@
             const diffDescriptions = {
                 'easy': 'Distance + Direction',
                 'medium': 'Distance only',
-                'hard': 'Direction only'
+                'hard': 'Direction only, 4 guesses'
             };
 
             console.log('Current difficulty:', settings.difficulty);
@@ -2800,7 +2846,7 @@
                 const diffDescriptions = {
                     'easy': 'Distance + Direction',
                     'medium': 'Distance only',
-                    'hard': 'Direction only'
+                    'hard': 'Direction only, 4 guesses'
                 };
                 modeText = `${modeText} (${diffNames[settings.difficulty]})`;
                 badge.title = `${modeText} - ${diffDescriptions[settings.difficulty]}. Click to change difficulty.`;
@@ -3184,7 +3230,7 @@
         // NEW: Update floating guess counter pill
         function updateGuessCounterPill() {
             const pill = document.getElementById('guess-counter-pill');
-            pill.textContent = `${gameState.guesses.length}/6`;
+            pill.textContent = `${gameState.guesses.length}/${getMaxGuesses()}`;
         }
 
         // ============================================
@@ -3742,6 +3788,7 @@
             // Help button
             document.getElementById('help-btn').addEventListener('click', showHelp);
             document.getElementById('close-help').addEventListener('click', hideHelp);
+            document.getElementById('close-help-x').addEventListener('click', hideHelp);
             document.getElementById('help-overlay').addEventListener('click', (e) => {
                 if (e.target === document.getElementById('help-overlay')) {
                     hideHelp();
@@ -3772,6 +3819,8 @@
                     refreshGuessHistory();
                     updateModeBadge();
                     updateDifficultyDisplay();
+                    updateGuessCounter();
+                    updateGuessCounterPill();
                 });
             });
 
@@ -3794,6 +3843,8 @@
                 refreshGuessHistory();
                 updateModeBadge();
                 updateDifficultyDisplay();
+                updateGuessCounter();
+                updateGuessCounterPill();
             });
 
             // Difficulty toggle button in header
@@ -3814,6 +3865,8 @@
                 refreshGuessHistory();
                 updateModeBadge();
                 updateDifficultyDisplay();
+                updateGuessCounter();
+                updateGuessCounterPill();
 
                 // Force UI update
                 updateStats();
