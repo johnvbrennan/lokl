@@ -11,10 +11,10 @@
  */
 export function createStore(initialState = {}, options = {}) {
     const {
-        enableDevTools = import.meta.env.DEV,
-        enableHistory = import.meta.env.DEV,
+        enableDevTools = import.meta.env?.DEV ?? false,
+        enableHistory = import.meta.env?.DEV ?? false,
         historyLimit = 10,
-        enableLogging = import.meta.env.DEV
+        enableLogging = import.meta.env?.DEV ?? false
     } = options;
 
     // Private state - sealed to prevent external mutation
@@ -275,7 +275,7 @@ function deepMerge(target, source) {
  */
 function deepFreeze(obj) {
     // Skip freezing in production for performance
-    if (!import.meta.env.DEV) return obj;
+    if (!import.meta.env?.DEV) return obj;
 
     if (obj === null || typeof obj !== 'object') return obj;
 
