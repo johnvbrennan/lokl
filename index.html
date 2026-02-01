@@ -177,7 +177,7 @@
             top: calc(16px + env(safe-area-inset-top));
             left: 50%;
             transform: translateX(-50%);
-            z-index: 1000;
+            z-index: 1100; /* Z-index hierarchy: Locate dock (1000) < Header (1100) < Floating menu (1101) */
             display: flex;
             align-items: center;
             gap: var(--spacing-md);
@@ -235,7 +235,7 @@
             min-width: 200px;
             padding: var(--spacing-xs);
             display: none;
-            z-index: 1001;
+            z-index: 1101;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 10px var(--neon-mint-glow);
         }
 
@@ -1144,9 +1144,9 @@
             .locate-dock {
                 /* Move to top on mobile to avoid conflict with guess pills */
                 bottom: auto;
-                top: calc(60px + env(safe-area-inset-top));
+                top: calc(72px + env(safe-area-inset-top));
                 padding: var(--spacing-sm) var(--spacing-lg);
-                max-width: calc(100% - 24px);
+                max-width: calc(100% - 32px);
             }
 
             .locate-target {
