@@ -37,7 +37,7 @@ function initializeState() {
 export const store = createStore(initializeState(), {
     enableDevTools: true,
     enableHistory: true,
-    enableLogging: import.meta.env.DEV
+    enableLogging: import.meta.env?.DEV ?? false
 });
 
 /**
