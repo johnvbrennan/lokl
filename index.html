@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>lokl - Irish County Guessing Game</title>
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
@@ -174,7 +174,7 @@
         /* Floating Header Pill */
         .floating-header {
             position: fixed;
-            top: 16px;
+            top: calc(16px + env(safe-area-inset-top));
             left: 50%;
             transform: translateX(-50%);
             z-index: 1000;
@@ -1103,7 +1103,7 @@
         /* Responsive - Mobile Layout */
         @media (max-width: 700px) {
             .floating-header {
-                top: 12px;
+                top: calc(12px + env(safe-area-inset-top));
                 padding: var(--spacing-xs) var(--spacing-md);
             }
 
@@ -3463,10 +3463,10 @@
         // THEME MANAGEMENT
         // ============================================
 
-        let currentTheme = 'dark';
+        let currentTheme = 'light';
 
         function initTheme() {
-            const savedTheme = localStorage.getItem('loklTheme') || 'dark';
+            const savedTheme = localStorage.getItem('loklTheme') || 'light';
             setTheme(savedTheme);
         }
 
