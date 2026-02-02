@@ -217,6 +217,8 @@ export function updateMapCounty(countyName, color, isCorrect = false) {
  * @param {string} gameMode - Current game mode
  */
 export function resetMapColors(gameMode) {
+    console.log('🔄 resetMapColors called for mode:', gameMode);
+    console.trace('Called from:');
     Object.values(countyLayers).forEach(layer => {
         layer.setStyle(defaultStyle(layer.feature, gameMode));
         layer.getElement()?.classList.remove('county-correct');
