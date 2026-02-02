@@ -211,7 +211,11 @@ export function updateMapCounty(countyName, color, isCorrect = false) {
             color: currentStyle.color
         });
 
+        // Force visual update by bringing layer forward and back
+        layer.bringToFront();
+
         console.log('✅ Map updated for', countyName, 'fillColor:', color, 'fillOpacity: 0.9');
+        console.log('🔍 Layer element:', layer.getElement()?.style.fill);
 
         if (isCorrect) {
             // Add pulsing effect for correct answer
