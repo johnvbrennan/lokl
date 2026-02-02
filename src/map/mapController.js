@@ -239,13 +239,20 @@ export function updateMapCounty(countyName, color, isCorrect = false) {
         layer.bringToFront();
 
         // Force repaint on mobile browsers by triggering a reflow
+        // Use transform instead of display to avoid losing Leaflet's internal state
         const el = layer.getElement();
         if (el) {
-            // Hide and show to force a repaint - critical for mobile
-            const originalDisplay = el.style.display;
-            el.style.display = 'none';
+            // Store original transform
+            const originalTransform = el.style.transform;
+            // Apply a transform that forces a repaint but doesn't visually change anything
+            el.style.transform = 'translateZ(0.001px)';
             void el.offsetHeight; // Force reflow
-            el.style.display = originalDisplay || '';
+            // Restore original or set to GPU-accelerated transform
+            el.style.transform = originalTransform || 'translateZ(0)';
+
+            // Also force the fill attribute to be set directly on the element for mobile
+            el.setAttribute('fill', color);
+            el.setAttribute('fill-opacity', '0.9');
         }
 
         if (isCorrect) {
