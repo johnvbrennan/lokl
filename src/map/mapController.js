@@ -196,12 +196,14 @@ export function setMapClickHandler(handler, gameMode, gameStatus) {
  * @param {boolean} isCorrect - Whether this is the correct answer
  */
 export function updateMapCounty(countyName, color, isCorrect = false) {
+    console.log('🗺️ updateMapCounty called:', countyName, 'color:', color, 'isCorrect:', isCorrect);
     const layer = countyLayers[countyName];
     if (layer) {
         layer.setStyle({
             fillColor: color,
             fillOpacity: 0.9
         });
+        console.log('✅ Map updated for', countyName);
 
         if (isCorrect) {
             // Add pulsing effect for correct answer
