@@ -37,11 +37,17 @@ export function initMap(onMapReady) {
     window.addEventListener('resize', () => {
         clearTimeout(resizeTimeout);
         resizeTimeout = setTimeout(() => {
-            console.log('Window resized, restoring county colors');
+            console.log('Window resized, invalidating map size');
             if (map) {
                 map.invalidateSize();
-                // Restore any county colors that were set before resize
+                // Restore colors immediately
                 restoreCountyColors();
+
+                // Also restore after a short delay in case SVG elements are being recreated
+                setTimeout(() => {
+                    console.log('Delayed restore after resize');
+                    restoreCountyColors();
+                }, 100);
             }
         }, 250);
     });
@@ -143,6 +149,10 @@ export function loadGeoJSON(onMapReady) {
  * @returns {Object} Leaflet style object
  */
 function defaultStyle(feature, gameMode = null) {
+    // Check if this county has a stored color (from a guess)
+    const countyName = feature?.properties?.name;
+    const storedColor = countyName ? countyColors.get(countyName) : null;
+
     // Locate mode: bright borders to help find counties
     // Practice/Daily: visible borders so you can see the map
     const isLocateMode = gameMode === 'locate';
@@ -153,7 +163,18 @@ function defaultStyle(feature, gameMode = null) {
 
     // DEBUG: Log when defaultStyle is called (helps identify resize issues)
     if (feature) {
-        console.log('defaultStyle called for:', feature.properties?.name, 'gameMode:', gameMode);
+        console.log('defaultStyle called for:', countyName, 'gameMode:', gameMode, 'hasStoredColor:', !!storedColor);
+    }
+
+    // If we have a stored color for this county, use it instead of transparent
+    if (storedColor) {
+        return {
+            fillColor: storedColor.color,
+            fillOpacity: 0.9,
+            weight: isLocateMode ? 2 : 1,
+            opacity: isLocateMode ? 1 : 0.6,
+            color: isLocateMode ? mapBorderBright : mapBorder
+        };
     }
 
     return {
@@ -292,6 +313,9 @@ export function updateMapCounty(countyName, color, isCorrect = false) {
  * Restore county colors from stored state (used after resize/re-render)
  */
 function restoreCountyColors() {
+    console.log('Restoring colors for', countyColors.size, 'counties');
+    let restoredCount = 0;
+
     countyColors.forEach((data, countyName) => {
         const layer = countyLayers[countyName];
         if (layer) {
@@ -311,9 +335,16 @@ function restoreCountyColors() {
                 if (data.isCorrect) {
                     el.classList.add('county-correct');
                 }
+                restoredCount++;
+            } else {
+                console.warn('No element found for county:', countyName);
             }
+        } else {
+            console.warn('No layer found for county:', countyName);
         }
     });
+
+    console.log('Successfully restored', restoredCount, 'counties');
 }
 
 /**
