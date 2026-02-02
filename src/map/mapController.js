@@ -6,6 +6,7 @@
 // Map state
 let map = null;
 let countyLayers = {}; // Store layer references by county name
+let countyColors = new Map(); // Store current fill colors by county name
 let geoJsonLayer = null;
 let tileLayer = null; // Store reference to current tile layer
 let currentHighlightedCounty = null;
@@ -30,6 +31,20 @@ export function initMap(onMapReady) {
 
     // Load GeoJSON after tiles
     loadGeoJSON(onMapReady);
+
+    // Set up resize handler to restore colors after map resize
+    let resizeTimeout;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+            console.log('Window resized, restoring county colors');
+            if (map) {
+                map.invalidateSize();
+                // Restore any county colors that were set before resize
+                restoreCountyColors();
+            }
+        }, 250);
+    });
 }
 
 /**
@@ -136,6 +151,11 @@ function defaultStyle(feature, gameMode = null) {
     const mapBorderBright = getComputedStyle(document.documentElement)
         .getPropertyValue('--map-border-bright').trim();
 
+    // DEBUG: Log when defaultStyle is called (helps identify resize issues)
+    if (feature) {
+        console.log('defaultStyle called for:', feature.properties?.name, 'gameMode:', gameMode);
+    }
+
     return {
         fillColor: 'transparent',
         fillOpacity: 0,
@@ -223,6 +243,9 @@ export function setMapClickHandler(handler, gameMode, gameStatus) {
 export function updateMapCounty(countyName, color, isCorrect = false) {
     const layer = countyLayers[countyName];
     if (layer) {
+        // Store the color for this county (so we can restore it if needed)
+        countyColors.set(countyName, { color, isCorrect });
+
         // Get current style properties to preserve borders
         const currentStyle = layer.options;
 
@@ -266,10 +289,41 @@ export function updateMapCounty(countyName, color, isCorrect = false) {
 }
 
 /**
+ * Restore county colors from stored state (used after resize/re-render)
+ */
+function restoreCountyColors() {
+    countyColors.forEach((data, countyName) => {
+        const layer = countyLayers[countyName];
+        if (layer) {
+            const currentStyle = layer.options;
+            layer.setStyle({
+                fillColor: data.color,
+                fillOpacity: 0.9,
+                weight: currentStyle.weight,
+                opacity: currentStyle.opacity,
+                color: currentStyle.color
+            });
+
+            const el = layer.getElement();
+            if (el) {
+                el.setAttribute('fill', data.color);
+                el.setAttribute('fill-opacity', '0.9');
+                if (data.isCorrect) {
+                    el.classList.add('county-correct');
+                }
+            }
+        }
+    });
+}
+
+/**
  * Reset all counties to default colors
  * @param {string} gameMode - Current game mode
  */
 export function resetMapColors(gameMode) {
+    // Clear stored colors
+    countyColors.clear();
+
     Object.values(countyLayers).forEach(layer => {
         layer.setStyle(defaultStyle(layer.feature, gameMode));
         layer.getElement()?.classList.remove('county-correct');
