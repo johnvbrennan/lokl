@@ -269,9 +269,18 @@ export function highlightCounty(countyName) {
 export function unhighlightCounty(countyName, gameMode) {
     const layer = countyLayers[countyName];
     if (layer) {
-        // Restore to default border style based on game mode
-        const style = defaultStyle(layer.feature, gameMode);
-        layer.setStyle(style);
+        // Get current style to preserve fill color (from guesses)
+        const currentStyle = layer.options;
+        const defaultBorderStyle = defaultStyle(layer.feature, gameMode);
+
+        // Restore border styling but KEEP the fill color
+        layer.setStyle({
+            fillColor: currentStyle.fillColor,
+            fillOpacity: currentStyle.fillOpacity,
+            weight: defaultBorderStyle.weight,
+            opacity: defaultBorderStyle.opacity,
+            color: defaultBorderStyle.color
+        });
 
         // If it's no longer the highlighted county, clear the tracking
         if (currentHighlightedCounty === countyName) {
