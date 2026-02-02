@@ -34,23 +34,44 @@ export function initMap(onMapReady) {
 
     // Set up resize handler to restore colors after map resize
     let resizeTimeout;
-    window.addEventListener('resize', () => {
+    const handleResize = () => {
         clearTimeout(resizeTimeout);
         resizeTimeout = setTimeout(() => {
-            console.log('Window resized, invalidating map size');
+            console.log('Viewport changed, invalidating map size');
             if (map) {
                 map.invalidateSize();
                 // Restore colors immediately
                 restoreCountyColors();
 
-                // Also restore after a short delay in case SVG elements are being recreated
+                // Also restore after short delays for mobile SVG recreation
                 setTimeout(() => {
-                    console.log('Delayed restore after resize');
+                    console.log('Delayed restore after resize (100ms)');
                     restoreCountyColors();
                 }, 100);
+
+                setTimeout(() => {
+                    console.log('Second delayed restore (300ms)');
+                    restoreCountyColors();
+                }, 300);
             }
-        }, 250);
+        }, 150); // Shorter debounce for better mobile responsiveness
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    // Mobile-specific: listen to orientation changes
+    window.addEventListener('orientationchange', () => {
+        console.log('Orientation changed');
+        handleResize();
     });
+
+    // Mobile-specific: listen to visual viewport changes (address bar, etc)
+    if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', () => {
+            console.log('Visual viewport changed');
+            handleResize();
+        });
+    }
 }
 
 /**
@@ -320,6 +341,13 @@ function restoreCountyColors() {
         const layer = countyLayers[countyName];
         if (layer) {
             const currentStyle = layer.options;
+
+            console.log(`Restoring ${countyName}:`, {
+                color: data.color,
+                currentFillColor: currentStyle.fillColor,
+                currentFillOpacity: currentStyle.fillOpacity
+            });
+
             layer.setStyle({
                 fillColor: data.color,
                 fillOpacity: 0.9,
@@ -328,14 +356,36 @@ function restoreCountyColors() {
                 color: currentStyle.color
             });
 
+            // Force layer to front to ensure visibility
+            layer.bringToFront();
+
             const el = layer.getElement();
             if (el) {
+                console.log(`Element for ${countyName}:`, {
+                    fillAttr: el.getAttribute('fill'),
+                    fillOpacityAttr: el.getAttribute('fill-opacity'),
+                    fillStyle: el.style.fill,
+                    fillOpacityStyle: el.style.fillOpacity
+                });
+
                 el.setAttribute('fill', data.color);
                 el.setAttribute('fill-opacity', '0.9');
+
+                // Also try setting via style for maximum compatibility
+                el.style.fill = data.color;
+                el.style.fillOpacity = '0.9';
+
                 if (data.isCorrect) {
                     el.classList.add('county-correct');
                 }
                 restoredCount++;
+
+                console.log(`After restore ${countyName}:`, {
+                    fillAttr: el.getAttribute('fill'),
+                    fillOpacityAttr: el.getAttribute('fill-opacity'),
+                    fillStyle: el.style.fill,
+                    fillOpacityStyle: el.style.fillOpacity
+                });
             } else {
                 console.warn('No element found for county:', countyName);
             }
