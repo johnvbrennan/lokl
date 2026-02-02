@@ -196,7 +196,6 @@ export function setMapClickHandler(handler, gameMode, gameStatus) {
  * @param {boolean} isCorrect - Whether this is the correct answer
  */
 export function updateMapCounty(countyName, color, isCorrect = false) {
-    console.log('🗺️ updateMapCounty called:', countyName, 'color:', color, 'isCorrect:', isCorrect);
     const layer = countyLayers[countyName];
     if (layer) {
         // Get current style properties to preserve borders
@@ -214,9 +213,6 @@ export function updateMapCounty(countyName, color, isCorrect = false) {
         // Force visual update by bringing layer forward and back
         layer.bringToFront();
 
-        console.log('✅ Map updated for', countyName, 'fillColor:', color, 'fillOpacity: 0.9');
-        console.log('🔍 Layer element:', layer.getElement()?.style.fill);
-
         if (isCorrect) {
             // Add pulsing effect for correct answer
             layer.getElement()?.classList.add('county-correct');
@@ -229,8 +225,6 @@ export function updateMapCounty(countyName, color, isCorrect = false) {
  * @param {string} gameMode - Current game mode
  */
 export function resetMapColors(gameMode) {
-    console.log('🔄 resetMapColors called for mode:', gameMode);
-    console.trace('Called from:');
     Object.values(countyLayers).forEach(layer => {
         layer.setStyle(defaultStyle(layer.feature, gameMode));
         layer.getElement()?.classList.remove('county-correct');
@@ -282,11 +276,6 @@ export function unhighlightCounty(countyName, gameMode) {
         const currentStyle = layer.options;
         const defaultBorderStyle = defaultStyle(layer.feature, gameMode);
 
-        console.log('👉 unhighlightCounty:', countyName,
-            'gameMode:', gameMode,
-            'currentFill:', currentStyle.fillColor,
-            'currentOpacity:', currentStyle.fillOpacity);
-
         // Restore border styling but KEEP the fill color
         layer.setStyle({
             fillColor: currentStyle.fillColor,
@@ -295,8 +284,6 @@ export function unhighlightCounty(countyName, gameMode) {
             opacity: defaultBorderStyle.opacity,
             color: defaultBorderStyle.color
         });
-
-        console.log('✅ After unhighlight, fill preserved:', layer.options.fillColor);
 
         // If it's no longer the highlighted county, clear the tracking
         if (currentHighlightedCounty === countyName) {
