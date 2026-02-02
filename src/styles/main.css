@@ -1156,8 +1156,12 @@
         /* Responsive - Mobile Layout */
         @media (max-width: 700px) {
             .floating-header {
-                /* Position below Safari address bar (~50px) + safe area + spacing */
-                top: max(70px, calc(60px + env(safe-area-inset-top, 12px)));
+                /*
+                 * Position below Safari address bar on iPhone/mobile
+                 * Safari address bar can be 44-64px tall (varies by device/state)
+                 * Increased offset to 100px to ensure full visibility below address bar
+                 */
+                top: max(100px, calc(90px + env(safe-area-inset-top, 12px)));
                 padding: 10px 16px; /* Slightly larger touch targets */
                 min-height: 44px; /* iOS minimum recommended touch target height */
                 gap: 12px; /* Slightly larger spacing for easier interaction */
@@ -1240,9 +1244,9 @@
 
             .locate-dock {
                 /* Move to top on mobile to avoid conflict with guess pills */
-                /* Positioned below floating header (now at ~70px + 44px height) + spacing */
+                /* Positioned below floating header (now at ~100px + 44px height) + spacing */
                 bottom: auto;
-                top: max(130px, calc(120px + env(safe-area-inset-top, 12px))); /* Ensure it's below header */
+                top: max(160px, calc(150px + env(safe-area-inset-top, 12px))); /* Ensure it's below header */
                 padding: var(--spacing-sm) var(--spacing-lg);
                 max-width: calc(100% - 32px);
                 z-index: 1500; /* Below header but above other elements */
