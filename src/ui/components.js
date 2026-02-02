@@ -587,24 +587,21 @@ export function shareResult() {
     const resultEmoji = isWin ? '✅' : '❌';
     const resultText = isWin ? `Solved in ${score} guess${score === 1 ? '' : 'es'}!` : 'Gave it my best shot!';
 
+    // Include URL directly in text for better WhatsApp/social media compatibility
     const shareText = `${resultEmoji} Lokl #${getGame().gameNumber} - ${score}/6 (${difficultyLabel})
 
 ${resultText}
 ${emojis}
 
-Can you guess the Irish county? 🇮🇪`;
-
-    const shareUrl = 'https://lokl.ie';
-
-    // Full text for clipboard (includes URL)
-    const clipboardText = `${shareText}\n${shareUrl}`;
+Can you guess the Irish county? 🇮🇪
+https://lokl.ie`;
 
     // Use Web Share API on mobile devices (opens native share sheet)
+    // Note: Only using 'text' parameter because WhatsApp and other apps
+    // ignore text content when both text and url are provided separately
     if (navigator.share && /mobile|android|iphone|ipad|ipod/i.test(navigator.userAgent)) {
         navigator.share({
-            title: 'Lokl - Irish County Guessing Game',
-            text: shareText,
-            url: shareUrl
+            text: shareText
         })
         .then(() => {
             // Share was successful - no feedback needed as user sees native UI
@@ -614,12 +611,12 @@ Can you guess the Irish county? 🇮🇪`;
             // User cancelled or share failed - fall back to clipboard
             if (err.name !== 'AbortError') {
                 console.error('Share failed:', err);
-                fallbackToCopy(clipboardText);
+                fallbackToCopy(shareText);
             }
         });
     } else {
         // Desktop: Copy to clipboard
-        fallbackToCopy(clipboardText);
+        fallbackToCopy(shareText);
     }
 }
 
