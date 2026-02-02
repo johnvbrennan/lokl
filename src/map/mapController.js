@@ -16,15 +16,19 @@ let currentHighlightedCounty = null;
  * @param {Function} onMapReady - Callback when map is loaded
  */
 export function initMap(onMapReady) {
-    // Create map centered on Ireland
+    // Create map centered on Ireland with forced SVG renderer for mobile compatibility
     map = L.map('map', {
         center: [53.5, -7.5],
         zoom: 7,
         minZoom: 6,
         maxZoom: 10,
         zoomControl: true,
-        attributionControl: true
+        attributionControl: true,
+        preferCanvas: false, // Force SVG rendering (not Canvas)
+        renderer: L.svg() // Explicitly use SVG renderer
     });
+
+    console.log('🗺️ Map initialized with SVG renderer');
 
     // Add initial tile layer based on current theme
     updateMapTiles();
@@ -32,17 +36,117 @@ export function initMap(onMapReady) {
     // Load GeoJSON after tiles
     loadGeoJSON(onMapReady);
 
-    // Set up simple resize handler
+    // Set up resize handler
     let resizeTimeout;
-    window.addEventListener('resize', () => {
+    const handleResize = () => {
         clearTimeout(resizeTimeout);
         resizeTimeout = setTimeout(() => {
-            if (map) {
-                map.invalidateSize();
-                restoreCountyColors();
+            if (map && geoJsonLayer) {
+                console.log('📐 Resize detected');
+
+                // Check map container dimensions
+                const mapContainer = map.getContainer();
+                const containerRect = mapContainer.getBoundingClientRect();
+                console.log('  📏 Map container:', {
+                    width: containerRect.width,
+                    height: containerRect.height,
+                    visible: containerRect.width > 0 && containerRect.height > 0
+                });
+
+                // Step 1: Invalidate map size
+                map.invalidateSize(true);
+
+                // Step 2: Wait for Leaflet to finish rendering using animation frames
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        // Step 3: Force complete redraw of GeoJSON layer
+                        console.log('🎨 Redrawing GeoJSON layer');
+                        let redrawnCount = 0;
+                        geoJsonLayer.eachLayer(layer => {
+                            // Force Leaflet to recalculate and apply styles
+                            layer.setStyle(defaultStyle(layer.feature));
+
+                            // Check if this layer has a color
+                            const countyName = layer.feature?.properties?.name;
+                            if (countyColors.has(countyName)) {
+                                redrawnCount++;
+                                const el = layer.getElement();
+                                if (el) {
+                                    const computedStyle = window.getComputedStyle(el);
+                                    console.log(`    ✅ ${countyName}:`, {
+                                        'fill-attr': el.getAttribute('fill'),
+                                        'fill-opacity-attr': el.getAttribute('fill-opacity'),
+                                        'computed-fill': computedStyle.fill,
+                                        'computed-fill-opacity': computedStyle.fillOpacity,
+                                        'computed-opacity': computedStyle.opacity,
+                                        'computed-display': computedStyle.display,
+                                        'computed-visibility': computedStyle.visibility
+                                    });
+                                } else {
+                                    console.log(`    ❌ ${countyName}: NO ELEMENT!`);
+                                }
+                            }
+                        });
+
+                        console.log(`  📊 Redrawn ${redrawnCount} colored counties`);
+
+                        // Step 4: Fix SVG container dimensions (Leaflet bug on mobile)
+                        const overlayPane = map.getPanes().overlayPane;
+                        if (overlayPane) {
+                            const svg = overlayPane.querySelector('svg');
+                            if (svg) {
+                                const svgRect = svg.getBoundingClientRect();
+                                console.log('  📦 SVG container before fix:', {
+                                    width: svgRect.width,
+                                    height: svgRect.height
+                                });
+
+                                // Force SVG to fill its container
+                                if (svgRect.width === 0 || svgRect.height === 0) {
+                                    console.log('  🔧 Fixing SVG dimensions...');
+                                    const mapSize = map.getSize();
+                                    const mapContainer = map.getContainer();
+
+                                    // Set explicit dimensions
+                                    svg.setAttribute('width', mapSize.x);
+                                    svg.setAttribute('height', mapSize.y);
+                                    svg.style.width = mapSize.x + 'px';
+                                    svg.style.height = mapSize.y + 'px';
+
+                                    // Set viewBox to cover the map bounds
+                                    const bounds = map.getBounds();
+                                    const topLeft = map.latLngToLayerPoint(bounds.getNorthWest());
+                                    const bottomRight = map.latLngToLayerPoint(bounds.getSouthEast());
+                                    const viewBoxWidth = bottomRight.x - topLeft.x;
+                                    const viewBoxHeight = bottomRight.y - topLeft.y;
+                                    svg.setAttribute('viewBox', `${topLeft.x} ${topLeft.y} ${viewBoxWidth} ${viewBoxHeight}`);
+
+                                    console.log('  ✅ SVG fixed:', {
+                                        width: mapSize.x,
+                                        height: mapSize.y,
+                                        viewBox: `${topLeft.x} ${topLeft.y} ${viewBoxWidth} ${viewBoxHeight}`
+                                    });
+                                }
+                            }
+                        }
+
+                        // Step 5: Bring colored counties to front
+                        countyColors.forEach((data, countyName) => {
+                            const layer = countyLayers[countyName];
+                            if (layer) {
+                                layer.bringToFront();
+                            }
+                        });
+
+                        console.log('✅ Redraw complete');
+                    });
+                });
             }
-        }, 300);
-    });
+        }, 200);
+    };
+
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('orientationchange', handleResize);
 }
 
 /**
@@ -104,18 +208,9 @@ export function loadGeoJSON(onMapReady) {
 
             console.log('County layers loaded:', Object.keys(countyLayers).length);
 
-            // Force map to recalculate size and re-render (critical for mobile)
+            // Force map to recalculate size
             setTimeout(() => {
                 map.invalidateSize(true);
-                // Force all layers to redraw
-                if (geoJsonLayer) {
-                    geoJsonLayer.eachLayer(layer => {
-                        if (layer.setStyle) {
-                            const currentStyle = layer.options;
-                            layer.setStyle(currentStyle);
-                        }
-                    });
-                }
             }, 100);
 
             // Call callback when map is ready
@@ -147,6 +242,31 @@ function defaultStyle(feature, gameMode = null) {
     const mapBorderBright = getComputedStyle(document.documentElement)
         .getPropertyValue('--map-border-bright').trim();
 
+    // Check if this county has a stored color - check BOTH Map and feature properties
+    const countyName = feature?.properties?.name;
+    const storedColorFromMap = countyName ? countyColors.get(countyName) : null;
+    const storedColorFromFeature = feature?.properties?._guessColor;
+
+    // Prefer Map, fallback to feature properties
+    const guessColor = storedColorFromMap?.color || storedColorFromFeature;
+
+    // DEBUG: Log what we're finding
+    if (guessColor) {
+        console.log(`  🎨 ${countyName}: found color ${guessColor} (from ${storedColorFromMap ? 'Map' : 'feature'})`);
+    }
+
+    // If there's a stored color, use it; otherwise transparent
+    if (guessColor) {
+        return {
+            fillColor: guessColor,
+            fillOpacity: 0.9,
+            weight: isLocateMode ? 2 : 1,
+            opacity: isLocateMode ? 1 : 0.6,
+            color: isLocateMode ? mapBorderBright : mapBorder
+        };
+    }
+
+    // Default: transparent fill
     return {
         fillColor: 'transparent',
         fillOpacity: 0,
@@ -234,43 +354,81 @@ export function setMapClickHandler(handler, gameMode, gameStatus) {
 export function updateMapCounty(countyName, color, isCorrect = false) {
     const layer = countyLayers[countyName];
     if (layer) {
-        // Store color in Map for restoration
+        // Store color in BOTH the Map AND the feature properties
         countyColors.set(countyName, { color, isCorrect });
 
-        // Set the style
-        layer.setStyle({
+        // Store in feature properties so it persists through Leaflet re-renders
+        if (layer.feature && layer.feature.properties) {
+            layer.feature.properties._guessColor = color;
+            layer.feature.properties._isCorrect = isCorrect;
+        }
+
+        // Apply the style
+        const style = {
             fillColor: color,
-            fillOpacity: 0.9
-        });
+            fillOpacity: 0.9,
+            weight: 1,
+            opacity: 0.6,
+            color: getComputedStyle(document.documentElement).getPropertyValue('--map-border').trim()
+        };
+
+        layer.setStyle(style);
+
+        // Add correct class if needed
+        if (isCorrect) {
+            const element = layer.getElement();
+            if (element) {
+                element.classList.add('county-correct');
+            }
+        }
 
         layer.bringToFront();
 
-        if (isCorrect) {
-            const el = layer.getElement();
-            if (el) {
-                el.classList.add('county-correct');
-            }
-        }
+        console.log(`✅ Updated ${countyName} to ${color}`);
     }
 }
 
 /**
- * Restore county colors from stored state (used after resize/re-render)
+ * Restore county colors after resize/re-render
+ * Simply tells each layer to recalculate its style (which reads from countyColors Map)
  */
 function restoreCountyColors() {
     if (countyColors.size === 0) return;
 
-    console.log('🔄 Restoring colors for', countyColors.size, 'counties');
+    console.log('🔄 Restoring', countyColors.size, 'counties');
 
+    // Force each colored county to recalculate its style
     countyColors.forEach((data, countyName) => {
         const layer = countyLayers[countyName];
         if (layer) {
-            layer.setStyle({
-                fillColor: data.color,
-                fillOpacity: 0.9
-            });
+            // Get the style we want to apply
+            const style = defaultStyle(layer.feature);
+            console.log(`  ${countyName}:`, style);
+
+            // Apply it
+            layer.setStyle(style);
+
+            // Check what actually got applied
+            const element = layer.getElement();
+            if (element) {
+                console.log(`    ↳ Element:`, {
+                    fill: element.getAttribute('fill'),
+                    fillOpacity: element.getAttribute('fill-opacity'),
+                    styleFill: element.style.fill,
+                    styleFillOpacity: element.style.fillOpacity,
+                    display: element.style.display,
+                    visibility: element.style.visibility,
+                    opacity: element.style.opacity
+                });
+            } else {
+                console.log(`    ↳ Element: NULL - THIS IS THE PROBLEM!`);
+            }
+
+            layer.bringToFront();
         }
     });
+
+    console.log('✅ Colors restored');
 }
 
 /**
@@ -278,10 +436,21 @@ function restoreCountyColors() {
  * @param {string} gameMode - Current game mode
  */
 export function resetMapColors(gameMode) {
+    console.log('🧹 Resetting map colors');
+
+    // Clear the color storage
     countyColors.clear();
 
+    // Reset all layers to default style and clear feature properties
     Object.values(countyLayers).forEach(layer => {
+        // Clear feature properties
+        if (layer.feature && layer.feature.properties) {
+            delete layer.feature.properties._guessColor;
+            delete layer.feature.properties._isCorrect;
+        }
+
         layer.setStyle(defaultStyle(layer.feature, gameMode));
+
         const el = layer.getElement();
         if (el) {
             el.classList.remove('county-correct');

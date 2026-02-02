@@ -509,6 +509,22 @@
             }
         }
 
+        /* Force colored counties to display properly on all devices */
+        .leaflet-overlay-pane path.colored-county {
+            /* Ensure fill color is visible */
+            paint-order: fill stroke markers;
+            vector-effect: non-scaling-stroke;
+        }
+
+        /* Ensure colored counties remain visible during viewport changes */
+        @media (max-width: 700px) {
+            .leaflet-overlay-pane path.colored-county {
+                /* Force GPU acceleration for better mobile rendering */
+                transform: translateZ(0);
+                will-change: fill, fill-opacity;
+            }
+        }
+
         /* County tooltip styling */
         .county-tooltip {
             background: var(--glass-bg);
