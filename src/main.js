@@ -277,6 +277,27 @@ function resetUI() {
     if (statGuesses) statGuesses.textContent = `0/${getMaxGuesses()}`;
     if (statClosest) statClosest.textContent = '--';
     if (statProvince) statProvince.textContent = '--';
+
+    // Show/hide appropriate UI based on game mode
+    const mode = getGame().mode;
+    const inputArea = document.getElementById('input-area');
+    const locateArea = document.getElementById('locate-area');
+    const inputDock = document.getElementById('input-dock');
+    const locateDock = document.getElementById('locate-dock');
+
+    if (mode === 'locate') {
+        // Locate mode: hide input, show locate UI
+        if (inputArea) inputArea.style.display = 'none';
+        if (locateArea) locateArea.style.display = 'block';
+        if (inputDock) inputDock.style.display = 'none';
+        if (locateDock) locateDock.style.display = 'flex';
+    } else {
+        // All other modes (daily, practice, timetrial): show input, hide locate UI
+        if (inputArea) inputArea.style.display = '';
+        if (locateArea) locateArea.style.display = 'none';
+        if (inputDock) inputDock.style.display = 'flex';
+        if (locateDock) locateDock.style.display = 'none';
+    }
 }
 
 /**
