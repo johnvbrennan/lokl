@@ -32,46 +32,17 @@ export function initMap(onMapReady) {
     // Load GeoJSON after tiles
     loadGeoJSON(onMapReady);
 
-    // Set up resize handler to restore colors after map resize
+    // Set up simple resize handler
     let resizeTimeout;
-    const handleResize = () => {
+    window.addEventListener('resize', () => {
         clearTimeout(resizeTimeout);
         resizeTimeout = setTimeout(() => {
-            console.log('Viewport changed, invalidating map size');
             if (map) {
                 map.invalidateSize();
-                // Restore colors immediately
                 restoreCountyColors();
-
-                // Also restore after short delays for mobile SVG recreation
-                setTimeout(() => {
-                    console.log('Delayed restore after resize (100ms)');
-                    restoreCountyColors();
-                }, 100);
-
-                setTimeout(() => {
-                    console.log('Second delayed restore (300ms)');
-                    restoreCountyColors();
-                }, 300);
             }
-        }, 150); // Shorter debounce for better mobile responsiveness
-    };
-
-    window.addEventListener('resize', handleResize);
-
-    // Mobile-specific: listen to orientation changes
-    window.addEventListener('orientationchange', () => {
-        console.log('Orientation changed');
-        handleResize();
+        }, 300);
     });
-
-    // Mobile-specific: listen to visual viewport changes (address bar, etc)
-    if (window.visualViewport) {
-        window.visualViewport.addEventListener('resize', () => {
-            console.log('Visual viewport changed');
-            handleResize();
-        });
-    }
 }
 
 /**
@@ -170,39 +141,11 @@ export function loadGeoJSON(onMapReady) {
  * @returns {Object} Leaflet style object
  */
 function defaultStyle(feature, gameMode = null) {
-    const countyName = feature?.properties?.name;
-
-    // Check THREE sources for stored color (in priority order):
-    // 1. Feature properties (most persistent)
-    const featureColor = feature?.properties?._fillColor;
-    const featureFillOpacity = feature?.properties?._fillOpacity;
-
-    // 2. CountyColors Map
-    const storedColor = countyName ? countyColors.get(countyName) : null;
-
-    // Locate mode: bright borders to help find counties
-    // Practice/Daily: visible borders so you can see the map
     const isLocateMode = gameMode === 'locate';
     const mapBorder = getComputedStyle(document.documentElement)
         .getPropertyValue('--map-border').trim();
     const mapBorderBright = getComputedStyle(document.documentElement)
         .getPropertyValue('--map-border-bright').trim();
-
-    // Use stored color if available from either source
-    const hasColor = featureColor || storedColor;
-    const colorToUse = featureColor || storedColor?.color;
-    const opacityToUse = featureFillOpacity || (storedColor ? 0.9 : 0);
-
-    if (hasColor) {
-        console.log(`🔄 defaultStyle for ${countyName}: using saved color`, colorToUse);
-        return {
-            fillColor: colorToUse,
-            fillOpacity: opacityToUse,
-            weight: isLocateMode ? 2 : 1,
-            opacity: isLocateMode ? 1 : 0.6,
-            color: isLocateMode ? mapBorderBright : mapBorder
-        };
-    }
 
     return {
         fillColor: 'transparent',
@@ -291,51 +234,22 @@ export function setMapClickHandler(handler, gameMode, gameStatus) {
 export function updateMapCounty(countyName, color, isCorrect = false) {
     const layer = countyLayers[countyName];
     if (layer) {
-        console.log(`🎨 Setting color for ${countyName}:`, color);
-
-        // Store color in THREE places for maximum persistence:
-        // 1. In the countyColors Map
+        // Store color in Map for restoration
         countyColors.set(countyName, { color, isCorrect });
 
-        // 2. In the layer's feature properties (survives Leaflet re-renders)
-        if (layer.feature && layer.feature.properties) {
-            layer.feature.properties._fillColor = color;
-            layer.feature.properties._fillOpacity = 0.9;
-            layer.feature.properties._isCorrect = isCorrect;
-        }
-
-        // 3. In the layer options (Leaflet's style cache)
-        layer.options.fillColor = color;
-        layer.options.fillOpacity = 0.9;
-
-        // Now set the style
-        const currentStyle = layer.options;
+        // Set the style
         layer.setStyle({
             fillColor: color,
-            fillOpacity: 0.9,
-            weight: currentStyle.weight,
-            opacity: currentStyle.opacity,
-            color: currentStyle.color
+            fillOpacity: 0.9
         });
 
-        // Force visual update
         layer.bringToFront();
 
-        // Set directly on SVG element for immediate visibility
-        const el = layer.getElement();
-        if (el) {
-            el.setAttribute('fill', color);
-            el.setAttribute('fill-opacity', '0.9');
-            el.style.fill = color;
-            el.style.fillOpacity = '0.9';
-
-            if (isCorrect) {
+        if (isCorrect) {
+            const el = layer.getElement();
+            if (el) {
                 el.classList.add('county-correct');
             }
-
-            console.log(`✅ Color applied to ${countyName}, element fill:`, el.getAttribute('fill'));
-        } else {
-            console.warn(`❌ No SVG element found for ${countyName}`);
         }
     }
 }
@@ -344,61 +258,19 @@ export function updateMapCounty(countyName, color, isCorrect = false) {
  * Restore county colors from stored state (used after resize/re-render)
  */
 function restoreCountyColors() {
+    if (countyColors.size === 0) return;
+
     console.log('🔄 Restoring colors for', countyColors.size, 'counties');
-    let restoredCount = 0;
 
     countyColors.forEach((data, countyName) => {
         const layer = countyLayers[countyName];
         if (layer) {
-            const currentStyle = layer.options;
-
             layer.setStyle({
                 fillColor: data.color,
-                fillOpacity: 0.9,
-                weight: currentStyle.weight,
-                opacity: currentStyle.opacity,
-                color: currentStyle.color
+                fillOpacity: 0.9
             });
-
-            // Force layer to front
-            layer.bringToFront();
-
-            const el = layer.getElement();
-            if (el) {
-                // Set via both attributes AND styles
-                el.setAttribute('fill', data.color);
-                el.setAttribute('fill-opacity', '0.9');
-                el.style.fill = data.color;
-                el.style.fillOpacity = '0.9';
-
-                // AGGRESSIVE MOBILE FIX: Force complete repaint
-                // Remove from DOM and re-add to force browser to re-render
-                const parent = el.parentNode;
-                const nextSibling = el.nextSibling;
-                if (parent) {
-                    parent.removeChild(el);
-                    // Force reflow
-                    void parent.offsetHeight;
-                    // Re-add element
-                    if (nextSibling) {
-                        parent.insertBefore(el, nextSibling);
-                    } else {
-                        parent.appendChild(el);
-                    }
-                }
-
-                if (data.isCorrect) {
-                    el.classList.add('county-correct');
-                }
-                restoredCount++;
-                console.log(`✅ Restored ${countyName}`);
-            } else {
-                console.warn(`❌ No element for ${countyName}`);
-            }
         }
     });
-
-    console.log(`✅ Successfully restored ${restoredCount}/${countyColors.size} counties`);
 }
 
 /**
@@ -406,22 +278,14 @@ function restoreCountyColors() {
  * @param {string} gameMode - Current game mode
  */
 export function resetMapColors(gameMode) {
-    console.log('🧹 Resetting all map colors');
-
-    // Clear stored colors from Map
     countyColors.clear();
 
     Object.values(countyLayers).forEach(layer => {
-        // Clear feature properties
-        if (layer.feature && layer.feature.properties) {
-            delete layer.feature.properties._fillColor;
-            delete layer.feature.properties._fillOpacity;
-            delete layer.feature.properties._isCorrect;
-        }
-
-        // Reset style
         layer.setStyle(defaultStyle(layer.feature, gameMode));
-        layer.getElement()?.classList.remove('county-correct');
+        const el = layer.getElement();
+        if (el) {
+            el.classList.remove('county-correct');
+        }
     });
 }
 
