@@ -170,8 +170,14 @@ export function loadGeoJSON(onMapReady) {
  * @returns {Object} Leaflet style object
  */
 function defaultStyle(feature, gameMode = null) {
-    // Check if this county has a stored color (from a guess)
     const countyName = feature?.properties?.name;
+
+    // Check THREE sources for stored color (in priority order):
+    // 1. Feature properties (most persistent)
+    const featureColor = feature?.properties?._fillColor;
+    const featureFillOpacity = feature?.properties?._fillOpacity;
+
+    // 2. CountyColors Map
     const storedColor = countyName ? countyColors.get(countyName) : null;
 
     // Locate mode: bright borders to help find counties
@@ -182,16 +188,16 @@ function defaultStyle(feature, gameMode = null) {
     const mapBorderBright = getComputedStyle(document.documentElement)
         .getPropertyValue('--map-border-bright').trim();
 
-    // DEBUG: Log when defaultStyle is called (helps identify resize issues)
-    if (feature) {
-        console.log('defaultStyle called for:', countyName, 'gameMode:', gameMode, 'hasStoredColor:', !!storedColor);
-    }
+    // Use stored color if available from either source
+    const hasColor = featureColor || storedColor;
+    const colorToUse = featureColor || storedColor?.color;
+    const opacityToUse = featureFillOpacity || (storedColor ? 0.9 : 0);
 
-    // If we have a stored color for this county, use it instead of transparent
-    if (storedColor) {
+    if (hasColor) {
+        console.log(`🔄 defaultStyle for ${countyName}: using saved color`, colorToUse);
         return {
-            fillColor: storedColor.color,
-            fillOpacity: 0.9,
+            fillColor: colorToUse,
+            fillOpacity: opacityToUse,
             weight: isLocateMode ? 2 : 1,
             opacity: isLocateMode ? 1 : 0.6,
             color: isLocateMode ? mapBorderBright : mapBorder
@@ -285,13 +291,25 @@ export function setMapClickHandler(handler, gameMode, gameStatus) {
 export function updateMapCounty(countyName, color, isCorrect = false) {
     const layer = countyLayers[countyName];
     if (layer) {
-        // Store the color for this county (so we can restore it if needed)
+        console.log(`🎨 Setting color for ${countyName}:`, color);
+
+        // Store color in THREE places for maximum persistence:
+        // 1. In the countyColors Map
         countyColors.set(countyName, { color, isCorrect });
 
-        // Get current style properties to preserve borders
-        const currentStyle = layer.options;
+        // 2. In the layer's feature properties (survives Leaflet re-renders)
+        if (layer.feature && layer.feature.properties) {
+            layer.feature.properties._fillColor = color;
+            layer.feature.properties._fillOpacity = 0.9;
+            layer.feature.properties._isCorrect = isCorrect;
+        }
 
-        // Set style with explicit fill properties
+        // 3. In the layer options (Leaflet's style cache)
+        layer.options.fillColor = color;
+        layer.options.fillOpacity = 0.9;
+
+        // Now set the style
+        const currentStyle = layer.options;
         layer.setStyle({
             fillColor: color,
             fillOpacity: 0.9,
@@ -300,32 +318,24 @@ export function updateMapCounty(countyName, color, isCorrect = false) {
             color: currentStyle.color
         });
 
-        // Force visual update by bringing layer forward
+        // Force visual update
         layer.bringToFront();
 
-        // Force repaint on mobile browsers by triggering a reflow
-        // Use transform instead of display to avoid losing Leaflet's internal state
+        // Set directly on SVG element for immediate visibility
         const el = layer.getElement();
         if (el) {
-            // Store original transform
-            const originalTransform = el.style.transform;
-            // Apply a transform that forces a repaint but doesn't visually change anything
-            el.style.transform = 'translateZ(0.001px)';
-            void el.offsetHeight; // Force reflow
-            // Restore original or set to GPU-accelerated transform
-            el.style.transform = originalTransform || 'translateZ(0)';
-
-            // Also force the fill attribute to be set directly on the element for mobile
             el.setAttribute('fill', color);
             el.setAttribute('fill-opacity', '0.9');
-        }
+            el.style.fill = color;
+            el.style.fillOpacity = '0.9';
 
-        if (isCorrect) {
-            // Add pulsing effect for correct answer
-            const el = layer.getElement();
-            if (el) {
+            if (isCorrect) {
                 el.classList.add('county-correct');
             }
+
+            console.log(`✅ Color applied to ${countyName}, element fill:`, el.getAttribute('fill'));
+        } else {
+            console.warn(`❌ No SVG element found for ${countyName}`);
         }
     }
 }
@@ -402,10 +412,20 @@ function restoreCountyColors() {
  * @param {string} gameMode - Current game mode
  */
 export function resetMapColors(gameMode) {
-    // Clear stored colors
+    console.log('🧹 Resetting all map colors');
+
+    // Clear stored colors from Map
     countyColors.clear();
 
     Object.values(countyLayers).forEach(layer => {
+        // Clear feature properties
+        if (layer.feature && layer.feature.properties) {
+            delete layer.feature.properties._fillColor;
+            delete layer.feature.properties._fillOpacity;
+            delete layer.feature.properties._isCorrect;
+        }
+
+        // Reset style
         layer.setStyle(defaultStyle(layer.feature, gameMode));
         layer.getElement()?.classList.remove('county-correct');
     });
