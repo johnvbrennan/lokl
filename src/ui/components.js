@@ -572,7 +572,7 @@ export function restoreGameUI(updateMapCounty, highlightCounty, unhighlightCount
 }
 
 /**
- * Share game result
+ * Share game result using Web Share API on mobile, clipboard on desktop
  */
 export function shareResult() {
     const isWin = getGame().status === 'won';
@@ -585,6 +585,34 @@ export function shareResult() {
 
     const text = `Locle #${getGame().gameNumber} ${score}/6 (${difficultyLabel})\n${emojis}\nhttps://locle.app`;
 
+    // Use Web Share API on mobile devices (opens native share sheet)
+    if (navigator.share && /mobile|android|iphone|ipad|ipod/i.test(navigator.userAgent)) {
+        navigator.share({
+            title: 'Locle - Irish County Game',
+            text: text
+        })
+        .then(() => {
+            // Share was successful - no feedback needed as user sees native UI
+            console.log('Shared successfully');
+        })
+        .catch(err => {
+            // User cancelled or share failed - fall back to clipboard
+            if (err.name !== 'AbortError') {
+                console.error('Share failed:', err);
+                fallbackToCopy(text);
+            }
+        });
+    } else {
+        // Desktop: Copy to clipboard
+        fallbackToCopy(text);
+    }
+}
+
+/**
+ * Fallback to copy text to clipboard
+ * @param {string} text - Text to copy
+ */
+function fallbackToCopy(text) {
     if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(text)
             .then(() => showCopyFeedback())
@@ -593,6 +621,7 @@ export function shareResult() {
                 alert('Could not copy to clipboard');
             });
     } else {
+        // Legacy clipboard method for older browsers
         const textarea = document.createElement('textarea');
         textarea.value = text;
         textarea.style.position = 'fixed';
