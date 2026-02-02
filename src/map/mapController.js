@@ -199,11 +199,19 @@ export function updateMapCounty(countyName, color, isCorrect = false) {
     console.log('🗺️ updateMapCounty called:', countyName, 'color:', color, 'isCorrect:', isCorrect);
     const layer = countyLayers[countyName];
     if (layer) {
+        // Get current style properties to preserve borders
+        const currentStyle = layer.options;
+
+        // Set style with explicit fill properties
         layer.setStyle({
             fillColor: color,
-            fillOpacity: 0.9
+            fillOpacity: 0.9,
+            weight: currentStyle.weight,
+            opacity: currentStyle.opacity,
+            color: currentStyle.color
         });
-        console.log('✅ Map updated for', countyName);
+
+        console.log('✅ Map updated for', countyName, 'fillColor:', color, 'fillOpacity: 0.9');
 
         if (isCorrect) {
             // Add pulsing effect for correct answer
