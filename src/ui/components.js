@@ -583,13 +583,28 @@ export function shareResult() {
     const score = isWin ? getGame().guesses.length : 'X';
     const difficultyLabel = getSettings().difficulty.charAt(0).toUpperCase() + getSettings().difficulty.slice(1);
 
-    const text = `Locle #${getGame().gameNumber} ${score}/6 (${difficultyLabel})\n${emojis}\nhttps://locle.app`;
+    // Create engaging share text with results
+    const resultEmoji = isWin ? '✅' : '❌';
+    const resultText = isWin ? `Solved in ${score} guess${score === 1 ? '' : 'es'}!` : 'Gave it my best shot!';
+
+    const shareText = `${resultEmoji} Lokl #${getGame().gameNumber} - ${score}/6 (${difficultyLabel})
+
+${resultText}
+${emojis}
+
+Can you guess the Irish county? 🇮🇪`;
+
+    const shareUrl = 'https://lokl.ie';
+
+    // Full text for clipboard (includes URL)
+    const clipboardText = `${shareText}\n${shareUrl}`;
 
     // Use Web Share API on mobile devices (opens native share sheet)
     if (navigator.share && /mobile|android|iphone|ipad|ipod/i.test(navigator.userAgent)) {
         navigator.share({
-            title: 'Locle - Irish County Game',
-            text: text
+            title: 'Lokl - Irish County Guessing Game',
+            text: shareText,
+            url: shareUrl
         })
         .then(() => {
             // Share was successful - no feedback needed as user sees native UI
@@ -599,12 +614,12 @@ export function shareResult() {
             // User cancelled or share failed - fall back to clipboard
             if (err.name !== 'AbortError') {
                 console.error('Share failed:', err);
-                fallbackToCopy(text);
+                fallbackToCopy(clipboardText);
             }
         });
     } else {
         // Desktop: Copy to clipboard
-        fallbackToCopy(text);
+        fallbackToCopy(clipboardText);
     }
 }
 
