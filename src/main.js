@@ -61,7 +61,11 @@ import {
     updateTimerDisplay,
     updateTimerWarningState,
     showTimeTrialEndModal,
-    updateTimeTrialSettingsUI
+    updateTimeTrialSettingsUI,
+    showGoAnimation,
+    showSuccessAnimation,
+    focusInput,
+    cleanupTimerEffects
 } from './ui/components.js';
 
 import {
@@ -307,13 +311,22 @@ function handleGuess(countyName) {
         addGuessToHistory: (guess, number) => addGuessToHistory(guess, number, highlightCounty, unhighlightCounty),
         updateGuessCounter: () => updateGuessCounter(highlightCounty, unhighlightCounty),
         updateStatsBar,
-        updateGuessRail,
+        updateGuessRail: () => updateGuessRail(highlightCounty, unhighlightCounty),
         updateGuessCounterPill,
-        startNextLocateRound: () => startNextLocateRound({
-            resetUI,
-            clearGuessRail,
-            updateGuessCounterPill
-        }),
+        startNextLocateRound: () => {
+            // 1. Generate new target county
+            const newTargetCounty = getRandomCounty();
+
+            // 2. Update store FIRST
+            store.setState(startNextLocateRoundAction(newTargetCounty), 'startNextLocateRound');
+
+            // 3. Update UI
+            startNextLocateRoundUI(newTargetCounty, {
+                resetUI,
+                clearGuessRail,
+                updateGuessCounterPill
+            });
+        },
         showEndModal: () => showEndModal(showResultLine),
         disableInput,
         clearInput,
@@ -328,12 +341,13 @@ function handleGuess(countyName) {
  * Wrapper for initGame with all callbacks
  */
 function handleInitGame(mode = 'daily', suppressModal = false) {
-    return initGame(mode, suppressModal, {
+    const result = initGame(mode, suppressModal, {
         resetUI,
         showEndModal: () => showEndModal(showResultLine),
         showTimeTrialEndModal: (won, timeElapsed, guessCount, targetCounty) => {
             showTimeTrialEndModal(won, timeElapsed, guessCount, targetCounty, showResultLine);
         },
+        showSuccessAnimation,
         restoreGameUI,
         updateModeBadge,
         clearGuessRail,
@@ -343,6 +357,24 @@ function handleInitGame(mode = 'daily', suppressModal = false) {
             updateMapCounty(targetCounty, COLORS.CORRECT, true);
         }
     });
+
+    // Special handling for Time Trial mode
+    if (mode === 'timetrial' && result) {
+        // Show "GO!" animation
+        showGoAnimation();
+
+        // Auto-focus input after short delay (let GO animation show first)
+        setTimeout(() => {
+            focusInput();
+        }, 500);
+    } else if (result && (mode === 'practice' || mode === 'daily')) {
+        // Auto-focus input for practice and daily modes too
+        setTimeout(() => {
+            focusInput();
+        }, 100);
+    }
+
+    return result;
 }
 
 /**

@@ -425,8 +425,10 @@ export function togglePanel(map) {
 
 /**
  * Update guess rail with horizontal pills
+ * @param {Function} highlightCounty - Optional callback to highlight county on map
+ * @param {Function} unhighlightCounty - Optional callback to unhighlight county on map
  */
-export function updateGuessRail() {
+export function updateGuessRail(highlightCounty, unhighlightCounty) {
     const rail = document.getElementById('guess-rail');
     if (!rail) return;
 
@@ -446,6 +448,21 @@ export function updateGuessRail() {
         const isCorrect = guess.county === getGame().targetCounty;
         if (isCorrect) {
             pill.classList.add('correct');
+        }
+
+        // Make pill interactive if highlight callbacks are provided
+        if (highlightCounty && unhighlightCounty) {
+            pill.style.cursor = 'pointer';
+            pill.dataset.county = guess.county;
+
+            // Add hover/click handlers to highlight county on map
+            pill.addEventListener('mouseenter', () => highlightCounty(guess.county));
+            pill.addEventListener('mouseleave', () => unhighlightCounty(guess.county));
+            pill.addEventListener('click', () => {
+                // Flash highlight on click for mobile
+                highlightCounty(guess.county);
+                setTimeout(() => unhighlightCounty(guess.county), 1000);
+            });
         }
 
         // Build pill content with county abbreviation and conditional info
@@ -542,7 +559,7 @@ export function restoreGameUI(updateMapCounty, highlightCounty, unhighlightCount
     });
 
     updateGuessCounter();
-    updateGuessRail();
+    updateGuessRail(highlightCounty, unhighlightCounty);
     updateGuessCounterPill();
     updateStatsBar();
 
@@ -688,8 +705,11 @@ export function updateTimerWarningState(timeRemaining, timeLimit) {
 
     const colorState = getTimerColor(timeRemaining, timeLimit);
 
-    // Remove all warning classes
+    // Remove all warning classes from pill
     pill.classList.remove('timer-warning', 'timer-danger', 'timer-critical', 'timer-urgent');
+
+    // Remove screen glow classes from body
+    document.body.classList.remove('timer-critical-glow', 'timer-urgent-glow');
 
     // Add appropriate class based on color state
     if (colorState === 'warning') {
@@ -698,8 +718,10 @@ export function updateTimerWarningState(timeRemaining, timeLimit) {
         pill.classList.add('timer-danger');
     } else if (colorState === 'critical') {
         pill.classList.add('timer-critical');
+        document.body.classList.add('timer-critical-glow');
     } else if (colorState === 'urgent') {
         pill.classList.add('timer-urgent');
+        document.body.classList.add('timer-urgent-glow');
     }
 }
 
@@ -712,6 +734,9 @@ export function updateTimerWarningState(timeRemaining, timeLimit) {
  * @param {Function} showResultLine - Callback to show result line
  */
 export function showTimeTrialEndModal(won, timeElapsed, guessCount, targetCounty, showResultLine) {
+    // Clean up timer visual effects
+    cleanupTimerEffects();
+
     const county = COUNTIES[targetCounty];
     const modalTitle = document.getElementById('modal-title');
     const starsEl = document.getElementById('modal-stars');
@@ -838,5 +863,76 @@ export function updateTimeTrialSettingsUI() {
     if (hardSlider && hardVal) {
         hardSlider.value = settings.hard;
         hardVal.textContent = settings.hard;
+    }
+}
+
+/**
+ * Show "GO!" animation overlay for Time Trial start
+ */
+export function showGoAnimation() {
+    // Create overlay
+    const overlay = document.createElement('div');
+    overlay.className = 'go-overlay';
+
+    const text = document.createElement('div');
+    text.className = 'go-text';
+    text.textContent = 'GO!';
+
+    overlay.appendChild(text);
+    document.body.appendChild(overlay);
+
+    // Remove after animation completes
+    setTimeout(() => {
+        overlay.remove();
+    }, 1500);
+}
+
+/**
+ * Show "SUCCESS!" animation overlay for Time Trial win
+ */
+export function showSuccessAnimation() {
+    console.log('🎉 Showing SUCCESS animation!');
+
+    // Create overlay
+    const overlay = document.createElement('div');
+    overlay.className = 'success-overlay';
+
+    const text = document.createElement('div');
+    text.className = 'success-text';
+    text.textContent = 'SUCCESS!';
+
+    overlay.appendChild(text);
+    document.body.appendChild(overlay);
+
+    // Remove after animation completes
+    setTimeout(() => {
+        overlay.remove();
+        console.log('✅ SUCCESS animation removed');
+    }, 2000);
+}
+
+/**
+ * Auto-focus the county input field
+ */
+export function focusInput() {
+    // Try the new input first, fall back to old input
+    const countyInputNew = document.getElementById('county-input-new');
+    const countyInput = document.getElementById('county-input');
+
+    if (countyInputNew && countyInputNew.style.display !== 'none') {
+        countyInputNew.focus();
+    } else if (countyInput && countyInput.style.display !== 'none') {
+        countyInput.focus();
+    }
+}
+
+/**
+ * Clean up timer visual effects (remove screen glow)
+ */
+export function cleanupTimerEffects() {
+    document.body.classList.remove('timer-critical-glow', 'timer-urgent-glow');
+    const pill = document.getElementById('guess-counter-pill');
+    if (pill) {
+        pill.classList.remove('timer-warning', 'timer-danger', 'timer-critical', 'timer-urgent');
     }
 }

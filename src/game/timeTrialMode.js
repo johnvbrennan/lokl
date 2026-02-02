@@ -3,7 +3,7 @@
 // Core timer mechanics and game logic
 // ============================================
 
-import { store } from '../store/store.js';
+import { store } from './gameState.js';
 import { startTimer, updateTimer, stopTimer, updateTimeTrialStatistics, endGame } from '../store/actions.js';
 import { getTimeTrialStatistics } from '../store/selectors.js';
 import { saveTimeTrialStatistics, clearTimeTrialState } from '../storage/persistence.js';
@@ -19,7 +19,7 @@ let timerInterval = null;
  */
 export function initTimeTrialMode(duration, targetCounty, callbacks = {}) {
     // Start the timer
-    store.dispatch(startTimer(duration));
+    store.setState(startTimer(duration), 'startTimer');
 
     // Start countdown
     startTimeTrialTimer(duration, callbacks);
@@ -45,7 +45,7 @@ export function startTimeTrialTimer(duration, callbacks = {}) {
         const timeRemaining = Math.max(0, duration - elapsed);
 
         // Update store with remaining time
-        store.dispatch(updateTimer(timeRemaining));
+        store.setState(updateTimer(timeRemaining), 'updateTimer');
 
         // Call tick callback if provided
         if (callbacks.onTick) {
@@ -68,7 +68,7 @@ export function stopTimeTrialTimer() {
         clearInterval(timerInterval);
         timerInterval = null;
     }
-    store.dispatch(stopTimer());
+    store.setState(stopTimer(), 'stopTimer');
 }
 
 /**
@@ -81,7 +81,7 @@ export function handleTimeout(callbacks) {
     const guessCount = state.game.guesses.length;
 
     // End the game as lost
-    store.dispatch(endGame('lost'));
+    store.setState(endGame('lost'), 'endGame');
 
     // Update statistics
     const stats = getTimeTrialStatistics(state);
@@ -89,7 +89,7 @@ export function handleTimeout(callbacks) {
         gamesPlayed: stats.gamesPlayed + 1,
         timeoutCount: stats.timeoutCount + 1
     };
-    store.dispatch(updateTimeTrialStatistics(updatedStats));
+    store.setState(updateTimeTrialStatistics(updatedStats), 'updateTimeTrialStatistics');
 
     // Clear saved state
     clearTimeTrialState();
@@ -185,7 +185,7 @@ export function updateTimeTrialStats(won, timeElapsed, guessCount) {
         updates.distribution = distribution;
     }
 
-    store.dispatch(updateTimeTrialStatistics(updates));
+    store.setState(updateTimeTrialStatistics(updates), 'updateTimeTrialStatistics');
     saveTimeTrialStatistics(store.getState().timeTrialStatistics);
 }
 

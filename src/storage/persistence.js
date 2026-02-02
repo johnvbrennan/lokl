@@ -3,6 +3,8 @@
 // LocalStorage wrapper for game data
 // ============================================
 
+import { getDefaultSettings } from '../store/initialState.js';
+
 // LocalStorage keys
 const KEYS = {
     STATISTICS: 'loklStats',
@@ -146,6 +148,8 @@ export function saveDailyState(state) {
  * @returns {Object} Settings object with defaults
  */
 export function loadSettings() {
+    const defaults = getDefaultSettings();
+
     try {
         const saved = localStorage.getItem(KEYS.SETTINGS);
         if (saved) {
@@ -153,18 +157,25 @@ export function loadSettings() {
             // Validate difficulty is valid
             if (!['easy', 'medium', 'hard'].includes(settings.difficulty)) {
                 console.warn('Invalid difficulty found, resetting to medium');
-                return { difficulty: 'medium' };
+                settings.difficulty = 'medium';
             }
-            return settings;
+            // Merge saved settings with defaults to ensure all properties exist
+            return {
+                ...defaults,
+                ...settings,
+                // Deep merge timeTrialDurations to preserve new defaults
+                timeTrialDurations: {
+                    ...defaults.timeTrialDurations,
+                    ...(settings.timeTrialDurations || {})
+                }
+            };
         }
     } catch (e) {
         console.error('Failed to load settings:', e);
     }
 
     // Return default settings if none found
-    return {
-        difficulty: 'medium'
-    };
+    return defaults;
 }
 
 /**

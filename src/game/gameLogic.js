@@ -176,10 +176,22 @@ export function processGuess(countyName, callbacks = {}) {
             stopTimeTrialTimer();
             const elapsedTime = getElapsedTime(updatedState.game.startTime);
             updateTimeTrialStats(true, elapsedTime, currentGuesses.length);
+
+            console.log('🎯 Time Trial WIN! Elapsed:', elapsedTime.toFixed(2) + 's');
+
+            // Show success animation immediately
+            if (callbacks.showSuccessAnimation) {
+                console.log('✅ Calling showSuccessAnimation callback');
+                callbacks.showSuccessAnimation();
+            } else {
+                console.error('❌ showSuccessAnimation callback is missing!');
+            }
+
+            // Show end modal after success animation has time to display
             if (callbacks.showTimeTrialEndModal) {
                 setTimeout(() => {
                     callbacks.showTimeTrialEndModal(true, elapsedTime, currentGuesses.length, updatedState.game.targetCounty);
-                }, 500);
+                }, 1800);  // Increased from 500ms to let success animation show
             }
         } else {
             updateStatistics(true, currentGuesses.length);
