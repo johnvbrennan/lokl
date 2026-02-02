@@ -22,7 +22,7 @@ import {
 } from './map/mapController.js';
 
 // Storage imports
-import { loadStatistics, loadSettings, saveSettings, setupPersistenceSubscriptions } from './storage/persistence.js';
+import { loadStatistics, loadSettings, saveSettings, setupPersistenceSubscriptions, loadDailyState } from './storage/persistence.js';
 
 // Game imports
 import { store, getMaxGuesses } from './game/gameState.js';
@@ -55,7 +55,8 @@ import {
     updateStartScreenDifficulty,
     updateWarningState,
     startCountdown,
-    stopCountdown
+    stopCountdown,
+    showStartScreen
 } from './ui/components.js';
 
 import {
@@ -137,27 +138,63 @@ function initStartScreenListeners() {
     const startOverlay = document.getElementById('start-overlay');
     if (!startOverlay) return;
 
-    // Daily challenge button
-    document.getElementById('start-daily')?.addEventListener('click', () => {
-        startOverlay.classList.remove('visible');
-        handleInitGame('daily');
+    // Store selected mode and difficulty
+    let selectedMode = 'daily';
+    let selectedDifficulty = getSettings().difficulty;
+
+    // Mode card selection
+    document.querySelectorAll('.mode-card').forEach(card => {
+        card.addEventListener('click', () => {
+            // Remove selected class from all cards
+            document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('selected'));
+            // Add selected class to clicked card
+            card.classList.add('selected');
+            // Store selected mode
+            selectedMode = card.dataset.mode;
+        });
     });
 
-    // Practice button
-    document.getElementById('start-practice')?.addEventListener('click', () => {
-        startOverlay.classList.remove('visible');
-        handleInitGame('practice');
+    // Difficulty button selection
+    document.querySelectorAll('.difficulty-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            // Remove selected class from all buttons
+            document.querySelectorAll('.difficulty-btn').forEach(b => b.classList.remove('selected'));
+            // Add selected class to clicked button
+            btn.classList.add('selected');
+            // Store selected difficulty
+            selectedDifficulty = btn.dataset.difficulty;
+        });
     });
 
-    // Locate mode button
-    document.getElementById('start-locate')?.addEventListener('click', () => {
+    // Start game button
+    document.getElementById('start-game-btn')?.addEventListener('click', () => {
         startOverlay.classList.remove('visible');
-        handleInitLocateMode();
+
+        // Apply difficulty setting first
+        if (selectedDifficulty !== getSettings().difficulty) {
+            store.setState(setDifficulty(selectedDifficulty), 'setDifficulty');
+            const radio = document.getElementById(`diff-${selectedDifficulty}`);
+            if (radio) radio.checked = true;
+        }
+
+        // Start the game based on selected mode
+        if (selectedMode === 'locate') {
+            handleInitLocateMode();
+        } else {
+            handleInitGame(selectedMode);
+        }
     });
 
-    // Close tutorial button
-    document.getElementById('close-tutorial')?.addEventListener('click', hideTutorial);
-    document.getElementById('close-tutorial-x')?.addEventListener('click', hideTutorial);
+    // How to play toggle
+    document.getElementById('how-to-play-toggle')?.addEventListener('click', () => {
+        const content = document.getElementById('how-to-play-content');
+        const arrow = document.getElementById('how-to-play-arrow');
+        if (content && arrow) {
+            const isExpanded = content.style.display === 'block';
+            content.style.display = isExpanded ? 'none' : 'block';
+            arrow.textContent = isExpanded ? '▼' : '▲';
+        }
+    });
 }
 
 /**
@@ -334,10 +371,21 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize start screen listeners
     initStartScreenListeners();
 
-    // Initialize map (this will call handleInitGame after GeoJSON loads)
+    // Initialize map
     initMap(() => {
-        handleInitGame('daily', true);
-        setMapClickHandler(null, getGame().mode, getGame().status);
+        // Check if there's a saved daily game to restore
+        const savedDailyState = loadDailyState();
+        const today = getTodaysDateString();
+        const hasSavedGame = savedDailyState && savedDailyState.date === today;
+
+        if (hasSavedGame) {
+            // Restore the saved daily game
+            handleInitGame('daily', true);
+            setMapClickHandler(null, getGame().mode, getGame().status);
+        } else {
+            // Show start screen for new users or when no game is in progress
+            showStartScreen();
+        }
     });
 
     // ============================================

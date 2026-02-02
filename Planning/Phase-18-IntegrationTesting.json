@@ -14,7 +14,7 @@
         "Verify @playwright/test installed",
         "Verify playwright.config.js created"
       ],
-      "passes": false,
+      "passes": true,
       "automatedTest": "P18.1 - Playwright installed"
     },
     {
@@ -30,7 +30,7 @@
         "Set up projects for chromium, firefox, webkit",
         "Configure CI detection for GitHub Actions"
       ],
-      "passes": false,
+      "passes": true,
       "automatedTest": "P18.2 - playwright.config.js configured"
     },
     {
@@ -44,7 +44,7 @@
         "Add 'test:e2e:headed' script: 'playwright test --headed'",
         "Verify scripts work"
       ],
-      "passes": false,
+      "passes": true,
       "automatedTest": "P18.3 - E2E test scripts defined"
     },
     {
@@ -58,7 +58,7 @@
         "Create tests/e2e/helpers/testHelpers.js for utilities",
         "Create tests/e2e/helpers/mockData.js for fixtures"
       ],
-      "passes": false,
+      "passes": true,
       "automatedTest": "P18.4 - E2E directory structure created"
     },
     {
@@ -75,7 +75,7 @@
         "Add methods for theme toggle",
         "Add methods for mode switching"
       ],
-      "passes": false,
+      "passes": true,
       "automatedTest": "P18.5 - GamePage object created"
     },
     {
@@ -93,7 +93,7 @@
         "Test: Share functionality works",
         "Test: Reload page and verify game state persisted"
       ],
-      "passes": false,
+      "passes": true,
       "automatedTest": "P18.6 - Daily challenge E2E test passes"
     },
     {
@@ -110,7 +110,7 @@
         "Test: Verify statistics track practice games",
         "Test: Verify no daily game restriction"
       ],
-      "passes": false,
+      "passes": true,
       "automatedTest": "P18.7 - Practice mode E2E test passes"
     },
     {
@@ -127,7 +127,7 @@
         "Test: Verify win modal shows",
         "Test: Start new locate game"
       ],
-      "passes": false,
+      "passes": true,
       "automatedTest": "P18.8 - Locate mode E2E test passes"
     },
     {
@@ -144,7 +144,7 @@
         "Test: Verify submit button enabled",
         "Test: Test keyboard navigation (arrow keys, Enter)"
       ],
-      "passes": false,
+      "passes": true,
       "automatedTest": "P18.9 - Autocomplete E2E test passes"
     },
     {
@@ -160,7 +160,7 @@
         "Test: Toggle back to dark mode",
         "Test: Reload page and verify theme persisted"
       ],
-      "passes": false,
+      "passes": true,
       "automatedTest": "P18.10 - Theme E2E test passes"
     },
     {
