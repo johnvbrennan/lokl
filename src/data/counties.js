@@ -21,7 +21,6 @@ export const COUNTIES = {
     "Laois": { lat: 53.03, lng: -7.56, province: "Leinster", fact: "Home to the Rock of Dunamase, a stunning ruined fortress!" },
     "Leitrim": { lat: 54.12, lng: -8.00, province: "Connacht", fact: "Ireland's least populated county - but beautiful lake country!" },
     "Limerick": { lat: 52.66, lng: -8.63, province: "Munster", fact: "The Treaty City - where the famous Treaty of Limerick was signed!" },
-    "Londonderry": { lat: 54.99, lng: -7.00, province: "Ulster", fact: "Derry's city walls are among the best-preserved in Europe!" },
     "Longford": { lat: 53.73, lng: -7.80, province: "Leinster", fact: "Corlea Trackway here is a 2,000-year-old Iron Age road!" },
     "Louth": { lat: 53.88, lng: -6.49, province: "Leinster", fact: "Ireland's smallest county - the Wee County!" },
     "Mayo": { lat: 53.76, lng: -9.53, province: "Connacht", fact: "Home to Croagh Patrick - Ireland's holy mountain!" },

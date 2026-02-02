@@ -168,13 +168,14 @@
             top: calc(16px + env(safe-area-inset-top));
             left: 50%;
             transform: translateX(-50%);
-            z-index: 1100; /* Z-index hierarchy: Locate dock (1000) < Header (1100) < Floating menu (1101) */
+            z-index: 2500; /* Increased to be above all map controls and UI elements */
             display: flex;
             align-items: center;
             gap: var(--spacing-md);
             padding: var(--spacing-sm) var(--spacing-md);
             border-radius: var(--border-radius-pill);
             transition: all 0.3s ease;
+            pointer-events: auto; /* Ensure touch/click events work */
         }
 
         .floating-header .header-logo {
@@ -268,8 +269,9 @@
             min-width: 200px;
             padding: var(--spacing-xs);
             display: none;
-            z-index: 1101;
+            z-index: 2501;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 10px var(--neon-mint-glow);
+            pointer-events: auto;
         }
 
         .floating-menu.visible {
@@ -1147,8 +1149,10 @@
         /* Responsive - Mobile Layout */
         @media (max-width: 700px) {
             .floating-header {
-                top: calc(12px + env(safe-area-inset-top));
-                padding: var(--spacing-xs) var(--spacing-md);
+                top: max(12px, env(safe-area-inset-top, 12px)); /* Ensure minimum distance from top */
+                padding: 10px 16px; /* Slightly larger touch targets */
+                min-height: 44px; /* iOS minimum recommended touch target height */
+                gap: 12px; /* Slightly larger spacing for easier interaction */
             }
 
             .floating-header .header-logo {
@@ -1157,6 +1161,17 @@
 
             .floating-header .guess-counter-pill {
                 font-size: 0.875rem;
+                padding: 6px 10px; /* Slightly larger for easier reading */
+            }
+
+            /* Ensure menu button is easily tappable */
+            .floating-header .menu-btn {
+                min-width: 44px; /* iOS minimum recommended touch target */
+                min-height: 44px;
+                padding: 10px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
             }
 
             .guess-rail {
@@ -1187,10 +1202,12 @@
 
             .locate-dock {
                 /* Move to top on mobile to avoid conflict with guess pills */
+                /* Positioned below floating header (which is ~56px tall) + spacing */
                 bottom: auto;
-                top: calc(72px + env(safe-area-inset-top));
+                top: max(80px, calc(68px + env(safe-area-inset-top, 12px))); /* Ensure it's below header */
                 padding: var(--spacing-sm) var(--spacing-lg);
                 max-width: calc(100% - 32px);
+                z-index: 1500; /* Below header but above other elements */
             }
 
             .locate-target {
