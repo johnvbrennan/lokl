@@ -496,12 +496,23 @@
 
         /* Mobile-specific fixes for map rendering */
         @media (max-width: 700px) {
+            .leaflet-overlay-pane {
+                /* Force GPU acceleration for better mobile performance */
+                transform: translateZ(0);
+                -webkit-transform: translateZ(0);
+            }
+
+            .leaflet-overlay-pane svg {
+                /* Ensure SVG is rendered properly on mobile */
+                width: 100%;
+                height: 100%;
+            }
+
             .leaflet-overlay-pane path {
-                /* Ensure fills are rendered on mobile */
-                fill-opacity: inherit !important;
-                stroke-opacity: inherit !important;
-                /* Use will-change instead of transform to avoid breaking initialization */
+                /* Use will-change for better mobile performance */
                 will-change: fill, stroke;
+                /* Ensure paths are visible and interactive */
+                visibility: visible !important;
             }
         }
 

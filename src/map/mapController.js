@@ -91,6 +91,20 @@ export function loadGeoJSON(onMapReady) {
 
             console.log('County layers loaded:', Object.keys(countyLayers).length);
 
+            // Force map to recalculate size and re-render (critical for mobile)
+            setTimeout(() => {
+                map.invalidateSize(true);
+                // Force all layers to redraw
+                if (geoJsonLayer) {
+                    geoJsonLayer.eachLayer(layer => {
+                        if (layer.setStyle) {
+                            const currentStyle = layer.options;
+                            layer.setStyle(currentStyle);
+                        }
+                    });
+                }
+            }, 100);
+
             // Call callback when map is ready
             if (onMapReady) {
                 onMapReady();
