@@ -313,6 +313,10 @@ function handleGuess(countyName) {
         updateStatsBar,
         updateGuessRail: () => updateGuessRail(highlightCounty, unhighlightCounty),
         updateGuessCounterPill,
+        showSuccessAnimation,
+        showTimeTrialEndModal: (won, timeElapsed, guessCount, targetCounty) => {
+            showTimeTrialEndModal(won, timeElapsed, guessCount, targetCounty, showResultLine);
+        },
         startNextLocateRound: () => {
             // 1. Generate new target county
             const newTargetCounty = getRandomCounty();
