@@ -64,6 +64,7 @@ import {
     updateTimeTrialSettingsUI,
     showGoAnimation,
     showSuccessAnimation,
+    showCorrectAnimation,
     focusInput,
     cleanupTimerEffects
 } from './ui/components.js';
@@ -314,6 +315,7 @@ function handleGuess(countyName) {
         updateGuessRail: () => updateGuessRail(highlightCounty, unhighlightCounty),
         updateGuessCounterPill,
         showSuccessAnimation,
+        showCorrectAnimation,
         showTimeTrialEndModal: (won, timeElapsed, guessCount, targetCounty) => {
             showTimeTrialEndModal(won, timeElapsed, guessCount, targetCounty, showResultLine);
         },
@@ -362,17 +364,16 @@ function handleInitGame(mode = 'daily', suppressModal = false) {
         }
     });
 
-    // Special handling for Time Trial mode
-    if (mode === 'timetrial' && result) {
-        // Show "GO!" animation
+    // Show GO animation for all modes except locate
+    if (result && mode !== 'locate') {
         showGoAnimation();
 
-        // Auto-focus input after short delay (let GO animation show first)
+        // Auto-focus input after animation
         setTimeout(() => {
             focusInput();
         }, 500);
-    } else if (result && (mode === 'practice' || mode === 'daily')) {
-        // Auto-focus input for practice and daily modes too
+    } else if (result && mode === 'locate') {
+        // Locate mode gets immediate focus (no GO animation)
         setTimeout(() => {
             focusInput();
         }, 100);

@@ -888,11 +888,9 @@ export function showGoAnimation() {
 }
 
 /**
- * Show "SUCCESS!" animation overlay for Time Trial win
+ * Show "SUCCESS!" animation overlay for game wins
  */
 export function showSuccessAnimation() {
-    console.log('🎉 Showing SUCCESS animation!');
-
     // Create overlay
     const overlay = document.createElement('div');
     overlay.className = 'success-overlay';
@@ -907,8 +905,29 @@ export function showSuccessAnimation() {
     // Remove after animation completes
     setTimeout(() => {
         overlay.remove();
-        console.log('✅ SUCCESS animation removed');
     }, 2000);
+}
+
+/**
+ * Show "CORRECT!" animation for Locate mode (quicker)
+ */
+export function showCorrectAnimation() {
+    // Create overlay
+    const overlay = document.createElement('div');
+    overlay.className = 'success-overlay';
+    overlay.style.animation = 'success-fade-out 1s ease-out forwards';
+
+    const text = document.createElement('div');
+    text.className = 'success-text';
+    text.textContent = 'CORRECT!';
+
+    overlay.appendChild(text);
+    document.body.appendChild(overlay);
+
+    // Remove after shorter animation
+    setTimeout(() => {
+        overlay.remove();
+    }, 1000);
 }
 
 /**

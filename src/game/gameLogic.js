@@ -167,7 +167,10 @@ export function processGuess(countyName, callbacks = {}) {
         store.setState(endGame('won'), 'endGame');
 
         if (updatedState.game.mode === 'locate') {
-            // Locate mode: auto-start next round after delay
+            // Locate mode: show quick correct animation, then auto-start next round
+            if (callbacks.showCorrectAnimation) {
+                callbacks.showCorrectAnimation();
+            }
             if (startNextLocateRound) {
                 setTimeout(() => startNextLocateRound(), 1500);
             }
@@ -177,14 +180,9 @@ export function processGuess(countyName, callbacks = {}) {
             const elapsedTime = getElapsedTime(updatedState.game.startTime);
             updateTimeTrialStats(true, elapsedTime, currentGuesses.length);
 
-            console.log('🎯 Time Trial WIN! Elapsed:', elapsedTime.toFixed(2) + 's');
-
             // Show success animation immediately
             if (callbacks.showSuccessAnimation) {
-                console.log('✅ Calling showSuccessAnimation callback');
                 callbacks.showSuccessAnimation();
-            } else {
-                console.error('❌ showSuccessAnimation callback is missing!');
             }
 
             // Show end modal after success animation has time to display
@@ -194,14 +192,22 @@ export function processGuess(countyName, callbacks = {}) {
                 }, 1800);  // Increased from 500ms to let success animation show
             }
         } else {
+            // Daily and Practice modes
             updateStatistics(true, currentGuesses.length);
             persistDailyState({
                 date: getTodaysDateString(),
                 guesses: currentGuesses,
                 status: 'won'
             });
+
+            // Show success animation for all modes
+            if (callbacks.showSuccessAnimation) {
+                callbacks.showSuccessAnimation();
+            }
+
+            // Show end modal after success animation
             if (showEndModal) {
-                setTimeout(() => showEndModal(), 500);
+                setTimeout(() => showEndModal(), 1800);  // Increased to let animation show
             }
         }
     } else if (!isTimeTrialMode(updatedState) && currentGuesses.length >= getMaxGuesses()) {
