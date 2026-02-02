@@ -509,10 +509,11 @@
             }
 
             .leaflet-overlay-pane path {
-                /* Use will-change for better mobile performance */
+                /* Force mobile browsers to render fills */
                 will-change: fill, stroke;
-                /* Ensure paths are visible and interactive */
                 visibility: visible !important;
+                /* Ensure SVG rendering context is not cached */
+                transform: translateZ(0.001px);
             }
         }
 

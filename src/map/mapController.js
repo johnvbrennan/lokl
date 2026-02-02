@@ -344,19 +344,13 @@ export function updateMapCounty(countyName, color, isCorrect = false) {
  * Restore county colors from stored state (used after resize/re-render)
  */
 function restoreCountyColors() {
-    console.log('Restoring colors for', countyColors.size, 'counties');
+    console.log('🔄 Restoring colors for', countyColors.size, 'counties');
     let restoredCount = 0;
 
     countyColors.forEach((data, countyName) => {
         const layer = countyLayers[countyName];
         if (layer) {
             const currentStyle = layer.options;
-
-            console.log(`Restoring ${countyName}:`, {
-                color: data.color,
-                currentFillColor: currentStyle.fillColor,
-                currentFillOpacity: currentStyle.fillOpacity
-            });
 
             layer.setStyle({
                 fillColor: data.color,
@@ -366,45 +360,45 @@ function restoreCountyColors() {
                 color: currentStyle.color
             });
 
-            // Force layer to front to ensure visibility
+            // Force layer to front
             layer.bringToFront();
 
             const el = layer.getElement();
             if (el) {
-                console.log(`Element for ${countyName}:`, {
-                    fillAttr: el.getAttribute('fill'),
-                    fillOpacityAttr: el.getAttribute('fill-opacity'),
-                    fillStyle: el.style.fill,
-                    fillOpacityStyle: el.style.fillOpacity
-                });
-
+                // Set via both attributes AND styles
                 el.setAttribute('fill', data.color);
                 el.setAttribute('fill-opacity', '0.9');
-
-                // Also try setting via style for maximum compatibility
                 el.style.fill = data.color;
                 el.style.fillOpacity = '0.9';
+
+                // AGGRESSIVE MOBILE FIX: Force complete repaint
+                // Remove from DOM and re-add to force browser to re-render
+                const parent = el.parentNode;
+                const nextSibling = el.nextSibling;
+                if (parent) {
+                    parent.removeChild(el);
+                    // Force reflow
+                    void parent.offsetHeight;
+                    // Re-add element
+                    if (nextSibling) {
+                        parent.insertBefore(el, nextSibling);
+                    } else {
+                        parent.appendChild(el);
+                    }
+                }
 
                 if (data.isCorrect) {
                     el.classList.add('county-correct');
                 }
                 restoredCount++;
-
-                console.log(`After restore ${countyName}:`, {
-                    fillAttr: el.getAttribute('fill'),
-                    fillOpacityAttr: el.getAttribute('fill-opacity'),
-                    fillStyle: el.style.fill,
-                    fillOpacityStyle: el.style.fillOpacity
-                });
+                console.log(`✅ Restored ${countyName}`);
             } else {
-                console.warn('No element found for county:', countyName);
+                console.warn(`❌ No element for ${countyName}`);
             }
-        } else {
-            console.warn('No layer found for county:', countyName);
         }
     });
 
-    console.log('Successfully restored', restoredCount, 'counties');
+    console.log(`✅ Successfully restored ${restoredCount}/${countyColors.size} counties`);
 }
 
 /**
