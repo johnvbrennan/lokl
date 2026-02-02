@@ -444,8 +444,6 @@
 
         .leaflet-overlay-pane path {
             pointer-events: all !important;
-            transform: translateZ(0); /* Force GPU acceleration for better mobile rendering */
-            -webkit-transform: translateZ(0);
         }
 
         /* Ensure Leaflet controls stay below floating header */
@@ -502,12 +500,8 @@
                 /* Ensure fills are rendered on mobile */
                 fill-opacity: inherit !important;
                 stroke-opacity: inherit !important;
-            }
-
-            .leaflet-container {
-                /* Force re-rendering on mobile for better SVG support */
-                transform: translateZ(0);
-                -webkit-transform: translateZ(0);
+                /* Use will-change instead of transform to avoid breaking initialization */
+                will-change: fill, stroke;
             }
         }
 
