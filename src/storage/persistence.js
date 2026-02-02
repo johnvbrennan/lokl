@@ -32,7 +32,6 @@ export function setupPersistenceSubscriptions(store) {
         // Save settings if changed
         if (newState.settings !== oldState.settings) {
             saveSettings(newState.settings);
-            saveTheme(newState.settings.theme);
             // Save time trial settings if they changed
             if (newState.settings.timeTrialDurations !== oldState.settings.timeTrialDurations) {
                 saveTimeTrialSettings(newState.settings.timeTrialDurations);
@@ -152,24 +151,32 @@ export function loadSettings() {
 
     try {
         const saved = localStorage.getItem(KEYS.SETTINGS);
-        if (saved) {
-            const settings = JSON.parse(saved);
-            // Validate difficulty is valid
-            if (!['easy', 'medium', 'hard'].includes(settings.difficulty)) {
-                console.warn('Invalid difficulty found, resetting to medium');
-                settings.difficulty = 'medium';
+        let settings = saved ? JSON.parse(saved) : {};
+
+        // Migrate old theme storage if settings doesn't have theme
+        if (!settings.theme) {
+            const oldTheme = localStorage.getItem(KEYS.THEME);
+            if (oldTheme) {
+                settings.theme = oldTheme;
             }
-            // Merge saved settings with defaults to ensure all properties exist
-            return {
-                ...defaults,
-                ...settings,
-                // Deep merge timeTrialDurations to preserve new defaults
-                timeTrialDurations: {
-                    ...defaults.timeTrialDurations,
-                    ...(settings.timeTrialDurations || {})
-                }
-            };
         }
+
+        // Validate difficulty is valid
+        if (settings.difficulty && !['easy', 'medium', 'hard'].includes(settings.difficulty)) {
+            console.warn('Invalid difficulty found, resetting to medium');
+            settings.difficulty = 'medium';
+        }
+
+        // Merge saved settings with defaults to ensure all properties exist
+        return {
+            ...defaults,
+            ...settings,
+            // Deep merge timeTrialDurations to preserve new defaults
+            timeTrialDurations: {
+                ...defaults.timeTrialDurations,
+                ...(settings.timeTrialDurations || {})
+            }
+        };
     } catch (e) {
         console.error('Failed to load settings:', e);
     }

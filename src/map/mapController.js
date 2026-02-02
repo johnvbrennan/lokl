@@ -221,12 +221,25 @@ export function updateMapCounty(countyName, color, isCorrect = false) {
             color: currentStyle.color
         });
 
-        // Force visual update by bringing layer forward and back
+        // Force visual update by bringing layer forward
         layer.bringToFront();
+
+        // Force repaint on mobile browsers by triggering a reflow
+        const el = layer.getElement();
+        if (el) {
+            // Hide and show to force a repaint - critical for mobile
+            const originalDisplay = el.style.display;
+            el.style.display = 'none';
+            void el.offsetHeight; // Force reflow
+            el.style.display = originalDisplay || '';
+        }
 
         if (isCorrect) {
             // Add pulsing effect for correct answer
-            layer.getElement()?.classList.add('county-correct');
+            const el = layer.getElement();
+            if (el) {
+                el.classList.add('county-correct');
+            }
         }
     }
 }

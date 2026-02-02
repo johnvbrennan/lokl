@@ -54,11 +54,17 @@ export function toggleTheme(updateMapTiles, updateAllMapBorders) {
  * @param {Function} updateAllMapBorders - Callback to update map borders
  */
 function applyThemeToDOM(theme, updateMapTiles, updateAllMapBorders) {
-    document.documentElement.setAttribute('data-theme', theme);
-    updateThemeButton(theme);
+    const currentTheme = document.documentElement.getAttribute('data-theme');
 
-    if (updateMapTiles) updateMapTiles(theme);
-    if (updateAllMapBorders) updateAllMapBorders();
+    // Only update if theme is different to prevent unnecessary reflows
+    if (currentTheme !== theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        if (updateMapTiles) updateMapTiles(theme);
+        if (updateAllMapBorders) updateAllMapBorders();
+    }
+
+    // Always update button to ensure it's in sync
+    updateThemeButton(theme);
 }
 
 /**

@@ -8,8 +8,23 @@
     <script>
         (function() {
             try {
-                const savedTheme = localStorage.getItem('loklTheme') || 'light';
-                document.documentElement.setAttribute('data-theme', savedTheme);
+                let theme = 'light';
+
+                // Try loading from settings first (new way)
+                const settings = localStorage.getItem('loklSettings');
+                if (settings) {
+                    const parsed = JSON.parse(settings);
+                    if (parsed.theme) {
+                        theme = parsed.theme;
+                    }
+                }
+
+                // Fallback to old storage location for backward compatibility
+                if (!settings) {
+                    theme = localStorage.getItem('loklTheme') || 'light';
+                }
+
+                document.documentElement.setAttribute('data-theme', theme);
             } catch (e) {
                 document.documentElement.setAttribute('data-theme', 'light');
             }
