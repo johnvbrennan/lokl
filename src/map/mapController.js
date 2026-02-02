@@ -160,9 +160,20 @@ function onEachFeature(feature, layer) {
         },
         mouseout: function(e) {
             const layer = e.target;
-            // Reset to default style based on game mode
-            const style = defaultStyle(layer.feature, layer.gameMode);
-            layer.setStyle(style);
+            // Get current fill to preserve guess colors
+            const currentFill = layer.options.fillColor;
+            const currentFillOpacity = layer.options.fillOpacity;
+
+            // Reset to default border style but preserve fill
+            const defaultBorderStyle = defaultStyle(layer.feature, layer.gameMode);
+            layer.setStyle({
+                fillColor: currentFill,
+                fillOpacity: currentFillOpacity,
+                weight: defaultBorderStyle.weight,
+                color: defaultBorderStyle.color,
+                opacity: defaultBorderStyle.opacity
+            });
+
             const el = layer.getElement();
             if (el) el.style.cursor = '';
         },

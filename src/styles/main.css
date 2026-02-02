@@ -1156,7 +1156,8 @@
         /* Responsive - Mobile Layout */
         @media (max-width: 700px) {
             .floating-header {
-                top: max(12px, env(safe-area-inset-top, 12px)); /* Ensure minimum distance from top */
+                /* Position below Safari address bar (~50px) + safe area + spacing */
+                top: max(70px, calc(60px + env(safe-area-inset-top, 12px)));
                 padding: 10px 16px; /* Slightly larger touch targets */
                 min-height: 44px; /* iOS minimum recommended touch target height */
                 gap: 12px; /* Slightly larger spacing for easier interaction */
@@ -1239,9 +1240,9 @@
 
             .locate-dock {
                 /* Move to top on mobile to avoid conflict with guess pills */
-                /* Positioned below floating header (which is ~56px tall) + spacing */
+                /* Positioned below floating header (now at ~70px + 44px height) + spacing */
                 bottom: auto;
-                top: max(80px, calc(68px + env(safe-area-inset-top, 12px))); /* Ensure it's below header */
+                top: max(130px, calc(120px + env(safe-area-inset-top, 12px))); /* Ensure it's below header */
                 padding: var(--spacing-sm) var(--spacing-lg);
                 max-width: calc(100% - 32px);
                 z-index: 1500; /* Below header but above other elements */
