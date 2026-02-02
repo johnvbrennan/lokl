@@ -1,0 +1,172 @@
+{
+  "phase": 26,
+  "name": "Time Trial - Integration & Wiring",
+  "description": "Wire up event handlers, store subscriptions, and integrate Time Trial with the main application",
+  "prerequisites": ["Phase-25-TimeTrialUIComponents"],
+  "prds": [
+    {
+      "category": "functional",
+      "description": "Add Time Trial imports to main.js",
+      "steps": [
+        "Open src/main.js",
+        "Import time trial functions from src/game/timeTrialMode.js",
+        "Import: initTimeTrialMode, startTimeTrialTimer, stopTimeTrialTimer, handleTimeout",
+        "Import timer UI functions from src/ui/components.js",
+        "Import: updateTimerDisplay, updateTimerWarningState, showTimeTrialEndModal",
+        "Verify all imports resolve correctly",
+        "Check for any circular dependency issues"
+      ],
+      "passes": false
+    },
+    {
+      "category": "functional",
+      "description": "Add Time Trial button click event handler",
+      "steps": [
+        "Open src/main.js",
+        "Locate event listener setup section (around line 400)",
+        "Add click event listener for #timetrial-btn",
+        "On click: hide start overlay",
+        "Call initTimeTrialMode with UI callbacks",
+        "Pass callbacks: updateTimerDisplay, updateTimerWarningState, showTimeTrialEndModal, etc.",
+        "Initialize timer display",
+        "Test button click starts Time Trial game correctly",
+        "Verify game state transitions to 'timetrial' mode"
+      ],
+      "passes": false
+    },
+    {
+      "category": "functional",
+      "description": "Add store subscription for timer updates",
+      "steps": [
+        "Open src/main.js",
+        "Add store.subscribe() for timer state changes",
+        "Check if game.mode === 'timetrial' and game.timerActive === true",
+        "If active: call updateTimerDisplay(state.game.timeRemaining)",
+        "Call updateTimerWarningState(state.game.timeRemaining, state.game.timeLimit)",
+        "Verify subscription triggers on timer updates",
+        "Test that UI updates smoothly during countdown",
+        "Ensure subscription doesn't fire unnecessarily for other modes"
+      ],
+      "passes": false
+    },
+    {
+      "category": "functional",
+      "description": "Add Time Trial settings change handlers",
+      "steps": [
+        "Open src/main.js",
+        "Add event listeners for time trial settings sliders",
+        "Listen for 'input' event on #tt-easy, #tt-medium, #tt-hard",
+        "On change: update corresponding value display span",
+        "Update store settings via updateTimeTrialSettings action",
+        "Call saveTimeTrialSettings() for persistence",
+        "Test slider changes are reflected immediately",
+        "Verify settings persist after page refresh"
+      ],
+      "passes": false
+    },
+    {
+      "category": "functional",
+      "description": "Implement Page Visibility API handler",
+      "steps": [
+        "Open src/main.js",
+        "Add 'visibilitychange' event listener on document",
+        "On visibility change: check if document.hidden is false (tab visible)",
+        "If Time Trial is active: recalculate time remaining",
+        "Use elapsed = (Date.now() - startTime) / 1000",
+        "Calculate newRemaining = max(0, timeLimit - elapsed)",
+        "If newRemaining === 0: call handleTimeout immediately",
+        "Otherwise: update timer with corrected time",
+        "Test by switching tabs during active game",
+        "Verify timer recovers correctly on return"
+      ],
+      "passes": false
+    },
+    {
+      "category": "functional",
+      "description": "Handle page refresh recovery for Time Trial",
+      "steps": [
+        "Open src/game/gameLogic.js",
+        "Modify initGame() to check for saved Time Trial state on load",
+        "Call loadTimeTrialState() on app initialization",
+        "If saved state exists and is recent (< timeLimit seconds old):",
+        "Calculate elapsed time since startTime",
+        "Calculate remaining time",
+        "If remaining > 0: restore game state and resume timer",
+        "If remaining <= 0: trigger timeout immediately",
+        "Display toast: 'Game resumed - X.Xs remaining'",
+        "Test by refreshing page during active Time Trial",
+        "Verify game resumes with correct timer value"
+      ],
+      "passes": false
+    },
+    {
+      "category": "functional",
+      "description": "Modify guess counter pill update logic",
+      "steps": [
+        "Open src/ui/components.js",
+        "Locate updateGuessCounterPill() function (line ~500-520)",
+        "Add check at start: if (isTimeTrialMode(store.getState()))",
+        "If Time Trial: don't display guess counter, timer handles display",
+        "If not Time Trial: display guess counter as normal (X/Y format)",
+        "Update data-mode attribute accordingly",
+        "Test pill displays correctly in all modes",
+        "Verify switching between modes updates pill content"
+      ],
+      "passes": false
+    },
+    {
+      "category": "functional",
+      "description": "Add Time Trial help modal documentation",
+      "steps": [
+        "Open index.html",
+        "Locate help modal content section",
+        "Add new section titled '⏱️ TIME TRIAL MODE'",
+        "Describe: 'Race against the clock! Limited time, unlimited guesses.'",
+        "Explain timer varies by difficulty (60s/45s/30s)",
+        "Explain color warnings as time runs low",
+        "Mention statistics tracking (best time, average time)",
+        "Add visual divider line",
+        "Style to match existing help content",
+        "Test help modal displays new section"
+      ],
+      "passes": false
+    },
+    {
+      "category": "functional",
+      "description": "Ensure Time Trial doesn't interfere with other modes",
+      "steps": [
+        "Start Daily Challenge game - verify normal operation",
+        "Start Practice game - verify guess limits work",
+        "Start Locate Mode game - verify map clicks work",
+        "Switch between modes multiple times",
+        "Verify state resets properly between mode switches",
+        "Verify timer doesn't appear in non-Time Trial modes",
+        "Verify guess counter appears in non-Time Trial modes",
+        "Test that statistics remain separate for each mode"
+      ],
+      "passes": false
+    },
+    {
+      "category": "testing",
+      "description": "Verify complete integration works end-to-end",
+      "steps": [
+        "Clear browser localStorage",
+        "Load application fresh",
+        "Click Time Trial button",
+        "Select difficulty level (easy/medium/hard)",
+        "Verify correct timer starts (60s/45s/30s)",
+        "Watch timer count down with color changes",
+        "Make several guesses (verify unlimited)",
+        "Let timer expire - verify timeout handling",
+        "Start new Time Trial and win before timeout",
+        "Check statistics updated correctly",
+        "Adjust settings - verify persistence",
+        "Refresh page mid-game - verify recovery",
+        "Switch tabs mid-game - verify timer continues",
+        "Test on mobile and desktop",
+        "Verify no console errors throughout"
+      ],
+      "passes": false
+    }
+  ]
+}

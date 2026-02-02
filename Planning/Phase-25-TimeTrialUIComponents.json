@@ -1,0 +1,202 @@
+{
+  "phase": 25,
+  "name": "Time Trial - UI Components",
+  "description": "Build the user interface elements for timer display, settings, and end-game modals",
+  "prerequisites": ["Phase-24-TimeTrialCoreLogic"],
+  "prds": [
+    {
+      "category": "functional",
+      "description": "Add Time Trial button to header",
+      "steps": [
+        "Open index.html",
+        "Locate the header section with Practice and Locate buttons",
+        "Add Time Trial button with id='timetrial-btn'",
+        "Add timer emoji ⏱️ icon",
+        "Add span with class 'btn-text' containing 'Time Trial'",
+        "Add appropriate CSS classes for styling",
+        "Verify button appears in header visually",
+        "Test button is clickable and accessible"
+      ],
+      "passes": false
+    },
+    {
+      "category": "functional",
+      "description": "Modify guess counter pill to support timer display",
+      "steps": [
+        "Open index.html",
+        "Locate #guess-counter-pill element (line ~117)",
+        "Add data-mode attribute to support conditional display",
+        "Ensure pill content can display both 'X/Y' and 'XX.Xs'",
+        "Keep existing structure for backward compatibility",
+        "Verify pill displays correctly in all modes",
+        "Test responsive layout on mobile and desktop"
+      ],
+      "passes": false
+    },
+    {
+      "category": "functional",
+      "description": "Implement updateTimerDisplay UI function",
+      "steps": [
+        "Open src/ui/components.js",
+        "Create updateTimerDisplay(timeRemaining) function",
+        "Get #guess-counter-pill element",
+        "Format time using formatTimeDisplay()",
+        "Update pill-content text to show formatted time",
+        "Set data-mode='timetrial' on pill",
+        "Apply font-variant-numeric for tabular numbers",
+        "Test display updates smoothly during countdown",
+        "Verify proper alignment and spacing"
+      ],
+      "passes": false
+    },
+    {
+      "category": "functional",
+      "description": "Implement timer warning state UI function",
+      "steps": [
+        "Open src/ui/components.js",
+        "Create updateTimerWarningState(timeRemaining, timeLimit) function",
+        "Get timer color using getTimerColor()",
+        "Remove existing warning classes",
+        "Apply appropriate class: timer-warning, timer-danger, timer-critical, or timer-urgent",
+        "Update pill styling based on color state",
+        "Test color transitions at each threshold",
+        "Verify pulse animation activates below 5s"
+      ],
+      "passes": false
+    },
+    {
+      "category": "functional",
+      "description": "Add Time Trial settings sliders to settings modal",
+      "steps": [
+        "Open index.html",
+        "Locate settings modal section (line ~27-44)",
+        "Add new section with heading 'Time Trial Durations'",
+        "Add range slider for Easy: min=15, max=120, step=5, value=60, id='tt-easy'",
+        "Add range slider for Medium: min=15, max=120, step=5, value=45, id='tt-medium'",
+        "Add range slider for Hard: min=15, max=120, step=5, value=30, id='tt-hard'",
+        "Add span elements to display current values (tt-easy-val, tt-medium-val, tt-hard-val)",
+        "Style sliders to match existing settings UI",
+        "Verify sliders are functional and display current values"
+      ],
+      "passes": false
+    },
+    {
+      "category": "functional",
+      "description": "Implement Time Trial settings UI update function",
+      "steps": [
+        "Open src/ui/components.js",
+        "Create updateTimeTrialSettingsUI() function",
+        "Load current settings from store",
+        "Set slider values to match stored durations",
+        "Update value display spans",
+        "Add event listeners to sliders",
+        "On change: update value span and save to settings",
+        "Call persistence to save settings to localStorage",
+        "Test that settings persist across page refreshes"
+      ],
+      "passes": false
+    },
+    {
+      "category": "functional",
+      "description": "Implement Time Trial end modal",
+      "steps": [
+        "Open src/ui/components.js",
+        "Create showTimeTrialEndModal(won, timeElapsed, guessCount, targetCounty) function",
+        "If won: show 'Well Done!' title",
+        "If won: display 'Completed in X.Xs with Y guesses'",
+        "If timeout: show 'Time's Up!' title",
+        "If timeout: display 'The county was [CountyName]'",
+        "Show county fun fact",
+        "Display Time Trial statistics summary",
+        "Add 'Play Again' button",
+        "Test modal appears correctly for both win and timeout",
+        "Verify all data displays accurately"
+      ],
+      "passes": false
+    },
+    {
+      "category": "functional",
+      "description": "Implement Time Trial statistics display",
+      "steps": [
+        "Open src/ui/components.js",
+        "Create renderTimeTrialStats() function",
+        "Load time trial statistics from store",
+        "Display: Games Played, Games Won, Win Rate %",
+        "Display: Average Time (X.Xs format), Best Time",
+        "Display: Average Guesses, Timeout Count",
+        "Render distribution bar chart showing guess counts",
+        "Handle edge case of 0 games played",
+        "Style to match existing statistics modal",
+        "Test statistics display updates after each game"
+      ],
+      "passes": false
+    },
+    {
+      "category": "functional",
+      "description": "Add CSS styling for timer display",
+      "steps": [
+        "Open src/styles/main.css",
+        "Add styles for #guess-counter-pill[data-mode='timetrial']",
+        "Set min-width: 80px for consistent sizing",
+        "Set font-variant-numeric: tabular-nums for aligned digits",
+        "Add .timer-warning class with yellow color (--color-warm-2)",
+        "Add .timer-danger class with orange color (--color-warm-3)",
+        "Add .timer-critical class with red color (--color-hot)",
+        "Add .timer-urgent class with red color and pulse animation",
+        "Create @keyframes timer-pulse animation",
+        "Pulse should scale and fade (0.5s infinite)",
+        "Test all color states visually",
+        "Verify animation is smooth and not distracting"
+      ],
+      "passes": false
+    },
+    {
+      "category": "functional",
+      "description": "Add CSS styling for Time Trial settings",
+      "steps": [
+        "Open src/styles/main.css",
+        "Add styles for time trial settings section",
+        "Style range sliders to match theme",
+        "Add hover and focus states for sliders",
+        "Style value display spans",
+        "Ensure responsive layout on mobile",
+        "Test slider appearance in both light and dark themes",
+        "Verify accessibility (focus indicators, contrast)"
+      ],
+      "passes": false
+    },
+    {
+      "category": "functional",
+      "description": "Update mode badge for Time Trial",
+      "steps": [
+        "Open src/ui/components.js",
+        "Locate updateModeBadge() function (line ~140)",
+        "Add case for 'timetrial' mode",
+        "Display 'Time Trial' text with timer icon ⏱️",
+        "Apply appropriate styling",
+        "Test badge updates correctly when switching modes",
+        "Verify badge is visible and readable"
+      ],
+      "passes": false
+    },
+    {
+      "category": "testing",
+      "description": "Verify all UI components work correctly",
+      "steps": [
+        "Click Time Trial button - verify it's clickable",
+        "Start Time Trial game - verify timer appears in header pill",
+        "Watch timer count down - verify smooth updates",
+        "Observe color changes at 20s, 15s, 10s, 5s thresholds",
+        "Verify pulse animation at < 5s",
+        "Open settings modal - verify sliders present",
+        "Adjust slider values - verify persistence",
+        "Let game timeout - verify timeout modal displays correctly",
+        "Win a game - verify win modal displays time and guesses",
+        "Open statistics - verify Time Trial stats display",
+        "Test on mobile device - verify responsive layout",
+        "Test in both light and dark themes"
+      ],
+      "passes": false
+    }
+  ]
+}

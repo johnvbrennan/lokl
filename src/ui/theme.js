@@ -75,9 +75,17 @@ export function updateThemeButton(theme) {
     if (!btn) return;
 
     const icon = btn.querySelector('.menu-icon');
+    const label = btn.querySelector('.menu-label');
+
     if (icon) {
         icon.textContent = theme === 'dark' ? '☀️' : '🌙';
     }
+
+    // Update label to show the mode we're switching TO
+    if (label) {
+        label.textContent = theme === 'dark' ? 'Light Mode' : 'Dark Mode';
+    }
+
     btn.title = theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode';
 }
 

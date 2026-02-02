@@ -1,0 +1,152 @@
+{
+  "phase": 24,
+  "name": "Time Trial - Core Logic",
+  "description": "Implement the core timer mechanics, timeout handling, and game logic integration",
+  "prerequisites": ["Phase-23-TimeTrialStateInfrastructure"],
+  "prds": [
+    {
+      "category": "functional",
+      "description": "Create timeTrialMode.js module with timer initialization",
+      "steps": [
+        "Create new file src/game/timeTrialMode.js",
+        "Import store, actions, and selectors",
+        "Declare timerInterval variable to store setInterval reference",
+        "Implement initTimeTrialMode(callbacks) function",
+        "Initialize timer with duration from settings based on difficulty",
+        "Set up game state with unlimited guesses",
+        "Call startTimer action with duration",
+        "Verify initialization sets up state correctly",
+        "Test that callbacks are properly registered"
+      ],
+      "passes": false
+    },
+    {
+      "category": "functional",
+      "description": "Implement timer countdown mechanics",
+      "steps": [
+        "In timeTrialMode.js, implement startTimeTrialTimer(duration)",
+        "Use setInterval with 100ms interval for smooth updates",
+        "Track elapsed time using performance.now() for accuracy",
+        "Calculate timeRemaining = timeLimit - elapsed",
+        "Call updateTimer action on each tick",
+        "Update display every 100ms for 0.1s precision",
+        "Verify timer counts down smoothly from start to finish",
+        "Test that timer remains accurate over extended periods"
+      ],
+      "passes": false
+    },
+    {
+      "category": "functional",
+      "description": "Implement timer stop and cleanup",
+      "steps": [
+        "In timeTrialMode.js, implement stopTimeTrialTimer()",
+        "Clear the setInterval reference",
+        "Call stopTimer action to update state",
+        "Set timerInterval to null",
+        "Verify timer stops when function is called",
+        "Test that multiple calls don't cause errors",
+        "Verify no memory leaks from uncleaned intervals"
+      ],
+      "passes": false
+    },
+    {
+      "category": "functional",
+      "description": "Implement timeout handling",
+      "steps": [
+        "In timeTrialMode.js, implement handleTimeout(callbacks)",
+        "Detect when timeRemaining reaches 0",
+        "Stop the timer immediately",
+        "Call endGame('lost') action",
+        "Reveal the correct county on map via callback",
+        "Show timeout modal with message 'Time's up!'",
+        "Display target county name in modal",
+        "Update time trial statistics (increment timeoutCount)",
+        "Test timeout triggers correctly when time expires"
+      ],
+      "passes": false
+    },
+    {
+      "category": "functional",
+      "description": "Implement timer color calculation",
+      "steps": [
+        "In timeTrialMode.js, implement getTimerColor(timeRemaining, timeLimit)",
+        "Return 'normal' for timeRemaining > 20s",
+        "Return 'warning' (yellow) for 15s-20s",
+        "Return 'danger' (orange) for 10s-15s",
+        "Return 'critical' (red) for 5s-10s",
+        "Return 'urgent' (pulsing red) for < 5s",
+        "Verify correct color returned for each threshold",
+        "Test edge cases at exact threshold values"
+      ],
+      "passes": false
+    },
+    {
+      "category": "functional",
+      "description": "Implement time display formatting",
+      "steps": [
+        "In timeTrialMode.js, implement formatTimeDisplay(seconds)",
+        "Format as 'X.Xs' for times under 60s (e.g., '42.3s')",
+        "Format as 'M:SS.S' for times 60s and above (e.g., '1:23.4')",
+        "Round to 1 decimal place",
+        "Handle edge case of 0 seconds",
+        "Test formatting with various time values",
+        "Verify proper zero-padding for minutes display"
+      ],
+      "passes": false
+    },
+    {
+      "category": "functional",
+      "description": "Implement Time Trial statistics updates",
+      "steps": [
+        "In timeTrialMode.js, implement updateTimeTrialStats(won, timeElapsed, guessCount)",
+        "Increment gamesPlayed for all games",
+        "If won: increment gamesWon",
+        "If won: update averageTime (running average)",
+        "If won: update bestTime if timeElapsed < bestTime",
+        "If won: update averageGuesses",
+        "If won: increment distribution array at guessCount index",
+        "If timeout: increment timeoutCount",
+        "Call updateTimeTrialStatistics action",
+        "Call persistence to save updated stats",
+        "Test statistics calculations are accurate"
+      ],
+      "passes": false
+    },
+    {
+      "category": "functional",
+      "description": "Integrate Time Trial mode into gameLogic.js",
+      "steps": [
+        "Open src/game/gameLogic.js",
+        "Import time trial functions from timeTrialMode.js",
+        "Modify initGame() to handle 'timetrial' mode case",
+        "Start timer when mode is 'timetrial'",
+        "Get duration from settings based on difficulty",
+        "Call startTimeTrialTimer with duration",
+        "Modify processGuess() to skip guess limit check if isTimeTrialMode()",
+        "Keep existing guess limit logic for other modes",
+        "On win in time trial: stop timer, calculate elapsed time",
+        "Call updateTimeTrialStats on win with elapsed time and guess count",
+        "Test Time Trial game flow from start to finish"
+      ],
+      "passes": false
+    },
+    {
+      "category": "testing",
+      "description": "Verify core timer logic works end-to-end",
+      "steps": [
+        "Start Time Trial game with 30 second timer",
+        "Verify timer starts counting down from 30.0s",
+        "Watch timer reach each color threshold",
+        "Make several guesses (verify unlimited guesses)",
+        "Let timer expire naturally",
+        "Verify timeout triggers loss condition",
+        "Verify answer is revealed on timeout",
+        "Start new game and win before timeout",
+        "Verify timer stops on win",
+        "Verify statistics updated correctly",
+        "Check that all memory is cleaned up (no lingering intervals)"
+      ],
+      "passes": false
+    }
+  ]
+}

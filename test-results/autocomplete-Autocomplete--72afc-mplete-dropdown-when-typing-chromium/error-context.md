@@ -1,0 +1,76 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - main [ref=e3]:
+      - generic [ref=e5]:
+        - generic:
+          - generic:
+            - img
+        - generic:
+          - generic [ref=e38]:
+            - button "Zoom in" [ref=e39] [cursor=pointer]: +
+            - button "Zoom out" [ref=e40] [cursor=pointer]: −
+          - generic [ref=e41]:
+            - link "Leaflet" [ref=e42] [cursor=pointer]:
+              - /url: https://leafletjs.com
+              - img [ref=e43]
+              - text: Leaflet
+            - text: "| ©"
+            - link "OpenStreetMap" [ref=e47] [cursor=pointer]:
+              - /url: https://www.openstreetmap.org/copyright
+            - text: ©
+            - link "CARTO" [ref=e48] [cursor=pointer]:
+              - /url: https://carto.com/attributions
+    - banner [ref=e49]:
+      - generic [ref=e50]: lokl
+      - generic [ref=e51]: 0/6
+      - button "☰" [ref=e53] [cursor=pointer]
+    - generic [ref=e54]:
+      - textbox "Guess a county..." [ref=e55]
+      - button "➤" [ref=e56]
+  - generic [ref=e57]: Copied to clipboard!
+  - generic [ref=e59]:
+    - heading "lokl" [level=1] [ref=e60]
+    - heading "Welcome to lokl!" [level=2] [ref=e61]
+    - paragraph [ref=e62]: Can you find the mystery Irish county?
+    - generic [ref=e63]:
+      - generic [ref=e64] [cursor=pointer]:
+        - generic [ref=e65]: 📅
+        - generic [ref=e66]:
+          - generic [ref=e67]:
+            - text: Daily Challenge
+            - generic [ref=e68]: New
+          - generic [ref=e69]: Same county for everyone, one puzzle per day.
+      - generic [ref=e70] [cursor=pointer]:
+        - generic [ref=e71]: 🎯
+        - generic [ref=e72]:
+          - generic [ref=e73]:
+            - text: Practice
+            - generic [ref=e74]: Unlimited
+          - generic [ref=e75]: Random counties, play as many times as you want.
+      - generic [ref=e76] [cursor=pointer]:
+        - generic [ref=e77]: 📍
+        - generic [ref=e78]:
+          - generic [ref=e79]:
+            - text: Locate Mode
+            - generic [ref=e80]: Learn
+          - generic [ref=e81]: Click on the map to find named counties. Great for learning!
+    - generic [ref=e82]:
+      - generic [ref=e83]: Difficulty
+      - generic [ref=e84]:
+        - button "Easy Distance + Direction" [ref=e85] [cursor=pointer]:
+          - generic [ref=e86]: Easy
+          - text: Distance + Direction
+        - button "Medium Distance only" [ref=e87] [cursor=pointer]:
+          - generic [ref=e88]: Medium
+          - text: Distance only
+        - button "Hard Direction only, 4 guesses" [ref=e89] [cursor=pointer]:
+          - generic [ref=e90]: Hard
+          - text: Direction only, 4 guesses
+    - button "Start Game" [ref=e91] [cursor=pointer]
+    - button "How to play ▼" [ref=e93] [cursor=pointer]:
+      - generic [ref=e94]: How to play
+      - generic [ref=e95]: ▼
+```

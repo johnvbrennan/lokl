@@ -9,10 +9,11 @@ import { gameState, getMaxGuesses } from './gameState.js';
 import { COUNTY_ADJACENCY } from '../data/adjacency.js';
 
 /**
- * Initialize locate mode
+ * Initialize locate mode UI (state updates handled by caller)
+ * @param {string} targetCounty - Target county to display
  * @param {Object} callbacks - UI callback functions
  */
-export function initLocateMode(callbacks = {}) {
+export function initLocateModeUI(targetCounty, callbacks = {}) {
     const {
         clearGuessRail,
         resetMapColors,
@@ -22,14 +23,6 @@ export function initLocateMode(callbacks = {}) {
 
     // Clear guess pills immediately
     if (clearGuessRail) clearGuessRail();
-
-    gameState.mode = 'locate';
-    gameState.guesses = [];
-    gameState.status = 'playing';
-
-    // Pick a random target county
-    const targetCounty = getRandomCounty();
-    gameState.targetCounty = targetCounty;
 
     // Clear previous game state
     if (resetMapColors) resetMapColors();
@@ -107,31 +100,27 @@ export function exitLocateMode(initGame) {
 }
 
 /**
- * Start next locate round
+ * Start next locate round UI (state updates handled by caller)
+ * @param {string} targetCounty - New target county to display
  * @param {Object} callbacks - UI callback functions
  */
-export function startNextLocateRound(callbacks = {}) {
+export function startNextLocateRoundUI(targetCounty, callbacks = {}) {
     const {
         resetUI,
         clearGuessRail,
         updateGuessCounterPill
     } = callbacks;
 
-    // Pick a new random target
-    gameState.targetCounty = getRandomCounty();
-    gameState.guesses = [];
-    gameState.status = 'playing';
-
     // Update UI
     const locateTarget = document.getElementById('locate-target');
     const locateHint = document.getElementById('locate-hint');
-    if (locateTarget) locateTarget.textContent = gameState.targetCounty;
+    if (locateTarget) locateTarget.textContent = targetCounty;
     if (locateHint) locateHint.textContent = 'Click on the map to find it!';
 
     // Update the new locate dock
     const locateTargetNew = document.getElementById('locate-target-new');
     const locateHintNew = document.getElementById('locate-hint-new');
-    if (locateTargetNew) locateTargetNew.textContent = gameState.targetCounty;
+    if (locateTargetNew) locateTargetNew.textContent = targetCounty;
     if (locateHintNew) locateHintNew.textContent = 'Click on the map to find it!';
 
     // Clear guess rail

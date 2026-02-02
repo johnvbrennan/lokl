@@ -1,0 +1,259 @@
+{
+  "phase": 27,
+  "name": "Time Trial - Testing & Edge Cases",
+  "description": "Comprehensive testing of Time Trial feature including unit tests, integration tests, and edge case validation",
+  "prerequisites": ["Phase-26-TimeTrialIntegration"],
+  "prds": [
+    {
+      "category": "testing",
+      "description": "Create unit tests for timer logic",
+      "steps": [
+        "Create tests/timeTrialMode.test.js file",
+        "Test startTimeTrialTimer(duration) initializes correctly",
+        "Test timer tick updates timeRemaining accurately",
+        "Test stopTimeTrialTimer() cleans up interval",
+        "Test handleTimeout() triggers at timeRemaining === 0",
+        "Test getTimerColor() returns correct color for each threshold",
+        "Test formatTimeDisplay() formats times correctly",
+        "Mock performance.now() for deterministic tests",
+        "Run all unit tests and verify they pass",
+        "Verify 100% code coverage for timeTrialMode.js"
+      ],
+      "passes": false
+    },
+    {
+      "category": "testing",
+      "description": "Create unit tests for Time Trial actions and selectors",
+      "steps": [
+        "Create tests/timeTrialState.test.js file",
+        "Test startTimer() action sets correct state",
+        "Test updateTimer() action updates timeRemaining",
+        "Test stopTimer() action sets timerActive to false",
+        "Test isTimeTrialMode() selector with various modes",
+        "Test getTimeTrialDuration() for each difficulty",
+        "Test all Time Trial selectors return expected values",
+        "Run tests and verify they pass"
+      ],
+      "passes": false
+    },
+    {
+      "category": "testing",
+      "description": "Create integration test for complete Time Trial win flow",
+      "steps": [
+        "Create tests/integration/timeTrialWin.test.js",
+        "Test: Start Time Trial game",
+        "Test: Timer initializes with correct duration",
+        "Test: Make guesses (verify unlimited)",
+        "Test: Identify correct county before timeout",
+        "Test: Timer stops on win",
+        "Test: Elapsed time calculated correctly",
+        "Test: Statistics updated (gamesPlayed++, gamesWon++, bestTime)",
+        "Test: End modal displays correct data",
+        "Run integration test and verify pass"
+      ],
+      "passes": false
+    },
+    {
+      "category": "testing",
+      "description": "Create integration test for Time Trial timeout flow",
+      "steps": [
+        "Create tests/integration/timeTrialTimeout.test.js",
+        "Test: Start Time Trial game",
+        "Test: Wait for timer to reach 0",
+        "Test: Timeout handler triggers",
+        "Test: Game status changes to 'lost'",
+        "Test: Correct county revealed on map",
+        "Test: Statistics updated (gamesPlayed++, timeoutCount++)",
+        "Test: End modal shows 'Time's Up!' message",
+        "Run integration test and verify pass"
+      ],
+      "passes": false
+    },
+    {
+      "category": "testing",
+      "description": "Test persistence and recovery on page refresh",
+      "steps": [
+        "Start Time Trial game",
+        "Wait for timer to count down to mid-point (e.g., 30s remaining)",
+        "Save current state to localStorage",
+        "Simulate page refresh by reloading",
+        "Verify loadTimeTrialState() retrieves saved state",
+        "Verify elapsed time calculated correctly",
+        "Verify timer resumes with adjusted timeRemaining",
+        "Verify game continues normally",
+        "Test multiple refresh scenarios (early, mid, late in game)",
+        "Test refresh after timeout (should not resume)"
+      ],
+      "passes": false
+    },
+    {
+      "category": "testing",
+      "description": "Test tab switching and background behavior",
+      "steps": [
+        "Start Time Trial game",
+        "Switch to different browser tab",
+        "Wait 10 seconds",
+        "Return to game tab",
+        "Verify timer recalculates correctly using startTime",
+        "Verify no time is 'lost' due to tab being inactive",
+        "If timeout occurred while away: verify timeout handled",
+        "Test that timer continues accurately after return",
+        "Verify no visual glitches or jumps in timer display"
+      ],
+      "passes": false
+    },
+    {
+      "category": "testing",
+      "description": "Test rapid guessing and performance",
+      "steps": [
+        "Start Time Trial game",
+        "Submit 20+ guesses as quickly as possible",
+        "Verify all guesses are processed correctly",
+        "Verify timer continues smoothly during rapid input",
+        "Check for memory leaks using browser dev tools",
+        "Verify no UI lag or slowdown",
+        "Test that timer interval doesn't accumulate duplicates",
+        "Verify performance remains consistent throughout"
+      ],
+      "passes": false
+    },
+    {
+      "category": "testing",
+      "description": "Test settings persistence and updates",
+      "steps": [
+        "Open settings modal",
+        "Adjust Easy slider to 90 seconds",
+        "Adjust Medium slider to 60 seconds",
+        "Adjust Hard slider to 45 seconds",
+        "Close settings modal",
+        "Refresh page",
+        "Verify settings persisted correctly",
+        "Start Time Trial on Easy - verify 90s timer",
+        "Start Time Trial on Hard - verify 45s timer",
+        "Test minimum (15s) and maximum (120s) slider values"
+      ],
+      "passes": false
+    },
+    {
+      "category": "testing",
+      "description": "Test statistics accuracy and persistence",
+      "steps": [
+        "Clear Time Trial statistics",
+        "Play and win Time Trial game in 25.3s with 3 guesses",
+        "Verify gamesPlayed === 1, gamesWon === 1",
+        "Verify bestTime === 25.3, averageTime === 25.3",
+        "Verify averageGuesses === 3",
+        "Verify distribution[2] === 1 (3rd guess = index 2)",
+        "Play and timeout another game",
+        "Verify gamesPlayed === 2, gamesWon === 1, timeoutCount === 1",
+        "Win another game in 30.5s with 4 guesses",
+        "Verify averageTime === (25.3 + 30.5) / 2 === 27.9",
+        "Verify bestTime remains 25.3",
+        "Verify statistics persist after refresh"
+      ],
+      "passes": false
+    },
+    {
+      "category": "testing",
+      "description": "Test Time Trial doesn't affect other modes",
+      "steps": [
+        "Play Daily Challenge - verify 6 guess limit",
+        "Play Practice Mode - verify 6 guess limit",
+        "Play Locate Mode - verify map click functionality",
+        "Play Time Trial - verify unlimited guesses, timer works",
+        "Switch back to Daily - verify timer doesn't appear",
+        "Verify Daily statistics unchanged by Time Trial games",
+        "Verify Practice statistics unchanged by Time Trial games",
+        "Confirm complete isolation between modes"
+      ],
+      "passes": false
+    },
+    {
+      "category": "testing",
+      "description": "Test edge case: system clock changes",
+      "steps": [
+        "Start Time Trial game",
+        "Note the startTime timestamp",
+        "Simulate system clock jump forward (mock Date.now())",
+        "Verify timeout occurs appropriately if time exceeded",
+        "Simulate system clock jump backward",
+        "Verify timer doesn't show negative or incorrect values",
+        "Test that performance.now() provides stability",
+        "Verify edge case doesn't crash or corrupt state"
+      ],
+      "passes": false
+    },
+    {
+      "category": "testing",
+      "description": "Test accessibility features",
+      "steps": [
+        "Start Time Trial game",
+        "Use screen reader to verify timer announcements",
+        "Verify ARIA live region updates on timer changes",
+        "Test keyboard navigation to Time Trial button",
+        "Test keyboard navigation through settings sliders",
+        "Verify color contrast meets WCAG standards for all timer colors",
+        "Verify color changes accompanied by numerical changes (not color alone)",
+        "Test with keyboard-only navigation",
+        "Verify all interactive elements have focus indicators"
+      ],
+      "passes": false
+    },
+    {
+      "category": "testing",
+      "description": "Test mobile responsiveness",
+      "steps": [
+        "Open application on mobile device (or use device emulation)",
+        "Start Time Trial game",
+        "Verify timer displays properly in mobile header",
+        "Test timer is readable (not too small)",
+        "Verify color changes visible on mobile",
+        "Test settings sliders work with touch",
+        "Verify end modal displays correctly on small screens",
+        "Test portrait and landscape orientations",
+        "Verify no horizontal scrolling issues",
+        "Test on multiple mobile browsers (Chrome, Safari, Firefox)"
+      ],
+      "passes": false
+    },
+    {
+      "category": "testing",
+      "description": "Test theme compatibility",
+      "steps": [
+        "Start Time Trial in light theme",
+        "Verify timer colors are visible and readable",
+        "Verify pulse animation works",
+        "Switch to dark theme",
+        "Verify timer colors adapt correctly",
+        "Verify all warning states visible in dark theme",
+        "Test settings sliders in both themes",
+        "Verify statistics display in both themes",
+        "Confirm no theme-related visual bugs"
+      ],
+      "passes": false
+    },
+    {
+      "category": "testing",
+      "description": "Final end-to-end acceptance test",
+      "steps": [
+        "Clear all localStorage",
+        "Load application fresh",
+        "Navigate to Time Trial from start screen",
+        "Configure custom timer durations (Easy: 75s, Medium: 50s, Hard: 35s)",
+        "Start Time Trial on Medium difficulty",
+        "Verify 50s timer starts",
+        "Watch timer count down with color transitions",
+        "Make 5 incorrect guesses (verify unlimited guesses)",
+        "Correctly identify county before timeout",
+        "Verify win modal shows time and guesses",
+        "Check statistics show 1 game played, 1 won",
+        "Start new Time Trial and let it timeout",
+        "Verify timeout statistics recorded",
+        "Refresh page - verify all data persists",
+        "Switch between all game modes - verify no interference",
+        "Complete full user journey without errors"
+      ],
+      "passes": false
+    }
+  ]
+}

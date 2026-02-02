@@ -9,6 +9,8 @@ import { store, getMaxGuesses } from '../game/gameState.js';
 import { loadDailyState } from '../storage/persistence.js';
 import { getTodaysDateString, getTimeUntilNextDay, formatTimeRemaining } from '../utils/dateUtils.js';
 import { createConfetti } from './confetti.js';
+import { formatTimeDisplay, getTimerColor } from '../game/timeTrialMode.js';
+import { isTimeTrialMode } from '../store/selectors.js';
 
 // Helper functions to get state slices
 const getGame = () => store.getState().game;
@@ -127,7 +129,7 @@ export function updateModeBadge() {
     const badge = document.getElementById('mode-badge');
     if (!badge) return;
 
-    badge.classList.remove('practice', 'locate');
+    badge.classList.remove('practice', 'locate', 'timetrial');
 
     // Build badge text with difficulty for non-locate modes
     let modeText = '';
@@ -138,12 +140,16 @@ export function updateModeBadge() {
     } else if (getGame().mode === 'practice') {
         modeText = 'Practice';
         badge.classList.add('practice');
+    } else if (getGame().mode === 'timetrial') {
+        modeText = '⏱️ Time Trial';
+        badge.classList.add('timetrial');
+        badge.title = 'Time Trial Mode - Race against the clock!';
     } else {
         modeText = 'Daily';
     }
 
     // Add difficulty indicator for guess modes with full names
-    if (getGame().mode !== 'locate') {
+    if (getGame().mode !== 'locate' && getGame().mode !== 'timetrial') {
         const diffNames = {
             'easy': 'Easy',
             'medium': 'Medium',
@@ -426,6 +432,11 @@ export function updateGuessRail() {
 
     rail.innerHTML = '';
 
+    // Get difficulty settings to determine what info to show
+    const difficulty = getSettings().difficulty;
+    const showDistance = difficulty === 'easy' || difficulty === 'medium';
+    const showDirection = difficulty === 'easy' || difficulty === 'hard';
+
     getGame().guesses.forEach((guess, index) => {
         const pill = document.createElement('div');
         pill.className = 'guess-pill glass neon-border';
@@ -437,7 +448,24 @@ export function updateGuessRail() {
             pill.classList.add('correct');
         }
 
-        pill.textContent = guess.county.substring(0, 3).toUpperCase();
+        // Build pill content with county abbreviation and conditional info
+        const countyAbbr = guess.county.substring(0, 3).toUpperCase();
+
+        let content = `<span class="guess-name">${countyAbbr}</span>`;
+
+        if (showDistance && showDirection) {
+            // Easy: Show both
+            content += `<span class="guess-distance">${guess.distance}km</span>`;
+            content += `<span class="guess-direction">${guess.direction}</span>`;
+        } else if (showDistance) {
+            // Medium: Distance only
+            content += `<span class="guess-distance">${guess.distance}km</span>`;
+        } else if (showDirection) {
+            // Hard: Direction only
+            content += `<span class="guess-direction">${guess.direction}</span>`;
+        }
+
+        pill.innerHTML = content;
         rail.appendChild(pill);
     });
 }
@@ -448,7 +476,11 @@ export function updateGuessRail() {
 export function updateGuessCounterPill() {
     const pill = document.getElementById('guess-counter-pill');
     if (pill) {
-        pill.textContent = `${getGame().guesses.length}/${getMaxGuesses()}`;
+        // In time trial mode, timer display takes over the pill
+        if (!isTimeTrialMode(store.getState())) {
+            pill.textContent = `${getGame().guesses.length}/${getMaxGuesses()}`;
+            pill.removeAttribute('data-mode');
+        }
     }
 }
 
@@ -626,4 +658,185 @@ export function clearInput() {
 export function clearGuessRail() {
     const guessRail = document.getElementById('guess-rail');
     if (guessRail) guessRail.innerHTML = '';
+}
+
+// ============================================
+// TIME TRIAL UI FUNCTIONS
+// ============================================
+
+/**
+ * Update timer display in header pill
+ * @param {number} timeRemaining - Time remaining in seconds
+ */
+export function updateTimerDisplay(timeRemaining) {
+    const pill = document.getElementById('guess-counter-pill');
+    if (pill) {
+        pill.textContent = formatTimeDisplay(timeRemaining);
+        pill.setAttribute('data-mode', 'timetrial');
+        pill.style.fontVariantNumeric = 'tabular-nums';
+    }
+}
+
+/**
+ * Update timer warning state based on remaining time
+ * @param {number} timeRemaining - Time remaining in seconds
+ * @param {number} timeLimit - Total time limit in seconds
+ */
+export function updateTimerWarningState(timeRemaining, timeLimit) {
+    const pill = document.getElementById('guess-counter-pill');
+    if (!pill) return;
+
+    const colorState = getTimerColor(timeRemaining, timeLimit);
+
+    // Remove all warning classes
+    pill.classList.remove('timer-warning', 'timer-danger', 'timer-critical', 'timer-urgent');
+
+    // Add appropriate class based on color state
+    if (colorState === 'warning') {
+        pill.classList.add('timer-warning');
+    } else if (colorState === 'danger') {
+        pill.classList.add('timer-danger');
+    } else if (colorState === 'critical') {
+        pill.classList.add('timer-critical');
+    } else if (colorState === 'urgent') {
+        pill.classList.add('timer-urgent');
+    }
+}
+
+/**
+ * Show Time Trial end modal
+ * @param {boolean} won - Whether the game was won
+ * @param {number} timeElapsed - Time elapsed in seconds (for wins)
+ * @param {number} guessCount - Number of guesses made
+ * @param {string} targetCounty - Target county name
+ * @param {Function} showResultLine - Callback to show result line
+ */
+export function showTimeTrialEndModal(won, timeElapsed, guessCount, targetCounty, showResultLine) {
+    const county = COUNTIES[targetCounty];
+    const modalTitle = document.getElementById('modal-title');
+    const starsEl = document.getElementById('modal-stars');
+    const modalCounty = document.getElementById('modal-county');
+    const modalFact = document.getElementById('modal-fact');
+    const modalStatsEl = document.getElementById('modal-stats-summary');
+    const distributionContainer = document.getElementById('distribution-container');
+    const countdownContainer = document.getElementById('countdown-container');
+
+    if (modalTitle) modalTitle.textContent = won ? 'Well Done!' : "Time's Up!";
+
+    if (starsEl) {
+        if (won) {
+            starsEl.innerHTML = `⏱️ ${formatTimeDisplay(timeElapsed)}<br>with ${guessCount} guesses`;
+        } else {
+            starsEl.textContent = '⏱️ Time ran out!';
+        }
+    }
+
+    if (modalCounty) modalCounty.textContent = targetCounty;
+    if (modalFact) modalFact.textContent = county.fact;
+
+    // Show Time Trial statistics
+    if (modalStatsEl) {
+        const stats = store.getState().timeTrialStatistics;
+        const winPct = stats.gamesPlayed > 0 ? Math.round((stats.gamesWon / stats.gamesPlayed) * 100) : 0;
+
+        modalStatsEl.innerHTML = `
+            <div class="modal-stat">
+                <div class="modal-stat-value">${stats.gamesWon}/${stats.gamesPlayed}</div>
+                <div class="modal-stat-label">Won</div>
+            </div>
+            <div class="modal-stat">
+                <div class="modal-stat-value">${stats.bestTime !== null ? formatTimeDisplay(stats.bestTime) : '--'}</div>
+                <div class="modal-stat-label">Best Time</div>
+            </div>
+            <div class="modal-stat">
+                <div class="modal-stat-value">${winPct}%</div>
+                <div class="modal-stat-label">Win %</div>
+            </div>
+        `;
+    }
+
+    // Show distribution for Time Trial stats
+    if (distributionContainer) {
+        renderTimeTrialDistribution(won ? guessCount : null);
+    }
+
+    // Hide countdown for Time Trial
+    if (countdownContainer) {
+        countdownContainer.style.display = 'none';
+    }
+
+    const modalOverlay = document.getElementById('modal-overlay');
+    if (modalOverlay) modalOverlay.classList.add('visible');
+
+    // Show line connecting last guess to target
+    if (!won && showResultLine) {
+        showResultLine();
+    }
+
+    if (won) {
+        createConfetti();
+    }
+}
+
+/**
+ * Render Time Trial guess distribution
+ * @param {number|null} currentGuesses - Current game's guess count
+ */
+export function renderTimeTrialDistribution(currentGuesses) {
+    const bars = document.getElementById('distribution-bars');
+    if (!bars) return;
+
+    bars.innerHTML = '';
+
+    const stats = store.getState().timeTrialStatistics;
+    const maxCount = Math.max(...stats.distribution, 1);
+
+    for (let i = 0; i < 6; i++) {
+        const count = stats.distribution[i];
+        const percentage = (count / maxCount) * 100;
+        const isCurrent = currentGuesses === i + 1;
+
+        const row = document.createElement('div');
+        row.className = 'distribution-row';
+        row.innerHTML = `
+            <span class="distribution-label">${i + 1}</span>
+            <div class="distribution-bar-container">
+                <div class="distribution-bar${isCurrent ? ' current' : ''}"
+                     style="width: ${Math.max(percentage, count > 0 ? 10 : 0)}%">
+                    ${count > 0 ? count : ''}
+                </div>
+            </div>
+        `;
+        bars.appendChild(row);
+    }
+}
+
+/**
+ * Update Time Trial settings UI (sliders and values)
+ */
+export function updateTimeTrialSettingsUI() {
+    const settings = store.getState().settings.timeTrialDurations;
+
+    const easySlider = document.getElementById('tt-easy');
+    const mediumSlider = document.getElementById('tt-medium');
+    const hardSlider = document.getElementById('tt-hard');
+
+    const easyVal = document.getElementById('tt-easy-val');
+    const mediumVal = document.getElementById('tt-medium-val');
+    const hardVal = document.getElementById('tt-hard-val');
+
+    if (easySlider && easyVal) {
+        easySlider.value = settings.easy;
+        easyVal.textContent = settings.easy;
+    }
+
+    if (mediumSlider && mediumVal) {
+        mediumSlider.value = settings.medium;
+        mediumVal.textContent = settings.medium;
+    }
+
+    if (hardSlider && hardVal) {
+        hardSlider.value = settings.hard;
+        hardVal.textContent = settings.hard;
+    }
 }

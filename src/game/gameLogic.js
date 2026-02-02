@@ -9,12 +9,13 @@ import { getDistance, getBearing, getProximityColor, areAdjacent } from '../util
 import { getDailyCounty, getGameNumber, getTodaysDateString, getRandomCounty } from '../utils/dateUtils.js';
 import { store, getMaxGuesses } from './gameState.js';
 import { startNewGame, restoreGame, submitGuess, endGame, updateStatistics as updateStatsAction } from '../store/actions.js';
-import { getGameState, getGameStatus, getGameMode, getTargetCounty, getCurrentGuesses } from '../store/selectors.js';
+import { getGameState, getGameStatus, getGameMode, getTargetCounty, getCurrentGuesses, isTimeTrialMode } from '../store/selectors.js';
 import { loadDailyState, saveDailyState as persistDailyState, saveStatistics as persistStatistics } from '../storage/persistence.js';
+import { initTimeTrialMode, stopTimeTrialTimer, updateTimeTrialStats, getElapsedTime } from './timeTrialMode.js';
 
 /**
  * Initialize a new game
- * @param {string} mode - Game mode ('daily', 'practice', 'locate')
+ * @param {string} mode - Game mode ('daily', 'practice', 'locate', 'timetrial')
  * @param {boolean} suppressModal - Don't show end modal for already-complete daily games
  * @param {Object} callbacks - UI callback functions
  * @returns {boolean} Whether a new game was started (false if daily already complete)
@@ -72,6 +73,17 @@ export function initGame(mode = 'daily', suppressModal = false, callbacks = {}) 
 
         // Start new daily game
         store.setState(startNewGame(mode, targetCounty, gameNumber), 'startNewGame');
+    } else if (mode === 'timetrial') {
+        // Start time trial game
+        const targetCounty = getRandomCounty();
+        const state = store.getState();
+        const duration = state.settings.timeTrialDurations[state.settings.difficulty];
+
+        // Start new time trial game with timer
+        store.setState(startNewGame(mode, targetCounty, 0), 'startNewGame');
+
+        // Initialize time trial mode (starts timer)
+        initTimeTrialMode(duration, targetCounty, callbacks);
     } else {
         // Start practice or locate game
         const targetCounty = getRandomCounty();
@@ -159,6 +171,16 @@ export function processGuess(countyName, callbacks = {}) {
             if (startNextLocateRound) {
                 setTimeout(() => startNextLocateRound(), 1500);
             }
+        } else if (updatedState.game.mode === 'timetrial') {
+            // Time trial mode: stop timer and update stats
+            stopTimeTrialTimer();
+            const elapsedTime = getElapsedTime(updatedState.game.startTime);
+            updateTimeTrialStats(true, elapsedTime, currentGuesses.length);
+            if (callbacks.showTimeTrialEndModal) {
+                setTimeout(() => {
+                    callbacks.showTimeTrialEndModal(true, elapsedTime, currentGuesses.length, updatedState.game.targetCounty);
+                }, 500);
+            }
         } else {
             updateStatistics(true, currentGuesses.length);
             persistDailyState({
@@ -170,7 +192,8 @@ export function processGuess(countyName, callbacks = {}) {
                 setTimeout(() => showEndModal(), 500);
             }
         }
-    } else if (currentGuesses.length >= getMaxGuesses()) {
+    } else if (!isTimeTrialMode(updatedState) && currentGuesses.length >= getMaxGuesses()) {
+        // Only check guess limit for non-time-trial modes
         store.setState(endGame('lost'), 'endGame');
 
         if (updateMapCounty) {

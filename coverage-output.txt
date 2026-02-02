@@ -1,0 +1,164 @@
+
+> locle@1.0.0 test:coverage
+> vitest --coverage tests/unit/
+
+
+[1m[46m RUN [49m[22m [36mv4.0.18 [39m[90mC:/Development/Locle[39m
+      [2mCoverage enabled with [22m[33mv8[39m
+
+ [32m✓[39m tests/unit/utils/dateUtils.test.js [2m([22m[2m34 tests[22m[2m)[22m[32m 110[2mms[22m[39m
+ [32m✓[39m tests/unit/storage/persistence.test.js [2m([22m[2m31 tests[22m[2m)[22m[32m 107[2mms[22m[39m
+ [32m✓[39m tests/unit/data/counties.test.js [2m([22m[2m29 tests[22m[2m)[22m[32m 284[2mms[22m[39m
+ [32m✓[39m tests/unit/store/store.test.js [2m([22m[2m31 tests[22m[2m)[22m[32m 141[2mms[22m[39m
+ [32m✓[39m tests/unit/utils/calculations.test.js [2m([22m[2m47 tests[22m[2m)[22m[32m 59[2mms[22m[39m
+ [31m❯[39m tests/unit/game/gameLogic.test.js [2m([22m[2m25 tests[22m[2m | [22m[31m6 failed[39m[2m)[22m[32m 216[2mms[22m[39m
+       [32m✓[39m should initialize a new daily game[32m 36[2mms[22m[39m
+       [32m✓[39m should initialize a practice game[32m 5[2mms[22m[39m
+       [32m✓[39m should restore a saved daily game[32m 7[2mms[22m[39m
+       [32m✓[39m should handle completed daily game without showing modal when suppressed[32m 2[2mms[22m[39m
+       [32m✓[39m should call updateModeBadge callback if provided[32m 2[2mms[22m[39m
+       [32m✓[39m should process a valid guess[32m 9[2mms[22m[39m
+       [32m✓[39m should reject duplicate guesses[32m 2[2mms[22m[39m
+       [32m✓[39m should reject guesses when game is not playing[32m 2[2mms[22m[39m
+       [32m✓[39m should reject invalid county names[32m 3[2mms[22m[39m
+       [32m✓[39m should handle correct guess and win the game[32m 6[2mms[22m[39m
+[31m       [31m×[31m should handle loss condition after 6 incorrect guesses[39m[32m 72[2mms[22m[39m
+       [32m✓[39m should calculate distance correctly for incorrect guesses[32m 4[2mms[22m[39m
+       [32m✓[39m should mark adjacent counties with 0 distance[32m 3[2mms[22m[39m
+       [32m✓[39m should save daily state after guess[32m 1[2mms[22m[39m
+       [32m✓[39m should not save state for practice mode[32m 6[2mms[22m[39m
+       [32m✓[39m should call hideAutocomplete callback[32m 2[2mms[22m[39m
+       [32m✓[39m should return true when game is won[32m 2[2mms[22m[39m
+       [32m✓[39m should return false when game is playing[32m 4[2mms[22m[39m
+       [32m✓[39m should return false when game is lost[32m 2[2mms[22m[39m
+[31m       [31m×[31m should update statistics for a win[39m[32m 15[2mms[22m[39m
+[31m       [31m×[31m should update statistics for a loss[39m[32m 4[2mms[22m[39m
+[31m       [31m×[31m should update best streak when current exceeds it[39m[32m 4[2mms[22m[39m
+[31m       [31m×[31m should update distribution correctly for different guess counts[39m[32m 3[2mms[22m[39m
+       [32m✓[39m should not update distribution for invalid guess counts[32m 4[2mms[22m[39m
+[31m       [31m×[31m should update lastPlayedDate[39m[32m 8[2mms[22m[39m
+ [32m✓[39m tests/unit/ui/theme.test.js [2m([22m[2m6 tests[22m[2m)[22m[32m 25[2mms[22m[39m
+ [32m✓[39m tests/unit/store/selectors.test.js [2m([22m[2m11 tests[22m[2m)[22m[32m 19[2mms[22m[39m
+ [32m✓[39m tests/unit/ui/autocomplete.test.js [2m([22m[2m12 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+ [32m✓[39m tests/unit/store/initialState.test.js [2m([22m[2m13 tests[22m[2m)[22m[32m 25[2mms[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 6 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m tests/unit/game/gameLogic.test.js[2m > [22mgameLogic.js[2m > [22mprocessGuess[2m > [22mshould handle loss condition after 6 incorrect guesses
+[31m[1mAssertionError[22m: expected 'playing' to be 'lost' // Object.is equality[39m
+
+Expected: [32m"lost"[39m
+Received: [31m"playing"[39m
+
+[36m [2m❯[22m tests/unit/game/gameLogic.test.js:[2m307:33[22m[39m
+    [90m305| [39m
+    [90m306| [39m      [35mconst[39m state [33m=[39m store[33m.[39m[34mgetState[39m()[33m;[39m
+    [90m307| [39m      [34mexpect[39m(state[33m.[39mgame[33m.[39mstatus)[33m.[39m[34mtoBe[39m([32m'lost'[39m)[33m;[39m
+    [90m   | [39m                                [31m^[39m
+    [90m308| [39m      [34mexpect[39m(state[33m.[39mgame[33m.[39mguesses[33m.[39mlength)[33m.[39m[34mtoBe[39m([34m6[39m)[33m;[39m
+    [90m309| [39m    })[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/unit/game/gameLogic.test.js[2m > [22mgameLogic.js[2m > [22mupdateStatistics[2m > [22mshould update statistics for a win
+[31m[1mAssertionError[22m: expected 5 to be 6 // Object.is equality[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- 6[39m
+[31m+ 5[39m
+
+[36m [2m❯[22m tests/unit/game/gameLogic.test.js:[2m425:44[22m[39m
+    [90m423| [39m
+    [90m424| [39m      [35mconst[39m state [33m=[39m store[33m.[39m[34mgetState[39m()[33m;[39m
+    [90m425| [39m      [34mexpect[39m(state[33m.[39mstatistics[33m.[39mgamesPlayed)[33m.[39m[34mtoBe[39m([34m6[39m)[33m;[39m
+    [90m   | [39m                                           [31m^[39m
+    [90m426| [39m      [34mexpect[39m(state[33m.[39mstatistics[33m.[39mgamesWon)[33m.[39m[34mtoBe[39m([34m4[39m)[33m;[39m
+    [90m427| [39m      [34mexpect[39m(state[33m.[39mstatistics[33m.[39mcurrentStreak)[33m.[39m[34mtoBe[39m([34m3[39m)[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/unit/game/gameLogic.test.js[2m > [22mgameLogic.js[2m > [22mupdateStatistics[2m > [22mshould update statistics for a loss
+[31m[1mAssertionError[22m: expected 5 to be 6 // Object.is equality[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- 6[39m
+[31m+ 5[39m
+
+[36m [2m❯[22m tests/unit/game/gameLogic.test.js:[2m448:44[22m[39m
+    [90m446| [39m
+    [90m447| [39m      [35mconst[39m state [33m=[39m store[33m.[39m[34mgetState[39m()[33m;[39m
+    [90m448| [39m      [34mexpect[39m(state[33m.[39mstatistics[33m.[39mgamesPlayed)[33m.[39m[34mtoBe[39m([34m6[39m)[33m;[39m
+    [90m   | [39m                                           [31m^[39m
+    [90m449| [39m      [34mexpect[39m(state[33m.[39mstatistics[33m.[39mgamesWon)[33m.[39m[34mtoBe[39m([34m3[39m)[33m;[39m [90m// No change[39m
+    [90m450| [39m      [34mexpect[39m(state[33m.[39mstatistics[33m.[39mcurrentStreak)[33m.[39m[34mtoBe[39m([34m0[39m)[33m;[39m [90m// Reset[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/unit/game/gameLogic.test.js[2m > [22mgameLogic.js[2m > [22mupdateStatistics[2m > [22mshould update best streak when current exceeds it
+[31m[1mAssertionError[22m: expected 3 to be 4 // Object.is equality[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- 4[39m
+[31m+ 3[39m
+
+[36m [2m❯[22m tests/unit/game/gameLogic.test.js:[2m469:46[22m[39m
+    [90m467| [39m
+    [90m468| [39m      [35mconst[39m state [33m=[39m store[33m.[39m[34mgetState[39m()[33m;[39m
+    [90m469| [39m      [34mexpect[39m(state[33m.[39mstatistics[33m.[39mcurrentStreak)[33m.[39m[34mtoBe[39m([34m4[39m)[33m;[39m
+    [90m   | [39m                                             [31m^[39m
+    [90m470| [39m      [34mexpect[39m(state[33m.[39mstatistics[33m.[39mbestStreak)[33m.[39m[34mtoBe[39m([34m4[39m)[33m;[39m
+    [90m471| [39m    })[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/6]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/unit/game/gameLogic.test.js[2m > [22mgameLogic.js[2m > [22mupdateStatistics[2m > [22mshould update distribution correctly for different guess counts
+[31m[1mAssertionError[22m: expected +0 to be 1 // Object.is equality[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- 1[39m
+[31m+ 0[39m
+
+[36m [2m❯[22m tests/unit/game/gameLogic.test.js:[2m491:63[22m[39m
+    [90m489| [39m
+    [90m490| [39m        [35mconst[39m state [33m=[39m store[33m.[39m[34mgetState[39m()[33m;[39m
+    [90m491| [39m        [34mexpect[39m(state[33m.[39mstatistics[33m.[39mdistribution[guessCount [33m-[39m [34m1[39m])[33m.[39m[34mtoBe[39m([34m1[39m)[33m;[39m
+    [90m   | [39m                                                              [31m^[39m
+    [90m492| [39m      })[33m;[39m
+    [90m493| [39m    })[33m;[39m
+[90m [2m❯[22m tests/unit/game/gameLogic.test.js:[2m476:19[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/6]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/unit/game/gameLogic.test.js[2m > [22mgameLogic.js[2m > [22mupdateStatistics[2m > [22mshould update lastPlayedDate
+[31m[1mAssertionError[22m: expected null to be '2026-02-15' // Object.is equality[39m
+
+[32m- Expected:[39m 
+"2026-02-15"
+
+[31m+ Received:[39m 
+null
+
+[36m [2m❯[22m tests/unit/game/gameLogic.test.js:[2m517:47[22m[39m
+    [90m515| [39m
+    [90m516| [39m      [35mconst[39m state [33m=[39m store[33m.[39m[34mgetState[39m()[33m;[39m
+    [90m517| [39m      [34mexpect[39m(state[33m.[39mstatistics[33m.[39mlastPlayedDate)[33m.[39m[34mtoBe[39m([32m'2026-02-15'[39m)[33m;[39m
+    [90m   | [39m                                              [31m^[39m
+    [90m518| [39m    })[33m;[39m
+    [90m519| [39m  })[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/6]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m9 passed[39m[22m[90m (10)[39m
+[2m      Tests [22m [1m[31m6 failed[39m[22m[2m | [22m[1m[32m233 passed[39m[22m[90m (239)[39m
+[2m   Start at [22m 23:16:23
+[2m   Duration [22m 19.28s[2m (transform 7.13s, setup 0ms, import 9.22s, tests 1.00s, environment 60.94s)[22m
+

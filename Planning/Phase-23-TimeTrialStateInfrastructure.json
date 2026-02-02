@@ -1,0 +1,122 @@
+{
+  "phase": 23,
+  "name": "Time Trial - State Infrastructure",
+  "description": "Establish the foundational state management, actions, selectors, and persistence layer for Time Trial mode",
+  "prerequisites": ["Phase-16-StateManagement"],
+  "prds": [
+    {
+      "category": "functional",
+      "description": "Add Time Trial state properties to game state",
+      "steps": [
+        "Open src/store/initialState.js",
+        "Add 'timetrial' as valid value for game.mode",
+        "Add timeLimit field (number, null) - total time in seconds",
+        "Add timeRemaining field (number, null) - current remaining seconds",
+        "Add startTime field (number, null) - game start timestamp",
+        "Add timerActive field (boolean) - whether timer is running",
+        "Update getDefaultGameState() to accept time trial parameters",
+        "Verify state structure matches expected shape"
+      ],
+      "passes": false
+    },
+    {
+      "category": "functional",
+      "description": "Add Time Trial duration settings to settings state",
+      "steps": [
+        "Open src/store/initialState.js",
+        "Add timeTrialDurations object to settings state",
+        "Set easy: 60 seconds default",
+        "Set medium: 45 seconds default",
+        "Set hard: 30 seconds default",
+        "Update getDefaultSettings() function",
+        "Verify settings structure is correct"
+      ],
+      "passes": false
+    },
+    {
+      "category": "functional",
+      "description": "Create Time Trial statistics state structure",
+      "steps": [
+        "Open src/store/initialState.js",
+        "Add timeTrialStatistics as new root-level state property",
+        "Add gamesPlayed: 0",
+        "Add gamesWon: 0",
+        "Add averageTime: 0 (average completion time in seconds)",
+        "Add bestTime: null (best completion time in seconds)",
+        "Add averageGuesses: 0",
+        "Add timeoutCount: 0",
+        "Add distribution array [0,0,0,0,0,0]",
+        "Create getDefaultTimeTrialStatistics() function",
+        "Verify statistics structure in getInitialState()"
+      ],
+      "passes": false
+    },
+    {
+      "category": "functional",
+      "description": "Implement Time Trial actions",
+      "steps": [
+        "Open src/store/actions.js",
+        "Create startTimer(timeLimit) action - sets timeLimit, startTime, timerActive: true",
+        "Create updateTimer(timeRemaining) action - updates timeRemaining",
+        "Create stopTimer() action - sets timerActive: false",
+        "Create updateTimeTrialSettings(updates) action - merges settings updates",
+        "Create updateTimeTrialStatistics(updates) action - merges statistics updates",
+        "Verify all actions return proper state updates",
+        "Test actions modify state correctly"
+      ],
+      "passes": false
+    },
+    {
+      "category": "functional",
+      "description": "Implement Time Trial selectors",
+      "steps": [
+        "Open src/store/selectors.js",
+        "Create isTimeTrialMode(state) - returns state.game.mode === 'timetrial'",
+        "Create getTimeRemaining(state) - returns state.game.timeRemaining",
+        "Create getTimeLimit(state) - returns state.game.timeLimit",
+        "Create isTimerActive(state) - returns state.game.timerActive",
+        "Create getTimeTrialStatistics(state) - returns state.timeTrialStatistics",
+        "Create getTimeTrialDuration(state) - returns duration for current difficulty",
+        "Verify all selectors return expected values",
+        "Test selectors with mock state"
+      ],
+      "passes": false
+    },
+    {
+      "category": "functional",
+      "description": "Add Time Trial persistence functions",
+      "steps": [
+        "Open src/storage/persistence.js",
+        "Add 'loklTimeTrialSettings' to KEYS constant",
+        "Add 'loklTimeTrialStats' to KEYS constant",
+        "Add 'loklTimeTrialState' to KEYS constant",
+        "Implement loadTimeTrialSettings() function",
+        "Implement saveTimeTrialSettings(settings) function",
+        "Implement loadTimeTrialStatistics() function",
+        "Implement saveTimeTrialStatistics(stats) function",
+        "Implement loadTimeTrialState() for game state recovery",
+        "Implement saveTimeTrialState(state) for page refresh support",
+        "Update setupPersistenceSubscriptions() to auto-save time trial data",
+        "Test localStorage read/write operations",
+        "Verify data persists across page refreshes"
+      ],
+      "passes": false
+    },
+    {
+      "category": "testing",
+      "description": "Verify state infrastructure is complete",
+      "steps": [
+        "Import store and verify initial state includes timeTrialStatistics",
+        "Call startTimer(60) and verify state.game.timeLimit === 60",
+        "Call updateTimer(45) and verify state.game.timeRemaining === 45",
+        "Call stopTimer() and verify state.game.timerActive === false",
+        "Test isTimeTrialMode() returns true when mode is 'timetrial'",
+        "Test getTimeTrialDuration() returns correct duration for each difficulty",
+        "Save and load settings from localStorage",
+        "Save and load statistics from localStorage",
+        "Verify all persistence functions work correctly"
+      ],
+      "passes": false
+    }
+  ]
+}

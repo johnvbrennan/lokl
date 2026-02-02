@@ -259,3 +259,58 @@ export function getLastGuess(state) {
 export function hasGuessedCounty(state, countyName) {
     return state.game.guesses.some(g => g.county === countyName);
 }
+
+/**
+ * Check if game is in time trial mode
+ * @param {Object} state - Full application state
+ * @returns {boolean} True if in time trial mode
+ */
+export function isTimeTrialMode(state) {
+    return state.game.mode === 'timetrial';
+}
+
+/**
+ * Get time remaining for time trial
+ * @param {Object} state - Full application state
+ * @returns {number|null} Time remaining in seconds
+ */
+export function getTimeRemaining(state) {
+    return state.game.timeRemaining;
+}
+
+/**
+ * Get time limit for time trial
+ * @param {Object} state - Full application state
+ * @returns {number|null} Time limit in seconds
+ */
+export function getTimeLimit(state) {
+    return state.game.timeLimit;
+}
+
+/**
+ * Check if timer is active
+ * @param {Object} state - Full application state
+ * @returns {boolean} True if timer is active
+ */
+export function isTimerActive(state) {
+    return state.game.timerActive;
+}
+
+/**
+ * Get time trial statistics
+ * @param {Object} state - Full application state
+ * @returns {Object} Time trial statistics
+ */
+export function getTimeTrialStatistics(state) {
+    return state.timeTrialStatistics;
+}
+
+/**
+ * Get time trial duration for current difficulty
+ * @param {Object} state - Full application state
+ * @returns {number} Duration in seconds
+ */
+export function getTimeTrialDuration(state) {
+    const difficulty = state.settings.difficulty;
+    return state.settings.timeTrialDurations[difficulty];
+}

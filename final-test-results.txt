@@ -1,0 +1,106 @@
+
+> locle@1.0.0 test:e2e
+> playwright test --project=chromium --workers=1
+
+
+Running 32 tests using 1 worker
+
+  ✘   1 [chromium] › tests\e2e\autocomplete.spec.js:11:3 › Autocomplete Functionality › should show autocomplete dropdown when typing (34.1s)
+  ✓   2 [chromium] › tests\e2e\autocomplete.spec.js:36:3 › Autocomplete Functionality › should filter autocomplete results (26.3s)
+  ✓   3 [chromium] › tests\e2e\autocomplete.spec.js:54:3 › Autocomplete Functionality › should allow clicking autocomplete suggestion (6.7s)
+  ✓   4 [chromium] › tests\e2e\autocomplete.spec.js:86:3 › Autocomplete Functionality › should navigate autocomplete with keyboard (10.0s)
+  ✓   5 [chromium] › tests\e2e\autocomplete.spec.js:114:3 › Autocomplete Functionality › should close autocomplete on Escape (4.8s)
+  ✓   6 [chromium] › tests\e2e\autocomplete.spec.js:135:3 › Autocomplete Functionality › should enable submit button when valid county typed (9.3s)
+  ✓   7 [chromium] › tests\e2e\dailyChallenge.spec.js:12:3 › Daily Challenge Flow › should start a new daily game (3.8s)
+  ✓   8 [chromium] › tests\e2e\dailyChallenge.spec.js:29:3 › Daily Challenge Flow › should process guesses and show proximity colors (10.1s)
+  ✓   9 [chromium] › tests\e2e\dailyChallenge.spec.js:57:3 › Daily Challenge Flow › should track guess history (7.5s)
+  ✓  10 [chromium] › tests\e2e\dailyChallenge.spec.js:78:3 › Daily Challenge Flow › should persist game state on reload (11.7s)
+  ✓  11 [chromium] › tests\e2e\dailyChallenge.spec.js:102:3 › Daily Challenge Flow › should show win modal on correct guess (10.5s)
+Start overlay visible: [33mtrue[39m
+Start overlay classes: start-overlay visible
+Start button visible: [33mtrue[39m
+Start overlay visible after click: [33mfalse[39m
+Start overlay classes after click: start-overlay
+Input visible: [33mtrue[39m
+  ✓  12 [chromium] › tests\e2e\debug.spec.js:3:1 › debug - check page load and start overlay (6.2s)
+  ✓  13 [chromium] › tests\e2e\locateMode.spec.js:11:3 › Locate Mode Flow › should switch to locate mode (9.9s)
+  ✓  14 [chromium] › tests\e2e\locateMode.spec.js:33:3 › Locate Mode Flow › should show target county on map click in locate mode (12.6s)
+  ✓  15 [chromium] › tests\e2e\locateMode.spec.js:67:3 › Locate Mode Flow › should complete locate round on correct county click (18.1s)
+  ✓  16 [chromium] › tests\e2e\practiceMode.spec.js:11:3 › Practice Mode Flow › should switch to practice mode (10.8s)
+  ✓  17 [chromium] › tests\e2e\practiceMode.spec.js:24:3 › Practice Mode Flow › should allow unlimited practice games (8.3s)
+  ✓  18 [chromium] › tests\e2e\practiceMode.spec.js:61:3 › Practice Mode Flow › should not persist practice games on reload (11.8s)
+  ✓  19 [chromium] › tests\e2e\practiceMode.spec.js:80:3 › Practice Mode Flow › should track practice statistics separately (11.2s)
+  ✓  20 [chromium] › tests\e2e\smoke.spec.js:5:3 › Smoke Tests › should load the game successfully (7.5s)
+  ✓  21 [chromium] › tests\e2e\smoke.spec.js:22:3 › Smoke Tests › should start a game when clicking Start Game (3.1s)
+  ✓  22 [chromium] › tests\e2e\smoke.spec.js:35:3 › Smoke Tests › should allow selecting different game modes (8.4s)
+  ✓  23 [chromium] › tests\e2e\smoke.spec.js:48:3 › Smoke Tests › should allow selecting different difficulties (4.3s)
+  ✓  24 [chromium] › tests\e2e\startOverlay.spec.js:11:3 › Start Overlay Functionality › should allow selecting game mode by clicking on cards (9.8s)
+  ✓  25 [chromium] › tests\e2e\startOverlay.spec.js:36:3 › Start Overlay Functionality › should allow selecting difficulty by clicking on buttons (4.9s)
+  ✓  26 [chromium] › tests\e2e\startOverlay.spec.js:61:3 › Start Overlay Functionality › should start game with selected mode and difficulty (10.3s)
+  ✓  27 [chromium] › tests\e2e\startOverlay.spec.js:82:3 › Start Overlay Functionality › should hide start overlay after clicking Start Game (7.5s)
+  ✓  28 [chromium] › tests\e2e\startOverlay.spec.js:99:3 › Start Overlay Functionality › should show start overlay when clicking New Game from menu (12.4s)
+  ✓  29 [chromium] › tests\e2e\theme.spec.js:11:3 › Theme Switching › should load with default light theme (3.5s)
+  ✓  30 [chromium] › tests\e2e\theme.spec.js:20:3 › Theme Switching › should toggle theme to dark mode (5.4s)
+  ✓  31 [chromium] › tests\e2e\theme.spec.js:47:3 › Theme Switching › should persist theme preference on reload (11.6s)
+  ✘  32 [chromium] › tests\e2e\theme.spec.js:70:3 › Theme Switching › should toggle between themes multiple times (33.4s)
+
+
+  1) [chromium] › tests\e2e\autocomplete.spec.js:11:3 › Autocomplete Functionality › should show autocomplete dropdown when typing 
+
+    [31mTest timeout of 30000ms exceeded while running "beforeEach" hook.[39m
+
+      3 |
+      4 | test.describe('Autocomplete Functionality', () => {
+    > 5 |   test.beforeEach(async ({ page }) => {
+        |        ^
+      6 |     await page.goto('/');
+      7 |     await page.evaluate(() => localStorage.clear());
+      8 |     await page.reload();
+        at C:\Development\Locle\tests\e2e\autocomplete.spec.js:5:8
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\autocomplete-Autocomplete--72afc-mplete-dropdown-when-typing-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\autocomplete-Autocomplete--72afc-mplete-dropdown-when-typing-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\autocomplete-Autocomplete--72afc-mplete-dropdown-when-typing-chromium\error-context.md
+
+  2) [chromium] › tests\e2e\theme.spec.js:70:3 › Theme Switching › should toggle between themes multiple times 
+
+    [31mTest timeout of 30000ms exceeded.[39m
+
+    Error: locator.waitFor: Test timeout of 30000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('#floating-menu') to be visible[22m
+    [2m    56 × locator resolved to hidden <div id="floating-menu" class="floating-menu">…</div>[22m
+
+
+       at helpers\GamePage.js:99
+
+       97 |   async openMenu() {
+       98 |     await this.floatingMenuBtn.click();
+    >  99 |     await this.floatingMenu.waitFor({ state: 'visible' });
+          |                             ^
+      100 |   }
+      101 |
+      102 |   async openNewGameScreen() {
+        at GamePage.openMenu (C:\Development\Locle\tests\e2e\helpers\GamePage.js:99:29)
+        at C:\Development\Locle\tests\e2e\theme.spec.js:93:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\theme-Theme-Switching-shou-1f944-tween-themes-multiple-times-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\theme-Theme-Switching-shou-1f944-tween-themes-multiple-times-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\theme-Theme-Switching-shou-1f944-tween-themes-multiple-times-chromium\error-context.md
+
+  2 failed
+    [chromium] › tests\e2e\autocomplete.spec.js:11:3 › Autocomplete Functionality › should show autocomplete dropdown when typing 
+    [chromium] › tests\e2e\theme.spec.js:70:3 › Theme Switching › should toggle between themes multiple times 
+  30 passed (6.3m)

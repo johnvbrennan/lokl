@@ -7,7 +7,7 @@ import { COUNTIES, COUNTY_NAMES } from './data/counties.js';
 
 // Utility imports
 import { COLORS, COLOR_EMOJIS, DIRECTION_ARROWS } from './utils/constants.js';
-import { getTodaysDateString, getGameNumber, getTimeUntilNextDay, formatTimeRemaining } from './utils/dateUtils.js';
+import { getTodaysDateString, getGameNumber, getTimeUntilNextDay, formatTimeRemaining, getRandomCounty } from './utils/dateUtils.js';
 
 // Map imports
 import {
@@ -22,13 +22,14 @@ import {
 } from './map/mapController.js';
 
 // Storage imports
-import { loadStatistics, loadSettings, saveSettings, setupPersistenceSubscriptions, loadDailyState } from './storage/persistence.js';
+import { loadStatistics, loadSettings, saveSettings, setupPersistenceSubscriptions, loadDailyState, saveTimeTrialSettings, clearTimeTrialState, loadTimeTrialState } from './storage/persistence.js';
 
 // Game imports
 import { store, getMaxGuesses } from './game/gameState.js';
-import { setDifficulty } from './store/actions.js';
+import { setDifficulty, updateTimeTrialSettings, initLocateMode as initLocateModeAction, exitLocateMode as exitLocateModeAction, startNextLocateRound as startNextLocateRoundAction } from './store/actions.js';
 import { initGame, processGuess } from './game/gameLogic.js';
-import { initLocateMode, exitLocateMode, startNextLocateRound } from './game/locateMode.js';
+import { initLocateModeUI, exitLocateMode, startNextLocateRoundUI } from './game/locateMode.js';
+import { stopTimeTrialTimer, handleTimeout } from './game/timeTrialMode.js';
 
 // Helper functions to get state
 const getGame = () => store.getState().game;
@@ -56,7 +57,11 @@ import {
     updateWarningState,
     startCountdown,
     stopCountdown,
-    showStartScreen
+    showStartScreen,
+    updateTimerDisplay,
+    updateTimerWarningState,
+    showTimeTrialEndModal,
+    updateTimeTrialSettingsUI
 } from './ui/components.js';
 
 import {
@@ -326,9 +331,17 @@ function handleInitGame(mode = 'daily', suppressModal = false) {
     return initGame(mode, suppressModal, {
         resetUI,
         showEndModal: () => showEndModal(showResultLine),
+        showTimeTrialEndModal: (won, timeElapsed, guessCount, targetCounty) => {
+            showTimeTrialEndModal(won, timeElapsed, guessCount, targetCounty, showResultLine);
+        },
         restoreGameUI,
         updateModeBadge,
-        clearGuessRail
+        clearGuessRail,
+        updateTimerDisplay,
+        updateTimerWarningState,
+        onTimeout: (targetCounty) => {
+            updateMapCounty(targetCounty, COLORS.CORRECT, true);
+        }
     });
 }
 
@@ -336,15 +349,23 @@ function handleInitGame(mode = 'daily', suppressModal = false) {
  * Wrapper for initLocateMode with all callbacks
  */
 function handleInitLocateMode() {
-    initLocateMode({
+    // 1. Generate target county
+    const targetCounty = getRandomCounty();
+
+    // 2. Update store FIRST
+    store.setState(initLocateModeAction(targetCounty), 'initLocateMode');
+
+    // 3. Update UI
+    initLocateModeUI(targetCounty, {
         clearGuessRail,
         resetMapColors: () => resetMapColors('locate'),
         clearResultLine,
         updateModeBadge
     });
 
-    // Update map click handler for locate mode
-    setMapClickHandler(handleGuess, 'locate', 'playing');
+    // 4. Set click handler AFTER state is updated
+    const game = getGame();
+    setMapClickHandler(handleGuess, game.mode, game.status);
 }
 
 /**
@@ -364,6 +385,17 @@ function handleExitLocateMode() {
 document.addEventListener('DOMContentLoaded', () => {
     // Set up persistence subscriptions for auto-save
     setupPersistenceSubscriptions(store);
+
+    // Set up store subscription for timer updates
+    store.subscribe((newState, oldState) => {
+        // Update timer display for Time Trial mode
+        if (newState.game.mode === 'timetrial' && newState.game.timerActive) {
+            if (newState.game.timeRemaining !== oldState.game.timeRemaining) {
+                updateTimerDisplay(newState.game.timeRemaining);
+                updateTimerWarningState(newState.game.timeRemaining, newState.game.timeLimit);
+            }
+        }
+    });
 
     // Initialize theme (reads from store, sets up subscriptions)
     initTheme(updateMapTiles, () => updateAllMapBorders(getGame().mode));
@@ -595,6 +627,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    document.getElementById('timetrial-btn').addEventListener('click', () => {
+        if (getGame().mode === 'locate') {
+            handleExitLocateMode();
+        }
+        handleInitGame('timetrial');
+    });
+
     // ============================================
     // MODAL & STATS
     // ============================================
@@ -663,6 +702,41 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    // Time Trial settings sliders
+    const ttEasySlider = document.getElementById('tt-easy');
+    const ttMediumSlider = document.getElementById('tt-medium');
+    const ttHardSlider = document.getElementById('tt-hard');
+
+    if (ttEasySlider) {
+        ttEasySlider.addEventListener('input', (e) => {
+            const value = parseInt(e.target.value);
+            document.getElementById('tt-easy-val').textContent = value;
+            store.setState(updateTimeTrialSettings({ easy: value }), 'updateTimeTrialSettings');
+            saveTimeTrialSettings(store.getState().settings.timeTrialDurations);
+        });
+    }
+
+    if (ttMediumSlider) {
+        ttMediumSlider.addEventListener('input', (e) => {
+            const value = parseInt(e.target.value);
+            document.getElementById('tt-medium-val').textContent = value;
+            store.setState(updateTimeTrialSettings({ medium: value }), 'updateTimeTrialSettings');
+            saveTimeTrialSettings(store.getState().settings.timeTrialDurations);
+        });
+    }
+
+    if (ttHardSlider) {
+        ttHardSlider.addEventListener('input', (e) => {
+            const value = parseInt(e.target.value);
+            document.getElementById('tt-hard-val').textContent = value;
+            store.setState(updateTimeTrialSettings({ hard: value }), 'updateTimeTrialSettings');
+            saveTimeTrialSettings(store.getState().settings.timeTrialDurations);
+        });
+    }
+
+    // Initialize Time Trial settings UI
+    updateTimeTrialSettingsUI();
+
     // Mode badge click to cycle difficulty
     document.getElementById('mode-badge')?.addEventListener('click', () => {
         if (getGame().mode === 'locate') return;
@@ -709,6 +783,30 @@ document.addEventListener('DOMContentLoaded', () => {
     // ============================================
 
     document.getElementById('panel-toggle').addEventListener('click', togglePanel);
+
+    // ============================================
+    // PAGE VISIBILITY API - Handle tab switching
+    // ============================================
+
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden && getGame().mode === 'timetrial' && getGame().timerActive) {
+            // Tab became visible - recalculate timer
+            const state = store.getState();
+            const elapsed = (Date.now() - state.game.startTime) / 1000;
+            const newRemaining = Math.max(0, state.game.timeLimit - elapsed);
+
+            if (newRemaining === 0) {
+                // Timer expired while tab was hidden
+                stopTimeTrialTimer();
+                handleTimeout({
+                    onTimeout: (targetCounty) => {
+                        updateMapCounty(targetCounty, COLORS.CORRECT, true);
+                        showTimeTrialEndModal(false, 0, getGame().guesses.length, targetCounty, showResultLine);
+                    }
+                });
+            }
+        }
+    });
 
     // ============================================
     // KEYBOARD SHORTCUTS

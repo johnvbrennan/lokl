@@ -236,3 +236,122 @@ export function resetGame(mode = 'daily') {
         }
     };
 }
+
+/**
+ * Start timer for time trial mode
+ * @param {number} timeLimit - Time limit in seconds
+ * @returns {Object} State update object
+ */
+export function startTimer(timeLimit) {
+    return {
+        game: {
+            timeLimit,
+            timeRemaining: timeLimit,
+            startTime: Date.now(),
+            timerActive: true
+        }
+    };
+}
+
+/**
+ * Update timer with remaining time
+ * @param {number} timeRemaining - Time remaining in seconds
+ * @returns {Object} State update object
+ */
+export function updateTimer(timeRemaining) {
+    return {
+        game: {
+            timeRemaining
+        }
+    };
+}
+
+/**
+ * Stop timer
+ * @returns {Object} State update object
+ */
+export function stopTimer() {
+    return {
+        game: {
+            timerActive: false
+        }
+    };
+}
+
+/**
+ * Update time trial settings
+ * @param {Object} updates - Partial time trial settings updates
+ * @returns {Function} State update function
+ */
+export function updateTimeTrialSettings(updates) {
+    return (currentState) => {
+        return {
+            settings: {
+                timeTrialDurations: {
+                    ...currentState.settings.timeTrialDurations,
+                    ...updates
+                }
+            }
+        };
+    };
+}
+
+/**
+ * Update time trial statistics
+ * @param {Object} updates - Partial time trial statistics updates
+ * @returns {Function} State update function
+ */
+export function updateTimeTrialStatistics(updates) {
+    return (currentState) => {
+        return {
+            timeTrialStatistics: {
+                ...currentState.timeTrialStatistics,
+                ...updates
+            }
+        };
+    };
+}
+
+/**
+ * Initialize locate mode with a target county
+ * @param {string} targetCounty - Target county name
+ * @returns {Object} State update object
+ */
+export function initLocateMode(targetCounty) {
+    return {
+        game: {
+            mode: 'locate',
+            status: 'playing',
+            guesses: [],
+            targetCounty: targetCounty
+        }
+    };
+}
+
+/**
+ * Exit locate mode (will be followed by initGame)
+ * @returns {Object} State update object
+ */
+export function exitLocateMode() {
+    return {
+        game: {
+            mode: 'practice',
+            status: 'start'
+        }
+    };
+}
+
+/**
+ * Start next locate round
+ * @param {string} targetCounty - New target county name
+ * @returns {Object} State update object
+ */
+export function startNextLocateRound(targetCounty) {
+    return {
+        game: {
+            targetCounty: targetCounty,
+            guesses: [],
+            status: 'playing'
+        }
+    };
+}

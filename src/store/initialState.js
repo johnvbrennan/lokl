@@ -14,8 +14,12 @@ export function getInitialState() {
             targetCounty: null,         // Name of the county to guess
             guesses: [],                 // Array of guess objects
             status: 'playing',           // 'playing', 'won', 'lost'
-            mode: 'daily',               // 'daily', 'practice', 'locate'
-            gameNumber: 0                // Daily challenge number (0 for practice/locate)
+            mode: 'daily',               // 'daily', 'practice', 'locate', 'timetrial'
+            gameNumber: 0,               // Daily challenge number (0 for practice/locate)
+            timeLimit: null,             // Time limit in seconds (for time trial)
+            timeRemaining: null,         // Current remaining time in seconds (for time trial)
+            startTime: null,             // Game start timestamp (for time trial)
+            timerActive: false           // Whether timer is running (for time trial)
         },
 
         // Statistics - persistent across sessions
@@ -28,10 +32,26 @@ export function getInitialState() {
             lastPlayedDate: null         // Last played date string (YYYY-MM-DD)
         },
 
+        // Time Trial Statistics - persistent across sessions
+        timeTrialStatistics: {
+            gamesPlayed: 0,              // Total time trial games played
+            gamesWon: 0,                 // Total time trial games won
+            averageTime: 0,              // Average completion time in seconds
+            bestTime: null,              // Best completion time in seconds
+            averageGuesses: 0,           // Average number of guesses
+            timeoutCount: 0,             // Number of timeouts
+            distribution: [0, 0, 0, 0, 0, 0] // Wins by guess count [1, 2, 3, 4, 5, 6]
+        },
+
         // Settings - user preferences
         settings: {
             difficulty: 'medium',        // 'easy' (6 guesses), 'hard' (4 guesses)
-            theme: 'light'               // 'light' or 'dark'
+            theme: 'light',              // 'light' or 'dark'
+            timeTrialDurations: {        // Time trial durations in seconds
+                easy: 60,
+                medium: 45,
+                hard: 30
+            }
         },
 
         // UI state - ephemeral UI state
@@ -55,15 +75,20 @@ export function getInitialState() {
 /**
  * Get default game state
  * @param {string} mode - Game mode
+ * @param {number} timeLimit - Time limit for time trial mode (optional)
  * @returns {Object} Default game state
  */
-export function getDefaultGameState(mode = 'daily') {
+export function getDefaultGameState(mode = 'daily', timeLimit = null) {
     return {
         targetCounty: null,
         guesses: [],
         status: 'playing',
         mode: mode,
-        gameNumber: 0
+        gameNumber: 0,
+        timeLimit: mode === 'timetrial' ? timeLimit : null,
+        timeRemaining: mode === 'timetrial' ? timeLimit : null,
+        startTime: mode === 'timetrial' ? Date.now() : null,
+        timerActive: mode === 'timetrial'
     };
 }
 
@@ -89,7 +114,12 @@ export function getDefaultStatistics() {
 export function getDefaultSettings() {
     return {
         difficulty: 'medium',
-        theme: 'light'
+        theme: 'light',
+        timeTrialDurations: {
+            easy: 60,
+            medium: 45,
+            hard: 30
+        }
     };
 }
 
@@ -111,5 +141,21 @@ export function getDefaultUIState() {
             message: null,
             visible: false
         }
+    };
+}
+
+/**
+ * Get default time trial statistics
+ * @returns {Object} Default time trial statistics
+ */
+export function getDefaultTimeTrialStatistics() {
+    return {
+        gamesPlayed: 0,
+        gamesWon: 0,
+        averageTime: 0,
+        bestTime: null,
+        averageGuesses: 0,
+        timeoutCount: 0,
+        distribution: [0, 0, 0, 0, 0, 0]
     };
 }

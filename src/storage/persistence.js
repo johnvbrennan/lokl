@@ -8,7 +8,10 @@ const KEYS = {
     STATISTICS: 'loklStats',
     DAILY_STATE: 'loklDaily',
     SETTINGS: 'loklSettings',
-    THEME: 'loklTheme'
+    THEME: 'loklTheme',
+    TIMETRIAL_SETTINGS: 'loklTimeTrialSettings',
+    TIMETRIAL_STATS: 'loklTimeTrialStats',
+    TIMETRIAL_STATE: 'loklTimeTrialState'
 };
 
 /**
@@ -28,6 +31,15 @@ export function setupPersistenceSubscriptions(store) {
         if (newState.settings !== oldState.settings) {
             saveSettings(newState.settings);
             saveTheme(newState.settings.theme);
+            // Save time trial settings if they changed
+            if (newState.settings.timeTrialDurations !== oldState.settings.timeTrialDurations) {
+                saveTimeTrialSettings(newState.settings.timeTrialDurations);
+            }
+        }
+
+        // Save time trial statistics if changed
+        if (newState.timeTrialStatistics !== oldState.timeTrialStatistics) {
+            saveTimeTrialStatistics(newState.timeTrialStatistics);
         }
 
         // Save daily game state if in daily mode and game state changed
@@ -38,6 +50,18 @@ export function setupPersistenceSubscriptions(store) {
                 status: newState.game.status
             };
             saveDailyState(dailyState);
+        }
+
+        // Save time trial game state if in time trial mode and game state changed
+        if (newState.game.mode === 'timetrial' && newState.game !== oldState.game) {
+            const timeTrialState = {
+                targetCounty: newState.game.targetCounty,
+                guesses: newState.game.guesses,
+                status: newState.game.status,
+                timeLimit: newState.game.timeLimit,
+                startTime: newState.game.startTime
+            };
+            saveTimeTrialState(timeTrialState);
         }
     });
 }
@@ -181,5 +205,140 @@ export function saveTheme(theme) {
         localStorage.setItem(KEYS.THEME, theme);
     } catch (e) {
         console.error('Failed to save theme:', e);
+    }
+}
+
+// ============================================
+// TIME TRIAL SETTINGS
+// ============================================
+
+/**
+ * Load time trial settings from localStorage
+ * @returns {Object} Time trial settings with defaults
+ */
+export function loadTimeTrialSettings() {
+    try {
+        const saved = localStorage.getItem(KEYS.TIMETRIAL_SETTINGS);
+        if (saved) {
+            return JSON.parse(saved);
+        }
+    } catch (e) {
+        console.error('Failed to load time trial settings:', e);
+    }
+
+    // Return default time trial settings if none found
+    return {
+        easy: 60,
+        medium: 45,
+        hard: 30
+    };
+}
+
+/**
+ * Save time trial settings to localStorage
+ * @param {Object} settings - Time trial settings to save
+ */
+export function saveTimeTrialSettings(settings) {
+    try {
+        localStorage.setItem(KEYS.TIMETRIAL_SETTINGS, JSON.stringify(settings));
+    } catch (e) {
+        console.error('Failed to save time trial settings:', e);
+    }
+}
+
+// ============================================
+// TIME TRIAL STATISTICS
+// ============================================
+
+/**
+ * Load time trial statistics from localStorage
+ * @returns {Object} Time trial statistics with defaults
+ */
+export function loadTimeTrialStatistics() {
+    try {
+        const saved = localStorage.getItem(KEYS.TIMETRIAL_STATS);
+        if (saved) {
+            return JSON.parse(saved);
+        }
+    } catch (e) {
+        console.error('Failed to load time trial statistics:', e);
+    }
+
+    // Return default time trial statistics if none found
+    return {
+        gamesPlayed: 0,
+        gamesWon: 0,
+        averageTime: 0,
+        bestTime: null,
+        averageGuesses: 0,
+        timeoutCount: 0,
+        distribution: [0, 0, 0, 0, 0, 0]
+    };
+}
+
+/**
+ * Save time trial statistics to localStorage
+ * @param {Object} stats - Time trial statistics to save
+ */
+export function saveTimeTrialStatistics(stats) {
+    try {
+        localStorage.setItem(KEYS.TIMETRIAL_STATS, JSON.stringify(stats));
+    } catch (e) {
+        console.error('Failed to save time trial statistics:', e);
+    }
+}
+
+// ============================================
+// TIME TRIAL STATE
+// ============================================
+
+/**
+ * Load time trial game state from localStorage
+ * @returns {Object|null} Time trial state or null if not found/expired
+ */
+export function loadTimeTrialState() {
+    try {
+        const saved = localStorage.getItem(KEYS.TIMETRIAL_STATE);
+        if (!saved) return null;
+
+        const state = JSON.parse(saved);
+
+        // Check if state is recent (within time limit)
+        if (state.startTime && state.timeLimit) {
+            const elapsed = (Date.now() - state.startTime) / 1000;
+            if (elapsed > state.timeLimit) {
+                // State has expired
+                clearTimeTrialState();
+                return null;
+            }
+        }
+
+        return state;
+    } catch (e) {
+        console.error('Failed to load time trial state:', e);
+        return null;
+    }
+}
+
+/**
+ * Save time trial game state to localStorage
+ * @param {Object} state - Time trial state to save
+ */
+export function saveTimeTrialState(state) {
+    try {
+        localStorage.setItem(KEYS.TIMETRIAL_STATE, JSON.stringify(state));
+    } catch (e) {
+        console.error('Failed to save time trial state:', e);
+    }
+}
+
+/**
+ * Clear time trial game state from localStorage
+ */
+export function clearTimeTrialState() {
+    try {
+        localStorage.removeItem(KEYS.TIMETRIAL_STATE);
+    } catch (e) {
+        console.error('Failed to clear time trial state:', e);
     }
 }
