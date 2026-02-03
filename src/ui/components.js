@@ -571,10 +571,36 @@ export function restoreGameUI(updateMapCounty, highlightCounty, unhighlightCount
     }
 }
 
+// Share state to prevent multiple simultaneous share attempts
+let isSharing = false;
+
 /**
  * Share game result using Web Share API on mobile, clipboard on desktop
  */
 export function shareResult() {
+    // Prevent multiple simultaneous share attempts
+    if (isSharing) {
+        console.log('Share already in progress, ignoring duplicate click');
+        return;
+    }
+
+    const shareBtn = document.getElementById('share-btn');
+    const originalText = shareBtn ? shareBtn.textContent : '';
+
+    isSharing = true;
+
+    // Provide haptic feedback on mobile devices
+    if (navigator.vibrate) {
+        navigator.vibrate(50); // Short vibration (50ms)
+    }
+
+    // Disable button and provide visual feedback
+    if (shareBtn) {
+        shareBtn.disabled = true;
+        shareBtn.classList.add('sharing');
+        shareBtn.textContent = 'Sharing...';
+    }
+
     const isWin = getGame().status === 'won';
     const emojis = getGame().guesses.map(g => {
         if (g.isAdjacent && g.county !== getGame().targetCounty) return '🔗';
@@ -596,6 +622,18 @@ ${emojis}
 Can you guess the Irish county? 🇮🇪
 https://lokl.ie`;
 
+    // Reset share state after a short delay
+    const resetShareState = () => {
+        setTimeout(() => {
+            isSharing = false;
+            if (shareBtn) {
+                shareBtn.disabled = false;
+                shareBtn.classList.remove('sharing');
+                shareBtn.textContent = originalText || 'Share';
+            }
+        }, 1000); // 1 second delay to prevent rapid re-clicks
+    };
+
     // Use Web Share API on mobile devices (opens native share sheet)
     // Note: Only using 'text' parameter because WhatsApp and other apps
     // ignore text content when both text and url are provided separately
@@ -606,17 +644,20 @@ https://lokl.ie`;
         .then(() => {
             // Share was successful - no feedback needed as user sees native UI
             console.log('Shared successfully');
+            resetShareState();
         })
         .catch(err => {
-            // User cancelled or share failed - fall back to clipboard
+            // User cancelled or share failed
             if (err.name !== 'AbortError') {
                 console.error('Share failed:', err);
                 fallbackToCopy(shareText);
             }
+            resetShareState();
         });
     } else {
         // Desktop: Copy to clipboard
         fallbackToCopy(shareText);
+        resetShareState();
     }
 }
 

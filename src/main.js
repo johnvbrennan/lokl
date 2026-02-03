@@ -179,6 +179,7 @@ function initStartScreenListeners() {
     // Start game button
     document.getElementById('start-game-btn')?.addEventListener('click', () => {
         startOverlay.classList.remove('visible');
+        hideHelp(); // Ensure help modal is closed
 
         // Apply difficulty setting first
         if (selectedDifficulty !== getSettings().difficulty) {
@@ -283,20 +284,20 @@ function resetUI() {
     const inputArea = document.getElementById('input-area');
     const locateArea = document.getElementById('locate-area');
     const inputDock = document.getElementById('input-dock');
-    const locateDock = document.getElementById('locate-dock');
+    const floatingHeader = document.querySelector('.floating-header');
 
     if (mode === 'locate') {
-        // Locate mode: hide input, show locate UI
+        // Locate mode: hide input, show locate UI in header
         if (inputArea) inputArea.style.display = 'none';
         if (locateArea) locateArea.style.display = 'block';
         if (inputDock) inputDock.style.display = 'none';
-        if (locateDock) locateDock.style.display = 'flex';
+        if (floatingHeader) floatingHeader.classList.add('locate-mode');
     } else {
         // All other modes (daily, practice, timetrial): show input, hide locate UI
         if (inputArea) inputArea.style.display = '';
         if (locateArea) locateArea.style.display = 'none';
         if (inputDock) inputDock.style.display = 'flex';
-        if (locateDock) locateDock.style.display = 'none';
+        if (floatingHeader) floatingHeader.classList.remove('locate-mode');
     }
 }
 
@@ -636,6 +637,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('menu-new-game').addEventListener('click', () => {
         floatingMenu.classList.remove('visible');
+        hideHelp(); // Ensure help modal is closed
         document.getElementById('guess-rail').innerHTML = '';
         document.getElementById('start-overlay').classList.add('visible');
         updateStartScreenDifficulty();
@@ -702,7 +704,25 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    document.getElementById('share-btn').addEventListener('click', shareResult);
+    // Share button - use touch-friendly event handling
+    const shareBtn = document.getElementById('share-btn');
+    let shareTouchHandled = false;
+
+    // Handle touch events on mobile to prevent click event from firing twice
+    shareBtn.addEventListener('touchend', (e) => {
+        e.preventDefault(); // Prevent click event from firing
+        shareTouchHandled = true;
+        shareResult();
+        // Reset flag after a short delay
+        setTimeout(() => { shareTouchHandled = false; }, 300);
+    }, { passive: false });
+
+    // Fallback for desktop and non-touch devices
+    shareBtn.addEventListener('click', (e) => {
+        if (!shareTouchHandled) {
+            shareResult();
+        }
+    });
 
     document.getElementById('play-again-btn').addEventListener('click', () => {
         hideModal();

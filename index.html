@@ -156,8 +156,6 @@
 
         <!-- NEW: Floating Header Pill -->
         <header class="floating-header glass neon-border">
-            <span class="lokl-title-small">lokl</span>
-            <span class="guess-counter-pill" id="guess-counter-pill">0/6</span>
             <div class="menu-container">
                 <button class="menu-btn" id="floating-menu-btn" title="Menu">&#9776;</button>
                 <div class="floating-menu" id="floating-menu">
@@ -180,6 +178,14 @@
                     </button>
                 </div>
             </div>
+            <div class="header-center" id="header-center">
+                <span class="lokl-title-small" id="header-title">lokl</span>
+                <span class="locate-prompt-inline" id="locate-prompt-inline" style="display: none;">
+                    <span class="locate-label-inline">Find County:</span>
+                    <span class="locate-target-inline" id="locate-target-inline">--</span>
+                </span>
+            </div>
+            <span class="guess-counter-pill" id="guess-counter-pill">0/6</span>
         </header>
 
         <!-- NEW: Guess Rail (horizontal scrolling) -->
