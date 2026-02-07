@@ -1,0 +1,64 @@
+{
+  "phase": 29,
+  "name": "Streak Mode - Core Game Logic",
+  "description": "Create streakMode.js with streak-specific game flow and refactor Locate mode to use shuffle queue",
+  "prerequisites": ["Phase-28-StreakModeStateInfrastructure"],
+  "prds": [
+    {
+      "category": "functional",
+      "description": "Create streakMode.js with initialization logic",
+      "steps": [
+        "Create src/game/streakMode.js",
+        "Import store, actions, selectors, createCountyShuffleQueue, saveStreakStatistics",
+        "Implement initStreakMode() - creates queue, gets first county, sets state",
+        "Return target county for caller to use"
+      ],
+      "passes": true
+    },
+    {
+      "category": "functional",
+      "description": "Implement handleStreakCorrect for advancing rounds",
+      "steps": [
+        "Implement handleStreakCorrect() in streakMode.js",
+        "Get next county from shuffle queue",
+        "Call streakCorrect action to increment count and set new target",
+        "Return new target county"
+      ],
+      "passes": true
+    },
+    {
+      "category": "functional",
+      "description": "Implement handleStreakGameOver for wrong guesses",
+      "steps": [
+        "Implement handleStreakGameOver() in streakMode.js",
+        "Read final streak count from state",
+        "Call endStreakGame action",
+        "Calculate and update streak statistics (gamesPlayed, bestStreak, averageStreak, totalCorrect)",
+        "Persist statistics to localStorage",
+        "Return final streak count"
+      ],
+      "passes": true
+    },
+    {
+      "category": "functional",
+      "description": "Implement exitStreakMode",
+      "steps": [
+        "Implement exitStreakMode(initGame) in streakMode.js",
+        "Reset and nullify shuffle queue",
+        "Call initGame('practice') callback"
+      ],
+      "passes": true
+    },
+    {
+      "category": "functional",
+      "description": "Refactor Locate mode to use shuffle queue for improved randomness",
+      "steps": [
+        "In main.js, create module-level locateQueue using createCountyShuffleQueue()",
+        "Replace getRandomCounty() calls in handleInitLocateMode and startNextLocateRound with locateQueue.next()",
+        "Reset locateQueue in handleExitLocateMode",
+        "Verify locate mode no longer repeats counties within 32-county cycles"
+      ],
+      "passes": true
+    }
+  ]
+}

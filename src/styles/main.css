@@ -905,6 +905,53 @@
             margin-top: var(--spacing-xs);
         }
 
+        /* Streak Mode Styles - Floating */
+        .streak-dock {
+            position: fixed;
+            bottom: calc(16px + env(safe-area-inset-bottom));
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            text-align: center;
+            padding: var(--spacing-md) var(--spacing-xl);
+            border-radius: var(--border-radius-pill);
+            max-width: 400px;
+        }
+
+        .streak-prompt {
+            margin-bottom: 0;
+        }
+
+        .streak-counter {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #ff6b35;
+            text-shadow: 0 0 20px rgba(255, 107, 53, 0.5);
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .streak-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-bottom: var(--spacing-xs);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .streak-target {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--neon-mint);
+            text-shadow: 0 0 20px var(--neon-mint-dim);
+        }
+
+        .streak-hint {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            min-height: 1.2em;
+            margin-top: var(--spacing-xs);
+        }
+
         .guess-number {
             font-weight: 700;
             color: var(--text-secondary);
@@ -1290,6 +1337,14 @@
                 z-index: 1500; /* Below header but above other elements */
             }
 
+            .streak-dock {
+                bottom: auto;
+                top: max(160px, calc(150px + env(safe-area-inset-top, 12px)));
+                padding: var(--spacing-sm) var(--spacing-lg);
+                max-width: calc(100% - 32px);
+                z-index: 1500;
+            }
+
             .locate-target {
                 font-size: 1.25rem;
             }
@@ -1653,6 +1708,11 @@
 
         .mode-tag.timetrial-tag {
             background: #ff6b6b;
+            color: white;
+        }
+
+        .mode-tag.streak-tag {
+            background: #ff6b35;
             color: white;
         }
 

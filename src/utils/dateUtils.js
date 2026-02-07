@@ -68,3 +68,34 @@ export function formatTimeRemaining(milliseconds) {
 export function getRandomCounty() {
     return COUNTY_NAMES[Math.floor(Math.random() * COUNTY_NAMES.length)];
 }
+
+/**
+ * Create a shuffle queue that cycles through all 32 counties before repeating.
+ * Uses Fisher-Yates shuffle for unbiased randomization.
+ * @returns {Object} Queue with next() and reset() methods
+ */
+export function createCountyShuffleQueue() {
+    let queue = [];
+
+    function shuffle(array) {
+        const shuffled = [...array];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+        return shuffled;
+    }
+
+    function next() {
+        if (queue.length === 0) {
+            queue = shuffle(COUNTY_NAMES);
+        }
+        return queue.pop();
+    }
+
+    function reset() {
+        queue = [];
+    }
+
+    return { next, reset };
+}

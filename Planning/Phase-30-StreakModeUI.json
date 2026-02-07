@@ -1,0 +1,92 @@
+{
+  "phase": 30,
+  "name": "Streak Mode - UI & Integration",
+  "description": "Build HTML elements, CSS styles, main.js event wiring, and UI components for Streak Mode",
+  "prerequisites": ["Phase-29-StreakModeCoreLogic"],
+  "prds": [
+    {
+      "category": "functional",
+      "description": "Add streak mode HTML elements to index.html",
+      "steps": [
+        "Add streak header button after timetrial-btn",
+        "Add streak mode card to start screen after timetrial card",
+        "Add streak dock element after locate-dock",
+        "Update help modal with streak description and S shortcut"
+      ],
+      "passes": true
+    },
+    {
+      "category": "functional",
+      "description": "Add streak mode CSS styles",
+      "steps": [
+        "Add .streak-dock styles following locate-dock pattern",
+        "Add .streak-counter styles (fire orange, large font, glow)",
+        "Add .streak-target, .streak-label, .streak-hint styles",
+        "Add .mode-tag.streak-tag styles",
+        "Add mobile responsive overrides"
+      ],
+      "passes": true
+    },
+    {
+      "category": "functional",
+      "description": "Wire up streak mode handlers in main.js",
+      "steps": [
+        "Import streakMode functions",
+        "Create handleInitStreakMode(), handleStreakGuess(), handleExitStreakMode()",
+        "Create initStreakModeUI(), updateStreakDock()",
+        "Add streak-btn click event listener",
+        "Add S keyboard shortcut",
+        "Update start screen to handle streak mode selection",
+        "Update resetUI to handle streak dock visibility"
+      ],
+      "passes": true
+    },
+    {
+      "category": "functional",
+      "description": "Implement showStreakEndModal in components.js",
+      "steps": [
+        "Create showStreakEndModal(finalStreak, targetCounty)",
+        "Display streak count with tiered messages (20+, 10+, 5+, etc.)",
+        "Show county that ended streak with fun fact",
+        "Show streak stats: final, best, average",
+        "Hide distribution and countdown containers"
+      ],
+      "passes": true
+    },
+    {
+      "category": "functional",
+      "description": "Update mode badge and guess counter pill for streak mode",
+      "steps": [
+        "In updateModeBadge(), add streak case",
+        "In updateGuessCounterPill(), show streak count with fire emoji",
+        "Add 'streak' to badge classList.remove()"
+      ],
+      "passes": true
+    },
+    {
+      "category": "functional",
+      "description": "Update map click handler for streak mode pointer cursor",
+      "steps": [
+        "In mapController.js, update shouldShowPointer logic",
+        "Include streak mode: (gameMode === 'locate' || gameMode === 'streak') && gameStatus === 'playing'"
+      ],
+      "passes": true
+    },
+    {
+      "category": "testing",
+      "description": "Full end-to-end verification of streak mode",
+      "steps": [
+        "Click streak button - verify mode launches with dock",
+        "Click correct county - verify animation, counter increment, new county",
+        "Click wrong county - verify game over modal with stats",
+        "Verify stats persist after refresh",
+        "Test S keyboard shortcut",
+        "Test start screen streak selection",
+        "Test mode switching between all 5 modes",
+        "Verify no county repeats (shuffle queue)",
+        "Test mobile layout and both themes"
+      ],
+      "passes": true
+    }
+  ]
+}

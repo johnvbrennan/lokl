@@ -1,0 +1,80 @@
+{
+  "phase": 28,
+  "name": "Streak Mode - State Infrastructure & Randomness",
+  "description": "Establish state shape, actions, selectors, persistence, and Fisher-Yates shuffle queue for Streak Mode",
+  "prerequisites": ["Phase-27-TimeTrialTesting"],
+  "prds": [
+    {
+      "category": "functional",
+      "description": "Add streakStatistics state and streakCount game field to initial state",
+      "steps": [
+        "Open src/store/initialState.js",
+        "Add streakCount: 0 to game state in getInitialState() and getDefaultGameState()",
+        "Add streakStatistics root-level state: gamesPlayed, bestStreak, averageStreak, totalCorrect",
+        "Create getDefaultStreakStatistics() function",
+        "Verify state structure matches expected shape"
+      ],
+      "passes": true
+    },
+    {
+      "category": "functional",
+      "description": "Implement streak mode action creators",
+      "steps": [
+        "Open src/store/actions.js",
+        "Create initStreakMode(targetCounty) - sets mode, status, guesses, targetCounty, streakCount: 0",
+        "Create streakCorrect(nextTargetCounty) - increments streakCount, resets guesses, sets new target",
+        "Create endStreakGame() - sets game status to lost",
+        "Create updateStreakStatistics(updates) - merges into streakStatistics",
+        "Create exitStreakMode() - sets mode to practice, status to start"
+      ],
+      "passes": true
+    },
+    {
+      "category": "functional",
+      "description": "Implement streak mode selectors",
+      "steps": [
+        "Open src/store/selectors.js",
+        "Create isStreakMode(state) - returns state.game.mode === 'streak'",
+        "Create getStreakCount(state) - returns state.game.streakCount or 0",
+        "Create getStreakStatistics(state) - returns state.streakStatistics"
+      ],
+      "passes": true
+    },
+    {
+      "category": "functional",
+      "description": "Add streak statistics persistence",
+      "steps": [
+        "Open src/storage/persistence.js",
+        "Add STREAK_STATS: 'loklStreakStats' to KEYS",
+        "Implement loadStreakStatistics() with defaults fallback",
+        "Implement saveStreakStatistics(stats)",
+        "Update setupPersistenceSubscriptions() to auto-save streakStatistics"
+      ],
+      "passes": true
+    },
+    {
+      "category": "functional",
+      "description": "Load persisted streak statistics in gameState.js",
+      "steps": [
+        "Open src/game/gameState.js",
+        "Import loadStreakStatistics from persistence.js",
+        "Load and merge streakStatistics into initial state"
+      ],
+      "passes": true
+    },
+    {
+      "category": "functional",
+      "description": "Implement Fisher-Yates shuffle county queue utility",
+      "steps": [
+        "Open src/utils/dateUtils.js",
+        "Create createCountyShuffleQueue() factory function",
+        "Implement Fisher-Yates shuffle algorithm",
+        "Implement next() - pops from queue, reshuffles when empty",
+        "Implement reset() - clears queue",
+        "Export createCountyShuffleQueue",
+        "Verify all 32 counties appear before any repeat"
+      ],
+      "passes": true
+    }
+  ]
+}

@@ -314,3 +314,34 @@ export function getTimeTrialDuration(state) {
     const difficulty = state.settings.difficulty;
     return state.settings.timeTrialDurations[difficulty];
 }
+
+// ============================================
+// STREAK MODE SELECTORS
+// ============================================
+
+/**
+ * Check if game is in streak mode
+ * @param {Object} state - Full application state
+ * @returns {boolean} True if in streak mode
+ */
+export function isStreakMode(state) {
+    return state.game.mode === 'streak';
+}
+
+/**
+ * Get current streak count
+ * @param {Object} state - Full application state
+ * @returns {number} Current streak count
+ */
+export function getStreakCount(state) {
+    return state.game.streakCount || 0;
+}
+
+/**
+ * Get streak statistics
+ * @param {Object} state - Full application state
+ * @returns {Object} Streak statistics
+ */
+export function getStreakStatistics(state) {
+    return state.streakStatistics;
+}

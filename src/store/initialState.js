@@ -19,7 +19,8 @@ export function getInitialState() {
             timeLimit: null,             // Time limit in seconds (for time trial)
             timeRemaining: null,         // Current remaining time in seconds (for time trial)
             startTime: null,             // Game start timestamp (for time trial)
-            timerActive: false           // Whether timer is running (for time trial)
+            timerActive: false,          // Whether timer is running (for time trial)
+            streakCount: 0               // Current streak count (for streak mode)
         },
 
         // Statistics - persistent across sessions
@@ -41,6 +42,14 @@ export function getInitialState() {
             averageGuesses: 0,           // Average number of guesses
             timeoutCount: 0,             // Number of timeouts
             distribution: [0, 0, 0, 0, 0, 0] // Wins by guess count [1, 2, 3, 4, 5, 6]
+        },
+
+        // Streak Statistics - persistent across sessions
+        streakStatistics: {
+            gamesPlayed: 0,              // Total streak games played
+            bestStreak: 0,               // All-time highest streak
+            averageStreak: 0,            // Average streak length
+            totalCorrect: 0              // Total counties correctly identified
         },
 
         // Settings - user preferences
@@ -88,7 +97,8 @@ export function getDefaultGameState(mode = 'daily', timeLimit = null) {
         timeLimit: mode === 'timetrial' ? timeLimit : null,
         timeRemaining: mode === 'timetrial' ? timeLimit : null,
         startTime: mode === 'timetrial' ? Date.now() : null,
-        timerActive: mode === 'timetrial'
+        timerActive: mode === 'timetrial',
+        streakCount: 0
     };
 }
 
@@ -141,6 +151,19 @@ export function getDefaultUIState() {
             message: null,
             visible: false
         }
+    };
+}
+
+/**
+ * Get default streak statistics
+ * @returns {Object} Default streak statistics
+ */
+export function getDefaultStreakStatistics() {
+    return {
+        gamesPlayed: 0,
+        bestStreak: 0,
+        averageStreak: 0,
+        totalCorrect: 0
     };
 }
 

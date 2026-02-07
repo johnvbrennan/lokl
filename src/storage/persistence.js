@@ -13,7 +13,8 @@ const KEYS = {
     THEME: 'loklTheme',
     TIMETRIAL_SETTINGS: 'loklTimeTrialSettings',
     TIMETRIAL_STATS: 'loklTimeTrialStats',
-    TIMETRIAL_STATE: 'loklTimeTrialState'
+    TIMETRIAL_STATE: 'loklTimeTrialState',
+    STREAK_STATS: 'loklStreakStats'
 };
 
 /**
@@ -41,6 +42,11 @@ export function setupPersistenceSubscriptions(store) {
         // Save time trial statistics if changed
         if (newState.timeTrialStatistics !== oldState.timeTrialStatistics) {
             saveTimeTrialStatistics(newState.timeTrialStatistics);
+        }
+
+        // Save streak statistics if changed
+        if (newState.streakStatistics !== oldState.streakStatistics) {
+            saveStreakStatistics(newState.streakStatistics);
         }
 
         // Save daily game state if in daily mode and game state changed
@@ -358,5 +364,43 @@ export function clearTimeTrialState() {
         localStorage.removeItem(KEYS.TIMETRIAL_STATE);
     } catch (e) {
         console.error('Failed to clear time trial state:', e);
+    }
+}
+
+// ============================================
+// STREAK STATISTICS
+// ============================================
+
+/**
+ * Load streak statistics from localStorage
+ * @returns {Object} Streak statistics with defaults
+ */
+export function loadStreakStatistics() {
+    try {
+        const saved = localStorage.getItem(KEYS.STREAK_STATS);
+        if (saved) {
+            return JSON.parse(saved);
+        }
+    } catch (e) {
+        console.error('Failed to load streak statistics:', e);
+    }
+
+    return {
+        gamesPlayed: 0,
+        bestStreak: 0,
+        averageStreak: 0,
+        totalCorrect: 0
+    };
+}
+
+/**
+ * Save streak statistics to localStorage
+ * @param {Object} stats - Streak statistics to save
+ */
+export function saveStreakStatistics(stats) {
+    try {
+        localStorage.setItem(KEYS.STREAK_STATS, JSON.stringify(stats));
+    } catch (e) {
+        console.error('Failed to save streak statistics:', e);
     }
 }

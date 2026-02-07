@@ -355,3 +355,83 @@ export function startNextLocateRound(targetCounty) {
         }
     };
 }
+
+// ============================================
+// STREAK MODE ACTIONS
+// ============================================
+
+/**
+ * Initialize streak mode with a target county
+ * @param {string} targetCounty - Target county name
+ * @returns {Object} State update object
+ */
+export function initStreakMode(targetCounty) {
+    return {
+        game: {
+            mode: 'streak',
+            status: 'playing',
+            guesses: [],
+            targetCounty: targetCounty,
+            streakCount: 0
+        }
+    };
+}
+
+/**
+ * Advance streak after correct guess
+ * @param {string} nextTargetCounty - Next target county name
+ * @returns {Function} State update function
+ */
+export function streakCorrect(nextTargetCounty) {
+    return (currentState) => {
+        return {
+            game: {
+                targetCounty: nextTargetCounty,
+                guesses: [],
+                status: 'playing',
+                streakCount: (currentState.game.streakCount || 0) + 1
+            }
+        };
+    };
+}
+
+/**
+ * End streak game (wrong guess)
+ * @returns {Object} State update object
+ */
+export function endStreakGame() {
+    return {
+        game: {
+            status: 'lost'
+        }
+    };
+}
+
+/**
+ * Update streak statistics
+ * @param {Object} updates - Partial streak statistics updates
+ * @returns {Function} State update function
+ */
+export function updateStreakStatistics(updates) {
+    return (currentState) => {
+        return {
+            streakStatistics: {
+                ...currentState.streakStatistics,
+                ...updates
+            }
+        };
+    };
+}
+
+/**
+ * Exit streak mode
+ * @returns {Object} State update object
+ */
+export function exitStreakMode() {
+    return {
+        game: {
+            mode: 'practice',
+            status: 'start'
+        }
+    };
+}

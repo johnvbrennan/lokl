@@ -5,7 +5,7 @@
 
 import { createStore } from '../store/store.js';
 import { getInitialState } from '../store/initialState.js';
-import { loadStatistics, loadSettings } from '../storage/persistence.js';
+import { loadStatistics, loadSettings, loadStreakStatistics } from '../storage/persistence.js';
 
 /**
  * Initialize the application state by merging defaults with persisted data
@@ -17,12 +17,14 @@ function initializeState() {
     // Load persisted data from localStorage
     const persistedStatistics = loadStatistics();
     const persistedSettings = loadSettings();
+    const persistedStreakStatistics = loadStreakStatistics();
 
     // Merge persisted data with default state
     return {
         ...defaultState,
         statistics: persistedStatistics,
-        settings: persistedSettings
+        settings: persistedSettings,
+        streakStatistics: persistedStreakStatistics
     };
 }
 

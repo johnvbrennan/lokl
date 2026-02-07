@@ -345,7 +345,7 @@ export function setMapClickHandler(handler, gameMode, gameStatus) {
     Object.entries(countyLayers).forEach(([name, layer]) => {
         layer.clickHandler = handler;
         layer.gameMode = gameMode;
-        layer.shouldShowPointer = gameMode === 'locate' && gameStatus === 'playing';
+        layer.shouldShowPointer = (gameMode === 'locate' || gameMode === 'streak') && gameStatus === 'playing';
     });
 }
 

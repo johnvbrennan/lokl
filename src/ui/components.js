@@ -129,7 +129,7 @@ export function updateModeBadge() {
     const badge = document.getElementById('mode-badge');
     if (!badge) return;
 
-    badge.classList.remove('practice', 'locate', 'timetrial');
+    badge.classList.remove('practice', 'locate', 'timetrial', 'streak');
 
     // Build badge text with difficulty for non-locate modes
     let modeText = '';
@@ -144,12 +144,16 @@ export function updateModeBadge() {
         modeText = '⏱️ Time Trial';
         badge.classList.add('timetrial');
         badge.title = 'Time Trial Mode - Race against the clock!';
+    } else if (getGame().mode === 'streak') {
+        modeText = '🔥 Streak';
+        badge.classList.add('streak');
+        badge.title = 'Streak Mode - One click, pass or fail!';
     } else {
         modeText = 'Daily';
     }
 
     // Add difficulty indicator for guess modes with full names
-    if (getGame().mode !== 'locate' && getGame().mode !== 'timetrial') {
+    if (getGame().mode !== 'locate' && getGame().mode !== 'timetrial' && getGame().mode !== 'streak') {
         const diffNames = {
             'easy': 'Easy',
             'medium': 'Medium',
@@ -493,8 +497,10 @@ export function updateGuessRail(highlightCounty, unhighlightCounty) {
 export function updateGuessCounterPill() {
     const pill = document.getElementById('guess-counter-pill');
     if (pill) {
-        // In time trial mode, timer display takes over the pill
-        if (!isTimeTrialMode(store.getState())) {
+        if (getGame().mode === 'streak') {
+            pill.textContent = `🔥 ${getGame().streakCount || 0}`;
+            pill.setAttribute('data-mode', 'streak');
+        } else if (!isTimeTrialMode(store.getState())) {
             pill.textContent = `${getGame().guesses.length}/${getMaxGuesses()}`;
             pill.removeAttribute('data-mode');
         }
@@ -995,4 +1001,64 @@ export function cleanupTimerEffects() {
     if (pill) {
         pill.classList.remove('timer-warning', 'timer-danger', 'timer-critical', 'timer-urgent');
     }
+}
+
+/**
+ * Show the streak end (game over) modal
+ * @param {number} finalStreak - The streak count achieved
+ * @param {string} targetCounty - County that ended the streak
+ */
+export function showStreakEndModal(finalStreak, targetCounty) {
+    const county = COUNTIES[targetCounty];
+
+    const modalTitle = document.getElementById('modal-title');
+    const starsEl = document.getElementById('modal-stars');
+    const modalCounty = document.getElementById('modal-county');
+    const modalFact = document.getElementById('modal-fact');
+    const modalStatsEl = document.getElementById('modal-stats-summary');
+    const distributionContainer = document.getElementById('distribution-container');
+    const countdownContainer = document.getElementById('countdown-container');
+
+    if (modalTitle) {
+        modalTitle.textContent = finalStreak > 0 ? 'Great Run!' : 'Game Over';
+    }
+
+    if (starsEl) {
+        if (finalStreak >= 20) {
+            starsEl.textContent = `${finalStreak} counties! Incredible!`;
+        } else if (finalStreak >= 10) {
+            starsEl.textContent = `${finalStreak} counties! Impressive!`;
+        } else if (finalStreak >= 5) {
+            starsEl.textContent = `${finalStreak} counties! Nice streak!`;
+        } else if (finalStreak > 0) {
+            starsEl.textContent = `${finalStreak} ${finalStreak === 1 ? 'county' : 'counties'}. Keep practicing!`;
+        } else {
+            starsEl.textContent = 'Better luck next time!';
+        }
+    }
+
+    if (modalCounty) modalCounty.textContent = targetCounty;
+    if (modalFact && county) modalFact.textContent = county.fact;
+
+    // Show streak statistics
+    if (modalStatsEl) {
+        const stats = store.getState().streakStatistics;
+        const statValues = modalStatsEl.querySelectorAll('.modal-stat-value');
+        const statLabels = modalStatsEl.querySelectorAll('.modal-stat-label');
+        if (statValues.length >= 3 && statLabels.length >= 3) {
+            statValues[0].textContent = finalStreak;
+            statLabels[0].textContent = 'Streak';
+            statValues[1].textContent = stats.bestStreak;
+            statLabels[1].textContent = 'Best';
+            statValues[2].textContent = stats.averageStreak.toFixed(1);
+            statLabels[2].textContent = 'Average';
+        }
+    }
+
+    // Hide distribution and countdown (not relevant for streak)
+    if (distributionContainer) distributionContainer.style.display = 'none';
+    if (countdownContainer) countdownContainer.style.display = 'none';
+
+    const modalOverlay = document.getElementById('modal-overlay');
+    if (modalOverlay) modalOverlay.classList.add('visible');
 }

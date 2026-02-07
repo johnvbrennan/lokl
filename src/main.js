@@ -7,7 +7,7 @@ import { COUNTIES, COUNTY_NAMES } from './data/counties.js';
 
 // Utility imports
 import { COLORS, COLOR_EMOJIS, DIRECTION_ARROWS } from './utils/constants.js';
-import { getTodaysDateString, getGameNumber, getTimeUntilNextDay, formatTimeRemaining, getRandomCounty } from './utils/dateUtils.js';
+import { getTodaysDateString, getGameNumber, getTimeUntilNextDay, formatTimeRemaining, getRandomCounty, createCountyShuffleQueue } from './utils/dateUtils.js';
 
 // Map imports
 import {
@@ -30,11 +30,15 @@ import { setDifficulty, updateTimeTrialSettings, initLocateMode as initLocateMod
 import { initGame, processGuess } from './game/gameLogic.js';
 import { initLocateModeUI, exitLocateMode, startNextLocateRoundUI } from './game/locateMode.js';
 import { stopTimeTrialTimer, handleTimeout } from './game/timeTrialMode.js';
+import { initStreakMode, handleStreakCorrect, handleStreakGameOver, exitStreakMode as exitStreakModeLogic } from './game/streakMode.js';
 
 // Helper functions to get state
 const getGame = () => store.getState().game;
 const getSettings = () => store.getState().settings;
 const getStats = () => store.getState().statistics;
+
+// Shuffle queue for locate mode (improved randomness - no county repeats within 32-county cycle)
+let locateQueue = createCountyShuffleQueue();
 
 // UI imports
 import {
@@ -66,7 +70,8 @@ import {
     showSuccessAnimation,
     showCorrectAnimation,
     focusInput,
-    cleanupTimerEffects
+    cleanupTimerEffects,
+    showStreakEndModal
 } from './ui/components.js';
 
 import {
@@ -190,6 +195,8 @@ function initStartScreenListeners() {
         // Start the game based on selected mode
         if (selectedMode === 'locate') {
             handleInitLocateMode();
+        } else if (selectedMode === 'streak') {
+            handleInitStreakMode();
         } else {
             handleInitGame(selectedMode);
         }
@@ -284,6 +291,7 @@ function resetUI() {
     const locateArea = document.getElementById('locate-area');
     const inputDock = document.getElementById('input-dock');
     const locateDock = document.getElementById('locate-dock');
+    const streakDock = document.getElementById('streak-dock');
 
     if (mode === 'locate') {
         // Locate mode: hide input, show locate UI
@@ -291,12 +299,21 @@ function resetUI() {
         if (locateArea) locateArea.style.display = 'block';
         if (inputDock) inputDock.style.display = 'none';
         if (locateDock) locateDock.style.display = 'flex';
+        if (streakDock) streakDock.style.display = 'none';
+    } else if (mode === 'streak') {
+        // Streak mode: hide input and locate, show streak UI
+        if (inputArea) inputArea.style.display = 'none';
+        if (locateArea) locateArea.style.display = 'none';
+        if (inputDock) inputDock.style.display = 'none';
+        if (locateDock) locateDock.style.display = 'none';
+        if (streakDock) streakDock.style.display = 'flex';
     } else {
-        // All other modes (daily, practice, timetrial): show input, hide locate UI
+        // All other modes (daily, practice, timetrial): show input, hide locate/streak UI
         if (inputArea) inputArea.style.display = '';
         if (locateArea) locateArea.style.display = 'none';
         if (inputDock) inputDock.style.display = 'flex';
         if (locateDock) locateDock.style.display = 'none';
+        if (streakDock) streakDock.style.display = 'none';
     }
 }
 
@@ -341,8 +358,8 @@ function handleGuess(countyName) {
             showTimeTrialEndModal(won, timeElapsed, guessCount, targetCounty, showResultLine);
         },
         startNextLocateRound: () => {
-            // 1. Generate new target county
-            const newTargetCounty = getRandomCounty();
+            // 1. Generate new target county (using shuffle queue for no repeats)
+            const newTargetCounty = locateQueue.next();
 
             // 2. Update store FIRST
             store.setState(startNextLocateRoundAction(newTargetCounty), 'startNextLocateRound');
@@ -407,8 +424,9 @@ function handleInitGame(mode = 'daily', suppressModal = false) {
  * Wrapper for initLocateMode with all callbacks
  */
 function handleInitLocateMode() {
-    // 1. Generate target county
-    const targetCounty = getRandomCounty();
+    // 1. Generate target county (using shuffle queue for no repeats)
+    locateQueue.reset();
+    const targetCounty = locateQueue.next();
 
     // 2. Update store FIRST
     store.setState(initLocateModeAction(targetCounty), 'initLocateMode');
@@ -433,6 +451,123 @@ function handleExitLocateMode() {
     exitLocateMode(handleInitGame);
 
     // Update map click handler back to normal
+    setMapClickHandler(null, getGame().mode, getGame().status);
+}
+
+// ============================================
+// STREAK MODE HANDLERS
+// ============================================
+
+/**
+ * Initialize streak mode
+ */
+function handleInitStreakMode() {
+    // 1. Initialize streak mode (creates queue, sets first target)
+    const targetCounty = initStreakMode();
+
+    // 2. Update UI - show streak dock, hide other docks
+    initStreakModeUI(targetCounty);
+
+    // 3. Set map click handler for streak mode
+    setMapClickHandler(handleStreakGuess, 'streak', 'playing');
+}
+
+/**
+ * Handle a click on a county during streak mode
+ */
+function handleStreakGuess(countyName) {
+    const state = store.getState();
+    if (state.game.status !== 'playing' || state.game.mode !== 'streak') return;
+
+    const isCorrect = countyName === state.game.targetCounty;
+
+    if (isCorrect) {
+        // Show correct color on map
+        updateMapCounty(countyName, COLORS.CORRECT, true);
+        showCorrectAnimation();
+
+        // Advance to next round after brief delay
+        setTimeout(() => {
+            const nextCounty = handleStreakCorrect();
+            resetMapColors('streak');
+            updateStreakDock(nextCounty, store.getState().game.streakCount);
+            updateGuessCounterPill();
+            setMapClickHandler(handleStreakGuess, 'streak', 'playing');
+        }, 800);
+    } else {
+        // Wrong! Show what they clicked (red) and reveal correct answer (green)
+        updateMapCounty(countyName, COLORS.HOT, false);
+        updateMapCounty(state.game.targetCounty, COLORS.CORRECT, true);
+
+        // Game over
+        const finalStreak = handleStreakGameOver();
+        setMapClickHandler(null, 'streak', 'lost');
+
+        // Show game over modal after delay
+        setTimeout(() => {
+            showStreakEndModal(finalStreak, state.game.targetCounty);
+        }, 1000);
+    }
+}
+
+/**
+ * Set up streak mode UI
+ */
+function initStreakModeUI(targetCounty) {
+    // Hide input dock and locate dock, show streak dock
+    const inputDock = document.getElementById('input-dock');
+    const locateDock = document.getElementById('locate-dock');
+    const streakDock = document.getElementById('streak-dock');
+
+    if (inputDock) inputDock.style.display = 'none';
+    if (locateDock) locateDock.style.display = 'none';
+    if (streakDock) streakDock.style.display = 'flex';
+
+    // Hide legacy input/locate areas
+    const inputArea = document.getElementById('input-area');
+    const locateArea = document.getElementById('locate-area');
+    if (inputArea) inputArea.style.display = 'none';
+    if (locateArea) locateArea.style.display = 'none';
+
+    // Update streak dock content
+    updateStreakDock(targetCounty, 0);
+
+    // Reset map and UI
+    resetMapColors('streak');
+    clearGuessRail();
+    updateModeBadge();
+    updateGuessCounterPill();
+}
+
+/**
+ * Update the streak dock display
+ */
+function updateStreakDock(targetCounty, streakCount) {
+    const counter = document.getElementById('streak-counter');
+    const target = document.getElementById('streak-target');
+    const hint = document.getElementById('streak-hint');
+
+    if (counter) counter.textContent = `🔥 ${streakCount}`;
+    if (target) target.textContent = targetCounty;
+    if (hint) hint.textContent = 'One click only!';
+}
+
+/**
+ * Exit streak mode and return to practice
+ */
+function handleExitStreakMode() {
+    // Hide streak dock, show input dock
+    const inputDock = document.getElementById('input-dock');
+    const streakDock = document.getElementById('streak-dock');
+
+    if (inputDock) inputDock.style.display = 'flex';
+    if (streakDock) streakDock.style.display = 'none';
+
+    // Restore legacy input area
+    const inputArea = document.getElementById('input-area');
+    if (inputArea) inputArea.style.display = '';
+
+    exitStreakModeLogic(() => handleInitGame('practice'));
     setMapClickHandler(null, getGame().mode, getGame().status);
 }
 
@@ -637,6 +772,10 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('menu-new-game').addEventListener('click', () => {
         floatingMenu.classList.remove('visible');
         document.getElementById('guess-rail').innerHTML = '';
+        // Reset mode button text
+        if (getGame().mode === 'streak') {
+            document.getElementById('streak-btn').innerHTML = '🔥 <span class="btn-text">Streak</span>';
+        }
         document.getElementById('start-overlay').classList.add('visible');
         updateStartScreenDifficulty();
     });
@@ -660,6 +799,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // ============================================
 
     document.getElementById('practice-btn').addEventListener('click', () => {
+        if (getGame().mode === 'streak') {
+            handleExitStreakMode();
+            document.getElementById('streak-btn').innerHTML = '🔥 <span class="btn-text">Streak</span>';
+            return;
+        }
         if (getGame().mode === 'locate') {
             handleExitLocateMode();
             document.getElementById('practice-btn').innerHTML = '🎯 <span class="btn-text">Practice</span>';
@@ -680,6 +824,10 @@ document.addEventListener('DOMContentLoaded', () => {
             handleExitLocateMode();
             document.getElementById('locate-btn').innerHTML = '📍 <span class="btn-text">Locate</span>';
         } else {
+            if (getGame().mode === 'streak') {
+                handleExitStreakMode();
+                document.getElementById('streak-btn').innerHTML = '🔥 <span class="btn-text">Streak</span>';
+            }
             handleInitLocateMode();
             document.getElementById('locate-btn').innerHTML = '🔙 <span class="btn-text">Back</span>';
         }
@@ -689,7 +837,24 @@ document.addEventListener('DOMContentLoaded', () => {
         if (getGame().mode === 'locate') {
             handleExitLocateMode();
         }
+        if (getGame().mode === 'streak') {
+            handleExitStreakMode();
+        }
         handleInitGame('timetrial');
+    });
+
+    document.getElementById('streak-btn').addEventListener('click', () => {
+        if (getGame().mode === 'streak') {
+            handleExitStreakMode();
+            document.getElementById('streak-btn').innerHTML = '🔥 <span class="btn-text">Streak</span>';
+        } else {
+            if (getGame().mode === 'locate') {
+                handleExitLocateMode();
+                document.getElementById('locate-btn').innerHTML = '📍 <span class="btn-text">Locate</span>';
+            }
+            handleInitStreakMode();
+            document.getElementById('streak-btn').innerHTML = '🔙 <span class="btn-text">Back</span>';
+        }
     });
 
     // ============================================
@@ -706,6 +871,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('play-again-btn').addEventListener('click', () => {
         hideModal();
+        // Reset streak button text if coming from streak mode
+        if (getGame().mode === 'streak') {
+            document.getElementById('streak-btn').innerHTML = '🔥 <span class="btn-text">Streak</span>';
+        }
         document.getElementById('start-overlay').classList.add('visible');
         updateStartScreenDifficulty();
     });
@@ -797,7 +966,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Mode badge click to cycle difficulty
     document.getElementById('mode-badge')?.addEventListener('click', () => {
-        if (getGame().mode === 'locate') return;
+        if (getGame().mode === 'locate' || getGame().mode === 'streak') return;
 
         const difficulties = ['easy', 'medium', 'hard'];
         const currentIndex = difficulties.indexOf(getSettings().difficulty);
@@ -886,6 +1055,10 @@ document.addEventListener('DOMContentLoaded', () => {
             case 'l':
                 e.preventDefault();
                 document.getElementById('locate-btn').click();
+                break;
+            case 's':
+                e.preventDefault();
+                document.getElementById('streak-btn').click();
                 break;
             case 'tab':
                 e.preventDefault();

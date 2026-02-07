@@ -45,6 +45,7 @@
                 <button class="header-btn" id="practice-btn" title="Practice Mode (P)">🎯 <span class="btn-text">Practice</span></button>
                 <button class="header-btn" id="locate-btn" title="Locate Mode - Find county on map (L)">📍 <span class="btn-text">Locate</span></button>
                 <button class="header-btn" id="timetrial-btn" title="Time Trial Mode (T)">⏱️ <span class="btn-text">Time Trial</span></button>
+                <button class="header-btn" id="streak-btn" title="Streak Mode - How many can you get right? (S)">🔥 <span class="btn-text">Streak</span></button>
                 <button class="header-btn" id="stats-btn" title="Statistics">📊 <span class="btn-text">Stats</span></button>
                 <button class="header-btn" id="difficulty-toggle-btn" title="Click to change difficulty">
                     <span id="difficulty-display">Medium</span>
@@ -200,6 +201,16 @@
                 <div class="locate-hint" id="locate-hint-new"></div>
             </div>
         </div>
+
+        <!-- Streak Mode Dock -->
+        <div class="streak-dock glass neon-border" id="streak-dock" style="display: none;">
+            <div class="streak-prompt">
+                <div class="streak-counter" id="streak-counter">🔥 0</div>
+                <div class="streak-label">Find this county on the map</div>
+                <div class="streak-target" id="streak-target">--</div>
+                <div class="streak-hint" id="streak-hint">One click only!</div>
+            </div>
+        </div>
     </div>
 
     <!-- Modal -->
@@ -276,6 +287,7 @@
                 <p><strong>Practice:</strong> Random counties, unlimited plays</p>
                 <p><strong>Locate:</strong> Click on the map to find named counties</p>
                 <p><strong>⏱️ Time Trial:</strong> Race against the clock! Unlimited guesses but limited time. Timer duration varies by difficulty (Easy: 60s, Medium: 45s, Hard: 30s). Colors indicate urgency: green/normal → yellow (warning) → orange (danger) → red (critical) → pulsing red (urgent). Track your best time and compete against yourself!</p>
+                <p><strong>🔥 Streak:</strong> One click per county - get it right or game over! See how many counties you can identify in a row. No second chances!</p>
             </div>
 
             <div class="help-section">
@@ -286,6 +298,7 @@
                     <span class="shortcut-key">?</span><span class="shortcut-desc">Show this help</span>
                     <span class="shortcut-key">P</span><span class="shortcut-desc">Toggle practice mode</span>
                     <span class="shortcut-key">L</span><span class="shortcut-desc">Toggle locate mode</span>
+                    <span class="shortcut-key">S</span><span class="shortcut-desc">Toggle streak mode</span>
                     <span class="shortcut-key">Tab</span><span class="shortcut-desc">Toggle side panel</span>
                 </div>
             </div>
@@ -333,6 +346,13 @@
                     <div class="mode-info">
                         <div class="mode-name">Time Trial <span class="mode-tag timetrial-tag">Fast</span></div>
                         <div class="mode-desc">Race against the clock! Unlimited guesses, limited time.</div>
+                    </div>
+                </div>
+                <div class="mode-card" data-mode="streak">
+                    <div class="mode-icon">🔥</div>
+                    <div class="mode-info">
+                        <div class="mode-name">Streak <span class="mode-tag streak-tag">Challenge</span></div>
+                        <div class="mode-desc">One click per county. How many can you get right in a row?</div>
                     </div>
                 </div>
             </div>
