@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Resize Test</title>
+    <script>
+        // Open console to see when resize happens
+        window.addEventListener('resize', () => {
+            console.log('Window resized:', window.innerWidth, 'x', window.innerHeight);
+        });
+        
+        // Check if map invalidateSize is being called
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                const paths = document.querySelectorAll('.leaflet-overlay-pane path');
+                console.log('Found paths:', paths.length);
+                paths.forEach((path, i) => {
+                    console.log(`Path ${i}:`, {
+                        fill: path.getAttribute('fill'),
+                        fillOpacity: path.getAttribute('fill-opacity'),
+                        fillStyle: path.style.fill,
+                        fillOpacityStyle: path.style.fillOpacity
+                    });
+                });
+            }, 2000);
+        });
+    </script>
+</head>
+<body>
+    <p>Open console and resize window to debug</p>
+</body>
+</html>

@@ -2,7 +2,7 @@
         :root,
         [data-theme="dark"] {
             /* Cyber-Emerald Palette */
-            --bg-deep: #020b09;
+            --bg-deep: #0a1f1a;
             --bg-forest: #052c24;
             --neon-mint: #00ff88;
             --neon-mint-dim: rgba(0, 255, 136, 0.4);
@@ -35,8 +35,8 @@
             --accent-hover: #33ff99;
 
             /* Map-specific colors */
-            --map-border: rgba(0, 255, 136, 0.3);
-            --map-border-bright: rgba(0, 255, 136, 0.6);
+            --map-border: rgba(0, 255, 136, 0.8);
+            --map-border-bright: rgba(0, 255, 136, 1.0);
             --map-hover: #f8fafc;
 
             /* Shadow colors for effects */
@@ -94,8 +94,8 @@
             --accent-hover: #00b366;
 
             /* Map-specific colors */
-            --map-border: rgba(0, 153, 85, 0.4);
-            --map-border-bright: rgba(0, 153, 85, 0.8);
+            --map-border: rgba(0, 80, 40, 0.7);
+            --map-border-bright: rgba(0, 80, 40, 0.9);
             --map-hover: #1a2d27;
 
             /* Shadow colors for effects */
@@ -427,9 +427,13 @@
             background: var(--bg-deep);
         }
 
-        /* Darken and desaturate tile layer */
+        /* Tile layer adjustments - base rule for dark/default, light overrides */
         .leaflet-tile-pane {
-            filter: brightness(0.7) contrast(1.2) saturate(0.8);
+            filter: brightness(0.85) contrast(1.1) saturate(0.8);
+        }
+
+        [data-theme="light"] .leaflet-tile-pane {
+            filter: brightness(0.88) contrast(1.05) saturate(0.9);
         }
 
         /* Ensure county overlay is visible and interactive on all devices */
