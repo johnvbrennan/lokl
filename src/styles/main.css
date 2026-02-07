@@ -17,7 +17,7 @@
             --color-cold-2: #4dabf7;     /* 55-75% - Medium blue */
             --color-cold-1: #1864ab;     /* 75-100% - Dark blue */
             --color-default: transparent; /* Unguessed county fill */
-            --color-stroke: rgba(0, 255, 136, 0.3); /* County border */
+            --color-stroke: rgba(0, 255, 136, 0.2); /* County border */
 
             /* Glass UI */
             --glass-bg: rgba(10, 10, 10, 0.6);
@@ -171,61 +171,11 @@
             z-index: 2500; /* Increased to be above all map controls and UI elements */
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            gap: var(--spacing-sm);
+            gap: var(--spacing-md);
             padding: var(--spacing-sm) var(--spacing-md);
             border-radius: var(--border-radius-pill);
             transition: all 0.3s ease;
             pointer-events: auto; /* Ensure touch/click events work */
-            min-width: 300px;
-            max-width: 90vw;
-        }
-
-        .floating-header .header-center {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: var(--spacing-sm);
-            min-width: 0; /* Allow flex shrinking */
-        }
-
-        .floating-header .menu-container {
-            order: -1; /* Force menu to left */
-        }
-
-        .floating-header .locate-prompt-inline {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 2px;
-            font-size: 0.9rem;
-            text-align: center;
-            line-height: 1.2;
-        }
-
-        .floating-header .locate-label-inline {
-            color: var(--text-secondary);
-            font-size: 0.7rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .floating-header .locate-target-inline {
-            color: var(--neon-mint);
-            font-weight: 600;
-            text-shadow: 0 0 10px var(--neon-mint-glow);
-            word-break: break-word;
-        }
-
-        /* Hide title when locate mode is active */
-        .floating-header.locate-mode #header-title {
-            display: none;
-        }
-
-        .floating-header.locate-mode #locate-prompt-inline {
-            display: flex !important;
         }
 
         .floating-header .header-logo {
@@ -311,7 +261,7 @@
         .floating-menu {
             position: absolute;
             top: calc(100% + 8px);
-            left: 0;
+            right: 0;
             background: var(--glass-bg);
             border: 1px solid var(--glass-border);
             border-radius: var(--border-radius);
@@ -485,14 +435,11 @@
         /* Ensure county overlay is visible and interactive on all devices */
         .leaflet-overlay-pane {
             z-index: 400 !important;
-            /* Don't override Leaflet's positioning transforms */
         }
 
         .leaflet-overlay-pane svg {
             position: relative;
             z-index: 400;
-            overflow: visible !important;
-            /* Don't override Leaflet's positioning transforms */
         }
 
         .leaflet-overlay-pane path {
@@ -547,9 +494,19 @@
             }
         }
 
-        /* Mobile-specific fixes for map rendering - REMOVED to test */
+        /* Mobile-specific fixes for map rendering */
         @media (max-width: 700px) {
-            /* Let Leaflet handle everything naturally on mobile */
+            .leaflet-overlay-pane svg {
+                /* Ensure SVG is rendered properly on mobile */
+                width: 100%;
+                height: 100%;
+            }
+
+            .leaflet-overlay-pane path {
+                /* Ensure paths are visible and interactive */
+                visibility: visible !important;
+                pointer-events: all !important;
+            }
         }
 
         /* Force colored counties to display properly on all devices */
@@ -561,7 +518,11 @@
 
         /* Ensure colored counties remain visible during viewport changes */
         @media (max-width: 700px) {
-            /* Let Leaflet handle rendering naturally */
+            .leaflet-overlay-pane path.colored-county {
+                /* Force GPU acceleration for better mobile rendering */
+                transform: translateZ(0);
+                will-change: fill, fill-opacity;
+            }
         }
 
         /* County tooltip styling */
@@ -914,8 +875,15 @@
         }
 
         .locate-dock {
-            /* Hidden - using inline header prompt instead */
-            display: none !important;
+            position: fixed;
+            bottom: calc(16px + env(safe-area-inset-bottom));
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            text-align: center;
+            padding: var(--spacing-md) var(--spacing-xl);
+            border-radius: var(--border-radius-pill);
+            max-width: 400px;
         }
 
         .locate-prompt {
@@ -1156,31 +1124,6 @@
             color: var(--neon-mint);
         }
 
-        /* Disabled and sharing states for buttons */
-        .modal-btn:disabled,
-        .modal-btn.sharing {
-            opacity: 0.6;
-            cursor: not-allowed;
-            pointer-events: none;
-        }
-
-        .modal-btn.sharing {
-            animation: pulse-share 1.5s ease-in-out infinite;
-        }
-
-        @keyframes pulse-share {
-            0%, 100% { opacity: 0.6; }
-            50% { opacity: 0.8; }
-        }
-
-        /* Improve touch target for mobile */
-        @media (hover: none) and (pointer: coarse) {
-            .modal-btn {
-                min-height: 44px; /* iOS recommended touch target */
-                padding: var(--spacing-md) var(--spacing-xl);
-            }
-        }
-
         .countdown {
             margin-top: var(--spacing-md);
             color: var(--text-secondary);
@@ -1344,20 +1287,18 @@
                 height: 42px;
             }
 
-            /* Locate mode now integrated in header - no separate dock needed */
-            .floating-header .locate-label-inline {
-                font-size: 0.65rem;
+            .locate-dock {
+                /* Move to top on mobile to avoid conflict with guess pills */
+                /* Positioned below floating header (now at ~100px + 44px height) + spacing */
+                bottom: auto;
+                top: max(160px, calc(150px + env(safe-area-inset-top, 12px))); /* Ensure it's below header */
+                padding: var(--spacing-sm) var(--spacing-lg);
+                max-width: calc(100% - 32px);
+                z-index: 1500; /* Below header but above other elements */
             }
 
-            .floating-header .locate-target-inline {
-                font-size: 0.85rem;
-                max-width: 180px;
-                /* Allow wrapping on mobile for long county names */
-            }
-
-            /* Ensure menu dropdown doesn't overflow on mobile */
-            .floating-menu {
-                max-width: calc(100vw - 32px);
+            .locate-target {
+                font-size: 1.25rem;
             }
 
             .header-logo {
@@ -1502,35 +1443,32 @@
         /* Help Modal */
         .help-modal {
             max-width: 500px;
-            max-height: 85vh;
         }
 
         .modal-close-btn {
             position: absolute;
             top: var(--spacing-md);
             right: var(--spacing-md);
-            background: rgba(0, 255, 136, 0.1);
-            border: 1px solid var(--glass-border);
-            color: var(--neon-mint);
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
             font-size: 2rem;
             line-height: 1;
             cursor: pointer;
             padding: 0;
-            width: 44px;
-            height: 44px;
+            width: 32px;
+            height: 32px;
             display: flex;
             align-items: center;
             justify-content: center;
-            border-radius: 50%;
+            border-radius: 4px;
             transition: all 0.2s ease;
             z-index: 1;
-            box-shadow: 0 0 10px var(--neon-mint-glow);
         }
 
         .modal-close-btn:hover {
-            background: var(--neon-mint);
-            color: var(--bg-deep);
-            box-shadow: 0 0 20px var(--neon-mint-dim);
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
         }
 
         .modal-close-btn:active {
@@ -1552,87 +1490,6 @@
             color: var(--text-secondary);
             line-height: 1.6;
             margin-bottom: var(--spacing-sm);
-        }
-
-        /* Mobile-specific help modal */
-        @media (max-width: 700px) {
-            .help-modal {
-                max-width: 95vw;
-                max-height: 80vh;
-                padding: var(--spacing-md);
-                margin: var(--spacing-sm);
-            }
-
-            .help-modal .modal-title {
-                font-size: 1.35rem;
-                margin-bottom: var(--spacing-sm);
-                padding-right: 40px; /* Space for close button */
-            }
-
-            .help-section {
-                margin-bottom: var(--spacing-md);
-            }
-
-            /* Hide keyboard shortcuts on mobile */
-            .help-section:has(.shortcut-list) {
-                display: none;
-            }
-
-            .help-section h3 {
-                font-size: 0.95rem;
-                margin-bottom: var(--spacing-xs);
-            }
-
-            .help-section p {
-                font-size: 0.85rem;
-                line-height: 1.5;
-                margin-bottom: var(--spacing-xs);
-            }
-
-            .shortcut-list {
-                gap: var(--spacing-xs) var(--spacing-sm);
-                margin-top: var(--spacing-xs);
-            }
-
-            .shortcut-key {
-                font-size: 0.75rem;
-                padding: 2px var(--spacing-xs);
-            }
-
-            .shortcut-desc {
-                font-size: 0.75rem;
-            }
-
-            .color-legend {
-                gap: var(--spacing-xs);
-                margin: var(--spacing-sm) 0;
-            }
-
-            .legend-item {
-                font-size: 0.7rem;
-            }
-
-            .modal-close-btn {
-                width: 40px;
-                height: 40px;
-                font-size: 1.75rem;
-                top: var(--spacing-sm);
-                right: var(--spacing-sm);
-            }
-
-            .help-about {
-                font-size: 0.7rem;
-                margin-top: var(--spacing-md);
-                padding-top: var(--spacing-sm);
-            }
-
-            /* Make "Got it!" button more prominent on mobile */
-            .help-modal .modal-btn.primary {
-                padding: var(--spacing-md) var(--spacing-lg);
-                font-size: 1rem;
-                margin-top: var(--spacing-sm);
-                width: 100%;
-            }
         }
 
         .shortcut-list {

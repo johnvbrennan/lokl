@@ -57,15 +57,23 @@ export function initLocateModeUI(targetCounty, callbacks = {}) {
     if (inputArea) inputArea.style.display = 'none';
     if (locateArea) locateArea.style.display = 'block';
 
-    // Hide input dock
+    // Hide input dock, show locate dock
     const inputDock = document.getElementById('input-dock');
+    const locateDock = document.getElementById('locate-dock');
     if (inputDock) inputDock.style.display = 'none';
+    if (locateDock) locateDock.style.display = 'flex';
 
-    // Show target county in header
-    const floatingHeader = document.querySelector('.floating-header');
-    const locateTargetInline = document.getElementById('locate-target-inline');
-    if (floatingHeader) floatingHeader.classList.add('locate-mode');
-    if (locateTargetInline) locateTargetInline.textContent = targetCounty;
+    // Show target county name
+    const locateTarget = document.getElementById('locate-target');
+    const locateHint = document.getElementById('locate-hint');
+    if (locateTarget) locateTarget.textContent = targetCounty;
+    if (locateHint) locateHint.textContent = 'Click on the map to find it!';
+
+    // Also update the new locate dock
+    const locateTargetNew = document.getElementById('locate-target-new');
+    const locateHintNew = document.getElementById('locate-hint-new');
+    if (locateTargetNew) locateTargetNew.textContent = targetCounty;
+    if (locateHintNew) locateHintNew.textContent = 'Click on the map to find it!';
 
     if (updateModeBadge) updateModeBadge();
 }
@@ -81,11 +89,11 @@ export function exitLocateMode(initGame) {
     if (inputArea) inputArea.style.display = '';
     if (locateArea) locateArea.style.display = 'none';
 
-    // Show input dock and remove locate mode from header
+    // Show input dock, hide locate dock
     const inputDock = document.getElementById('input-dock');
-    const floatingHeader = document.querySelector('.floating-header');
+    const locateDock = document.getElementById('locate-dock');
     if (inputDock) inputDock.style.display = 'flex';
-    if (floatingHeader) floatingHeader.classList.remove('locate-mode');
+    if (locateDock) locateDock.style.display = 'none';
 
     // Return to practice mode
     if (initGame) initGame('practice');
@@ -103,9 +111,17 @@ export function startNextLocateRoundUI(targetCounty, callbacks = {}) {
         updateGuessCounterPill
     } = callbacks;
 
-    // Update target county in header
-    const locateTargetInline = document.getElementById('locate-target-inline');
-    if (locateTargetInline) locateTargetInline.textContent = targetCounty;
+    // Update UI
+    const locateTarget = document.getElementById('locate-target');
+    const locateHint = document.getElementById('locate-hint');
+    if (locateTarget) locateTarget.textContent = targetCounty;
+    if (locateHint) locateHint.textContent = 'Click on the map to find it!';
+
+    // Update the new locate dock
+    const locateTargetNew = document.getElementById('locate-target-new');
+    const locateHintNew = document.getElementById('locate-hint-new');
+    if (locateTargetNew) locateTargetNew.textContent = targetCounty;
+    if (locateHintNew) locateHintNew.textContent = 'Click on the map to find it!';
 
     // Clear guess rail
     if (clearGuessRail) clearGuessRail();

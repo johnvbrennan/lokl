@@ -103,33 +103,29 @@ export function initMap(onMapReady) {
 
                                 // Force SVG to fill its container
                                 if (svgRect.width === 0 || svgRect.height === 0) {
-                                    console.log('  🔧 SVG has 0 dimensions - forcing complete redraw');
+                                    console.log('  🔧 Fixing SVG dimensions...');
+                                    const mapSize = map.getSize();
+                                    const mapContainer = map.getContainer();
 
-                                    // Remove and re-add the GeoJSON layer to force Leaflet to recalculate everything
-                                    if (geoJsonLayer && map) {
-                                        map.removeLayer(geoJsonLayer);
+                                    // Set explicit dimensions
+                                    svg.setAttribute('width', mapSize.x);
+                                    svg.setAttribute('height', mapSize.y);
+                                    svg.style.width = mapSize.x + 'px';
+                                    svg.style.height = mapSize.y + 'px';
 
-                                        // Wait for removal to complete
-                                        requestAnimationFrame(() => {
-                                            // Re-add the layer
-                                            geoJsonLayer.addTo(map);
-                                            geoJsonLayer.bringToFront();
+                                    // Set viewBox to cover the map bounds
+                                    const bounds = map.getBounds();
+                                    const topLeft = map.latLngToLayerPoint(bounds.getNorthWest());
+                                    const bottomRight = map.latLngToLayerPoint(bounds.getSouthEast());
+                                    const viewBoxWidth = bottomRight.x - topLeft.x;
+                                    const viewBoxHeight = bottomRight.y - topLeft.y;
+                                    svg.setAttribute('viewBox', `${topLeft.x} ${topLeft.y} ${viewBoxWidth} ${viewBoxHeight}`);
 
-                                            // Reapply all stored colors
-                                            countyColors.forEach((data, countyName) => {
-                                                const layer = countyLayers[countyName];
-                                                if (layer) {
-                                                    layer.setStyle({
-                                                        fillColor: data.color,
-                                                        fillOpacity: 0.9
-                                                    });
-                                                    layer.bringToFront();
-                                                }
-                                            });
-
-                                            console.log('  ✅ GeoJSON layer re-added and redrawn');
-                                        });
-                                    }
+                                    console.log('  ✅ SVG fixed:', {
+                                        width: mapSize.x,
+                                        height: mapSize.y,
+                                        viewBox: `${topLeft.x} ${topLeft.y} ${viewBoxWidth} ${viewBoxHeight}`
+                                    });
                                 }
                             }
                         }
@@ -216,25 +212,6 @@ export function loadGeoJSON(onMapReady) {
             setTimeout(() => {
                 map.invalidateSize(true);
             }, 100);
-
-            // iOS Safari fix: Force repaint on iOS devices only
-            if (typeof window !== 'undefined' && /iPhone|iPad|iPod/.test(navigator.userAgent)) {
-                setTimeout(() => {
-                    console.log('🍎 iOS device detected, applying visibility fixes');
-                    const overlayPane = map.getPanes().overlayPane;
-                    if (overlayPane) {
-                        const svg = overlayPane.querySelector('svg');
-                        if (svg) {
-                            // Force all paths to be visible on iOS
-                            const paths = svg.querySelectorAll('path');
-                            paths.forEach(path => {
-                                path.style.opacity = '1';
-                                path.style.visibility = 'visible';
-                            });
-                        }
-                    }
-                }, 300);
-            }
 
             // Call callback when map is ready
             if (onMapReady) {
