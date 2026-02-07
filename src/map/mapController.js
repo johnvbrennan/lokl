@@ -208,10 +208,14 @@ export function loadGeoJSON(onMapReady) {
 
             console.log('County layers loaded:', Object.keys(countyLayers).length);
 
-            // Force map to recalculate size
-            setTimeout(() => {
-                map.invalidateSize(true);
-            }, 100);
+            // Force map to recalculate size - multiple passes to catch mobile layout delays
+            [100, 300, 600].forEach(delay => {
+                setTimeout(() => {
+                    if (map) {
+                        map.invalidateSize(true);
+                    }
+                }, delay);
+            });
 
             // Call callback when map is ready
             if (onMapReady) {

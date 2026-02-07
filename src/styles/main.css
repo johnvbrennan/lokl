@@ -438,7 +438,6 @@
         }
 
         .leaflet-overlay-pane svg {
-            position: relative;
             z-index: 400;
         }
 
@@ -496,12 +495,6 @@
 
         /* Mobile-specific fixes for map rendering */
         @media (max-width: 700px) {
-            .leaflet-overlay-pane svg {
-                /* Ensure SVG is rendered properly on mobile */
-                width: 100%;
-                height: 100%;
-            }
-
             .leaflet-overlay-pane path {
                 /* Ensure paths are visible and interactive */
                 visibility: visible !important;
