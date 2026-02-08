@@ -204,6 +204,10 @@ export function loadGeoJSON(onMapReady) {
             // Fit map to Ireland bounds
             map.fitBounds(geoJsonLayer.getBounds(), { padding: [20, 20] });
 
+            // Constrain panning so counties stay within the visible viewport
+            map.setMaxBounds(geoJsonLayer.getBounds().pad(0.2));
+            map.options.maxBoundsViscosity = 1.0;
+
             // Hide loading indicator
             document.getElementById('loading').style.display = 'none';
 

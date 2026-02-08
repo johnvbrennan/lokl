@@ -1249,13 +1249,19 @@
 
         /* Responsive - Mobile Layout */
         @media (max-width: 700px) {
+            /*
+             * MOBILE SAFE-VIEWPORT LAYOUT
+             * Instead of floating overlays on a full-screen map, we give the map
+             * its own dedicated zone between the header and input dock.
+             * This prevents counties from hiding behind UI elements.
+             */
+            .main-content {
+                top: calc(60px + env(safe-area-inset-top, 0px));
+                bottom: calc(120px + env(safe-area-inset-bottom, 0px));
+            }
+
             .floating-header {
-                /*
-                 * Position below Safari address bar on iPhone/mobile
-                 * Safari address bar can be 44-64px tall (varies by device/state)
-                 * Increased offset to 100px to ensure full visibility below address bar
-                 */
-                top: max(100px, calc(90px + env(safe-area-inset-top, 12px)));
+                top: calc(6px + env(safe-area-inset-top, 0px));
                 padding: 10px 16px; /* Slightly larger touch targets */
                 min-height: 44px; /* iOS minimum recommended touch target height */
                 gap: 12px; /* Slightly larger spacing for easier interaction */
