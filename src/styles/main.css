@@ -196,6 +196,11 @@
             transition: all 0.3s ease;
         }
 
+        /* Header Target - hidden on desktop, shown on mobile for locate/streak */
+        .header-target {
+            display: none;
+        }
+
         /* Time Trial Timer Styles */
         .guess-counter-pill[data-mode="timetrial"] {
             min-width: 80px;
@@ -1331,26 +1336,27 @@
                 height: 42px;
             }
 
-            .locate-dock {
-                /* Move to top on mobile to avoid conflict with guess pills */
-                /* Positioned below floating header (now at ~100px + 44px height) + spacing */
-                bottom: auto;
-                top: max(160px, calc(150px + env(safe-area-inset-top, 12px))); /* Ensure it's below header */
-                padding: var(--spacing-sm) var(--spacing-lg);
-                max-width: calc(100% - 32px);
-                z-index: 1500; /* Below header but above other elements */
-            }
-
+            /* Hide docks on mobile — target county merged into floating header */
+            .locate-dock,
             .streak-dock {
-                bottom: auto;
-                top: max(160px, calc(150px + env(safe-area-inset-top, 12px)));
-                padding: var(--spacing-sm) var(--spacing-lg);
-                max-width: calc(100% - 32px);
-                z-index: 1500;
+                display: none !important;
             }
 
-            .locate-target {
-                font-size: 1.25rem;
+            /* Hide "lokl" title when target county is shown — frees space for county name */
+            .floating-header:has(.header-target.active) .lokl-title-small {
+                display: none;
+            }
+
+            /* Show target county in header on mobile */
+            .header-target.active {
+                display: inline-block;
+                font-size: 0.875rem;
+                font-weight: 700;
+                color: var(--neon-mint);
+                text-shadow: 0 0 10px var(--neon-mint-dim);
+                padding: 4px 10px;
+                background: rgba(0, 255, 136, 0.1);
+                border-radius: var(--border-radius);
             }
 
             .header-logo {

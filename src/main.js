@@ -314,6 +314,13 @@ function resetUI() {
         if (inputDock) inputDock.style.display = 'flex';
         if (locateDock) locateDock.style.display = 'none';
         if (streakDock) streakDock.style.display = 'none';
+
+        // Clear header target (mobile) when leaving locate/streak
+        const headerTarget = document.getElementById('header-target');
+        if (headerTarget) {
+            headerTarget.textContent = '';
+            headerTarget.classList.remove('active');
+        }
     }
 }
 
@@ -550,6 +557,13 @@ function updateStreakDock(targetCounty, streakCount) {
     if (counter) counter.textContent = `🔥 ${streakCount}`;
     if (target) target.textContent = targetCounty;
     if (hint) hint.textContent = 'One click only!';
+
+    // Update header target for mobile (dock is hidden on mobile)
+    const headerTarget = document.getElementById('header-target');
+    if (headerTarget) {
+        headerTarget.textContent = targetCounty;
+        headerTarget.classList.add('active');
+    }
 }
 
 /**
@@ -562,6 +576,13 @@ function handleExitStreakMode() {
 
     if (inputDock) inputDock.style.display = 'flex';
     if (streakDock) streakDock.style.display = 'none';
+
+    // Clear header target (mobile)
+    const headerTarget = document.getElementById('header-target');
+    if (headerTarget) {
+        headerTarget.textContent = '';
+        headerTarget.classList.remove('active');
+    }
 
     // Restore legacy input area
     const inputArea = document.getElementById('input-area');

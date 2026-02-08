@@ -75,6 +75,13 @@ export function initLocateModeUI(targetCounty, callbacks = {}) {
     if (locateTargetNew) locateTargetNew.textContent = targetCounty;
     if (locateHintNew) locateHintNew.textContent = 'Click on the map to find it!';
 
+    // Update header target for mobile (dock is hidden on mobile)
+    const headerTarget = document.getElementById('header-target');
+    if (headerTarget) {
+        headerTarget.textContent = targetCounty;
+        headerTarget.classList.add('active');
+    }
+
     if (updateModeBadge) updateModeBadge();
 }
 
@@ -94,6 +101,13 @@ export function exitLocateMode(initGame) {
     const locateDock = document.getElementById('locate-dock');
     if (inputDock) inputDock.style.display = 'flex';
     if (locateDock) locateDock.style.display = 'none';
+
+    // Clear header target (mobile)
+    const headerTarget = document.getElementById('header-target');
+    if (headerTarget) {
+        headerTarget.textContent = '';
+        headerTarget.classList.remove('active');
+    }
 
     // Return to practice mode
     if (initGame) initGame('practice');
@@ -122,6 +136,13 @@ export function startNextLocateRoundUI(targetCounty, callbacks = {}) {
     const locateHintNew = document.getElementById('locate-hint-new');
     if (locateTargetNew) locateTargetNew.textContent = targetCounty;
     if (locateHintNew) locateHintNew.textContent = 'Click on the map to find it!';
+
+    // Update header target for mobile
+    const headerTarget = document.getElementById('header-target');
+    if (headerTarget) {
+        headerTarget.textContent = targetCounty;
+        headerTarget.classList.add('active');
+    }
 
     // Clear guess rail
     if (clearGuessRail) clearGuessRail();
