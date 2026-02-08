@@ -33,7 +33,7 @@ function initializeState() {
  * This is the single source of truth for all application state
  */
 export const store = createStore(initializeState(), {
-    enableDevTools: true,
+    enableDevTools: import.meta.env?.DEV ?? false,
     enableHistory: true,
     enableLogging: import.meta.env?.DEV ?? false
 });

@@ -41,9 +41,9 @@ jobs:
           action: "upload"
           ###### Repository/Build Configurations - These values can be configured to match your app requirements. ######
           # For more information regarding Static Web App workflow configurations, please visit: https://aka.ms/swaworkflowconfig
-          app_location: "/" # App source code path
+          app_location: "dist" # Pre-built output directory (Vite build runs in prior step)
           api_location: "" # Api source code path - optional
-          output_location: "dist" # Built app content directory (Vite output)
+          output_location: "" # No further output subdirectory needed
           skip_app_build: true # Skip Azure's build since we build with Vite
           ###### End of Repository/Build Configurations ######
 
