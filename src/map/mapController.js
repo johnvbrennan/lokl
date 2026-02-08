@@ -31,7 +31,8 @@ export function initMap(onMapReady) {
     console.log('🗺️ Map initialized with SVG renderer');
 
     // Add initial tile layer based on current theme
-    updateMapTiles();
+    const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+    updateMapTiles(currentTheme);
 
     // Load GeoJSON after tiles
     loadGeoJSON(onMapReady);
