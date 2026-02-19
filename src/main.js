@@ -31,9 +31,9 @@ import { loadStatistics, loadSettings, saveSettings, setupPersistenceSubscriptio
 import { store, getMaxGuesses } from './game/gameState.js';
 import { setDifficulty, setRegion, updateTimeTrialSettings, initLocateMode as initLocateModeAction, exitLocateMode as exitLocateModeAction, startNextLocateRound as startNextLocateRoundAction } from './store/actions.js';
 import { initGame, processGuess, setRegionData } from './game/gameLogic.js';
-import { initLocateModeUI, exitLocateMode, startNextLocateRoundUI } from './game/locateMode.js';
+import { initLocateModeUI, exitLocateMode, startNextLocateRoundUI, setRegionData as setLocateRegionData } from './game/locateMode.js';
 import { stopTimeTrialTimer, handleTimeout } from './game/timeTrialMode.js';
-import { initStreakMode, handleStreakCorrect, handleStreakGameOver, exitStreakMode as exitStreakModeLogic } from './game/streakMode.js';
+import { initStreakMode, handleStreakCorrect, handleStreakGameOver, exitStreakMode as exitStreakModeLogic, setRegionData as setStreakRegionData } from './game/streakMode.js';
 
 // Helper functions to get state
 const getGame = () => store.getState().game;
@@ -123,13 +123,15 @@ async function switchToRegion(regionId) {
         // Update modules with new region data
         setRegionPlaceNames(currentRegionData.names);
         setRegionData(currentRegionData);
+        setLocateRegionData(currentRegionData);
+        setStreakRegionData(currentRegionData);
 
-        // Switch map to new region
+        // Switch map to new region with normalizer
         await new Promise((resolve) => {
             switchRegion(currentRegionData.config, () => {
                 console.log(`✅ Map switched to: ${currentRegionData.config.name}`);
                 resolve();
-            });
+            }, currentRegionData.normalizeGeoJSONName);
         });
 
         // Update UI labels for new region
@@ -728,6 +730,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Update modules with region data
         setRegionPlaceNames(currentRegionData.names);
         setRegionData(currentRegionData);
+        setLocateRegionData(currentRegionData);
+        setStreakRegionData(currentRegionData);
     } catch (error) {
         console.error('❌ Failed to load region:', error);
         // Fallback to default
@@ -739,7 +743,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Initialize start screen listeners
     initStartScreenListeners();
 
-    // Initialize map with region config
+    // Initialize map with region config and normalizer
     initMap(currentRegionData.config, () => {
         // Check if there's a saved daily game to restore
         const savedDailyState = loadDailyState();
@@ -754,7 +758,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Show start screen for new users or when no game is in progress
             showStartScreen();
         }
-    });
+    }, currentRegionData.normalizeGeoJSONName);
 
     // ============================================
     // INPUT HANDLING - New Floating Input

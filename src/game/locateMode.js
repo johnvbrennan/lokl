@@ -3,10 +3,21 @@
 // Functions specific to locate mode gameplay
 // ============================================
 
-import { getRandomCounty } from '../utils/dateUtils.js';
+import { getRandomCounty, getRandomPlace } from '../utils/dateUtils.js';
 import { areAdjacent } from '../utils/calculations.js';
 import { gameState, getMaxGuesses } from './gameState.js';
 import { COUNTY_ADJACENCY } from '../data/adjacency.js';
+
+// Current region data (set by main.js)
+let currentRegionData = null;
+
+/**
+ * Set the current region data for locate mode
+ * @param {Object} regionData - Region data object
+ */
+export function setRegionData(regionData) {
+    currentRegionData = regionData;
+}
 
 /**
  * Initialize locate mode UI (state updates handled by caller)
@@ -157,7 +168,8 @@ export function startNextLocateRoundUI(targetCounty, callbacks = {}) {
  * @returns {Array<string>} Array of adjacent county names
  */
 export function getAdjacentHints(targetCounty) {
-    return COUNTY_ADJACENCY[targetCounty] || [];
+    const adjacency = currentRegionData ? currentRegionData.adjacency : COUNTY_ADJACENCY;
+    return adjacency[targetCounty] || [];
 }
 
 /**

@@ -12,11 +12,24 @@ import {
     updateStreakStatistics
 } from '../store/actions.js';
 import { getStreakCount, getStreakStatistics } from '../store/selectors.js';
-import { createCountyShuffleQueue } from '../utils/dateUtils.js';
+import { createCountyShuffleQueue, createPlaceShuffleQueue } from '../utils/dateUtils.js';
 import { saveStreakStatistics } from '../storage/persistence.js';
 
 // Module-level shuffle queue instance
 let streakQueue = null;
+
+// Current region data (set by main.js)
+let currentRegionData = null;
+
+/**
+ * Set the current region data for streak mode
+ * @param {Object} regionData - Region data object
+ */
+export function setRegionData(regionData) {
+    currentRegionData = regionData;
+    // Reset queue when region changes
+    streakQueue = currentRegionData ? createPlaceShuffleQueue(currentRegionData.names) : createCountyShuffleQueue();
+}
 
 /**
  * Initialize Streak Mode
@@ -24,7 +37,7 @@ let streakQueue = null;
  * @returns {string} First target county name
  */
 export function initStreakMode() {
-    streakQueue = createCountyShuffleQueue();
+    streakQueue = currentRegionData ? createPlaceShuffleQueue(currentRegionData.names) : createCountyShuffleQueue();
     const targetCounty = streakQueue.next();
     store.setState(initStreakModeAction(targetCounty), 'initStreakMode');
     return targetCounty;

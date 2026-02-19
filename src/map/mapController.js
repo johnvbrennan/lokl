@@ -11,14 +11,17 @@ let geoJsonLayer = null;
 let tileLayer = null; // Store reference to current tile layer
 let currentHighlightedCounty = null;
 let currentRegionConfig = null; // Store current region configuration
+let nameNormalizer = null; // Function to normalize GeoJSON names (provided by region data)
 
 /**
  * Initialize the Leaflet map
  * @param {Object} regionConfig - Region configuration object
  * @param {Function} onMapReady - Callback when map is loaded
+ * @param {Function} nameNormalizerFn - Optional function to normalize GeoJSON place names
  */
-export function initMap(regionConfig, onMapReady) {
+export function initMap(regionConfig, onMapReady, nameNormalizerFn = null) {
     currentRegionConfig = regionConfig;
+    nameNormalizer = nameNormalizerFn;
 
     // Create map with region-specific settings
     map = L.map('map', {
@@ -296,7 +299,18 @@ function defaultStyle(feature, gameMode = null) {
  * @param {Object} layer - Leaflet layer
  */
 function onEachFeature(feature, layer) {
-    const countyName = feature.properties.name;
+    // Get name from properties (handle both 'name' and 'NAME')
+    let countyName = feature.properties.name || feature.properties.NAME;
+
+    // Apply name normalization if provided
+    if (nameNormalizer) {
+        countyName = nameNormalizer(countyName);
+        // Skip excluded countries (normalizer returns null)
+        if (!countyName) {
+            return;
+        }
+    }
+
     countyLayers[countyName] = layer;
 
     // Hover effects
@@ -571,8 +585,9 @@ export function getCountyLayers() {
  * Switch to a different region
  * @param {Object} newRegionConfig - New region configuration object
  * @param {Function} onMapReady - Callback when region switch is complete
+ * @param {Function} nameNormalizerFn - Optional function to normalize GeoJSON place names
  */
-export function switchRegion(newRegionConfig, onMapReady) {
+export function switchRegion(newRegionConfig, onMapReady, nameNormalizerFn = null) {
     console.log(`🔄 Switching to region: ${newRegionConfig.name}`);
 
     // Clear existing layers
@@ -586,8 +601,9 @@ export function switchRegion(newRegionConfig, onMapReady) {
     countyColors.clear();
     currentHighlightedCounty = null;
 
-    // Update region config
+    // Update region config and normalizer
     currentRegionConfig = newRegionConfig;
+    nameNormalizer = nameNormalizerFn;
 
     // Recenter map with new region settings
     map.setView(newRegionConfig.mapCenter, newRegionConfig.mapZoom);

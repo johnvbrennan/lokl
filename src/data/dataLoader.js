@@ -6,6 +6,45 @@
 import { REGIONS, DEFAULT_REGION } from './regionConfig.js';
 
 /**
+ * Normalize GeoJSON country names to match our data
+ * Handles naming inconsistencies between GeoJSON sources and our country data
+ */
+const GEO_JSON_NAME_MAP = {
+    'Holy See (Vatican City)': 'Vatican City',
+    'The former Yugoslav Republic of Macedonia': 'North Macedonia',
+    'Republic of Moldova': 'Moldova'
+};
+
+/**
+ * Countries to exclude from Europe GeoJSON (not part of EU + standard Europe definition)
+ */
+const EXCLUDED_COUNTRIES = new Set([
+    'Armenia',
+    'Azerbaijan',
+    'Belarus',
+    'Georgia',
+    'Israel',
+    'Turkey',
+    'Russia',
+    'Faroe Islands'
+]);
+
+/**
+ * Normalize a GeoJSON feature name
+ * @param {string} name - Original GeoJSON name
+ * @returns {string|null} - Normalized name or null if excluded
+ */
+function normalizeGeoJSONName(name) {
+    // Check if excluded
+    if (EXCLUDED_COUNTRIES.has(name)) {
+        return null;
+    }
+
+    // Apply name mapping
+    return GEO_JSON_NAME_MAP[name] || name;
+}
+
+/**
  * Region Data Loader
  * Dynamically loads region-specific data modules
  */
@@ -46,7 +85,8 @@ export class RegionDataLoader {
                 config,
                 data,
                 adjacency,
-                names
+                names,
+                normalizeGeoJSONName: normalizeGeoJSONName // Provide normalization function
             };
 
             // Cache the loaded region
