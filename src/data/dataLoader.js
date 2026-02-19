@@ -32,8 +32,8 @@ export class RegionDataLoader {
 
         try {
             // Dynamically import data and adjacency modules
-            const dataModule = await import(config.dataModule);
-            const adjacencyModule = await import(config.adjacencyModule);
+            const dataModule = await import(/* @vite-ignore */ config.dataModule);
+            const adjacencyModule = await import(/* @vite-ignore */ config.adjacencyModule);
 
             // Extract the actual data (handle both default and named exports)
             const data = dataModule.COUNTIES || dataModule.COUNTRIES || dataModule.default;

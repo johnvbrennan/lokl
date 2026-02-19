@@ -24,7 +24,7 @@ import {
 } from './map/mapController.js';
 
 // Storage imports
-import { loadStatistics, loadSettings, saveSettings, setupPersistenceSubscriptions, loadDailyState, saveTimeTrialSettings, clearTimeTrialState, loadTimeTrialState } from './storage/persistence.js';
+import { loadStatistics, loadSettings, saveSettings, setupPersistenceSubscriptions, loadDailyState, saveTimeTrialSettings, clearTimeTrialState, loadTimeTrialState, migrateOldData } from './storage/persistence.js';
 
 // Game imports
 import { store, getMaxGuesses } from './game/gameState.js';
@@ -603,6 +603,9 @@ function handleExitStreakMode() {
 // ============================================
 
 document.addEventListener('DOMContentLoaded', async () => {
+    // Migrate old data to region-specific keys (runs once)
+    migrateOldData();
+
     // Set up persistence subscriptions for auto-save
     setupPersistenceSubscriptions(store);
 
