@@ -143,6 +143,19 @@ export function setDifficulty(difficulty) {
 }
 
 /**
+ * Set selected region
+ * @param {string} regionId - Region identifier ('irish-counties', 'europe', etc.)
+ * @returns {Object} State update object
+ */
+export function setRegion(regionId) {
+    return {
+        settings: {
+            selectedRegion: regionId
+        }
+    };
+}
+
+/**
  * Show/hide modal
  * @param {string|null} modalName - Modal name or null to hide
  * @returns {Object} State update object

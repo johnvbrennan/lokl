@@ -1,0 +1,83 @@
+{
+  "phase": 4,
+  "name": "Game Logic Updates",
+  "description": "Update core game logic to use dynamic region data instead of hardcoded counties",
+  "prds": [
+    {
+      "category": "refactoring",
+      "description": "Main entry point loads current region on initialization",
+      "steps": [
+        "Update src/main.js",
+        "Import dataLoader from dataLoader.js",
+        "Load saved region or DEFAULT_REGION on page load",
+        "Call dataLoader.loadRegion() and store result",
+        "Pass regionConfig to initMap()",
+        "Verify region data is available throughout app"
+      ],
+      "passes": false
+    },
+    {
+      "category": "refactoring",
+      "description": "processGuess uses dynamic region data",
+      "steps": [
+        "Update src/game/gameLogic.js",
+        "Change processGuess() to accept regionData parameter",
+        "Use regionData.data instead of hardcoded COUNTIES",
+        "Pass regionData.config.maxDistance to getProximityColor()",
+        "Verify distance calculations work correctly",
+        "Verify colors are appropriate for region scale"
+      ],
+      "passes": false
+    },
+    {
+      "category": "refactoring",
+      "description": "Daily seed includes region ID for independence",
+      "steps": [
+        "Update src/utils/dateUtils.js",
+        "Change getDailyCounty() to getDailyPlace(regionData)",
+        "Include regionId in seed hash: hashCode(`${dateStr}-${regionId}`)",
+        "Use regionData.names instead of COUNTY_NAMES",
+        "Verify daily challenges differ per region",
+        "Verify same date gives same place per region"
+      ],
+      "passes": false
+    },
+    {
+      "category": "refactoring",
+      "description": "Autocomplete uses current region place names",
+      "steps": [
+        "Update src/ui/autocomplete.js",
+        "Change getAutocompleteMatches() to accept regionData parameter",
+        "Use regionData.names instead of COUNTY_NAMES",
+        "Verify autocomplete shows correct place names",
+        "Verify filtering works correctly"
+      ],
+      "passes": false
+    },
+    {
+      "category": "refactoring",
+      "description": "All game modes work with dynamic region data",
+      "steps": [
+        "Update src/game/streakMode.js to use regionData and maxDistance",
+        "Update src/game/locateMode.js to use regionData and maxDistance",
+        "Update src/game/timeTrialMode.js to use regionData and maxDistance",
+        "Verify all getProximityColor() calls pass maxDistance",
+        "Verify all game modes work with both regions"
+      ],
+      "passes": false
+    },
+    {
+      "category": "testing",
+      "description": "Game logic works correctly with Irish counties",
+      "steps": [
+        "Start daily mode game",
+        "Make a guess",
+        "Verify distance calculation is accurate",
+        "Verify color is appropriate",
+        "Verify direction arrow is correct",
+        "Complete game successfully"
+      ],
+      "passes": false
+    }
+  ]
+}

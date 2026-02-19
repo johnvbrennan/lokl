@@ -1,0 +1,192 @@
+{
+  "phase": 7,
+  "name": "Integration & Testing",
+  "description": "Wire everything together and perform comprehensive end-to-end testing",
+  "prds": [
+    {
+      "category": "feature",
+      "description": "Complete region switching flow implemented",
+      "steps": [
+        "Create switchToRegion(regionId) function in main.js",
+        "Show loading overlay during switch",
+        "Load new region data via dataLoader",
+        "Update store state with setRegion action",
+        "Call mapController.switchRegion()",
+        "Update UI labels with updateUIForRegion()",
+        "Load region-specific statistics",
+        "Hide loading overlay when complete",
+        "Handle errors gracefully with fallback"
+      ],
+      "passes": false
+    },
+    {
+      "category": "testing",
+      "description": "Daily mode works in both regions",
+      "steps": [
+        "Start daily mode with irish-counties",
+        "Verify correct daily county is selected",
+        "Complete game successfully",
+        "Switch to europe region",
+        "Start daily mode",
+        "Verify different daily country is selected",
+        "Verify can play both dailies on same day"
+      ],
+      "passes": false
+    },
+    {
+      "category": "testing",
+      "description": "Practice mode works in both regions",
+      "steps": [
+        "Start practice mode with irish-counties",
+        "Play multiple games",
+        "Verify random counties selected",
+        "Switch to europe region",
+        "Start practice mode",
+        "Play multiple games",
+        "Verify random countries selected"
+      ],
+      "passes": false
+    },
+    {
+      "category": "testing",
+      "description": "Locate mode works in both regions",
+      "steps": [
+        "Start locate mode with irish-counties",
+        "Click on map to guess counties",
+        "Verify feedback is correct",
+        "Complete several rounds",
+        "Switch to europe region",
+        "Start locate mode",
+        "Click on map to guess countries",
+        "Verify feedback is correct"
+      ],
+      "passes": false
+    },
+    {
+      "category": "testing",
+      "description": "Time Trial mode works in both regions",
+      "steps": [
+        "Start time trial with irish-counties",
+        "Make guesses before timer expires",
+        "Verify timer works correctly",
+        "Verify colors are appropriate",
+        "Switch to europe region",
+        "Start time trial",
+        "Verify timer works",
+        "Verify colors scale to Europe distances"
+      ],
+      "passes": false
+    },
+    {
+      "category": "testing",
+      "description": "Streak mode works in both regions",
+      "steps": [
+        "Start streak mode with irish-counties",
+        "Build up a streak",
+        "Verify streak counter increments",
+        "Switch to europe region",
+        "Start streak mode",
+        "Build up a streak",
+        "Verify independent streak tracking"
+      ],
+      "passes": false
+    },
+    {
+      "category": "testing",
+      "description": "Autocomplete works correctly for both regions",
+      "steps": [
+        "Type in irish-counties region",
+        "Verify county names appear",
+        "Verify filtering works",
+        "Switch to europe region",
+        "Type in country name",
+        "Verify country names appear",
+        "Verify no county names shown"
+      ],
+      "passes": false
+    },
+    {
+      "category": "testing",
+      "description": "Distance calculations are accurate",
+      "steps": [
+        "Verify Irish county distances are reasonable (< 470km)",
+        "Verify color coding matches distance in Ireland",
+        "Verify European country distances are reasonable",
+        "Verify color coding scales appropriately for Europe",
+        "Test edge cases (very close, very far)"
+      ],
+      "passes": false
+    },
+    {
+      "category": "testing",
+      "description": "Map rendering works correctly",
+      "steps": [
+        "Load irish-counties - verify map centers on Ireland",
+        "Verify zoom level appropriate for Ireland",
+        "Verify county colors render correctly",
+        "Switch to europe - verify map recenters",
+        "Verify zoom level appropriate for Europe",
+        "Verify country colors render correctly",
+        "Verify no visual glitches during switch"
+      ],
+      "passes": false
+    },
+    {
+      "category": "testing",
+      "description": "Statistics persistence works correctly",
+      "steps": [
+        "Play games in irish-counties",
+        "Check stats are saved",
+        "Switch to europe",
+        "Verify stats are separate",
+        "Play games in europe",
+        "Switch back to irish-counties",
+        "Verify original stats unchanged",
+        "Reload page",
+        "Verify all stats persist across reload"
+      ],
+      "passes": false
+    },
+    {
+      "category": "testing",
+      "description": "No regressions in existing functionality",
+      "steps": [
+        "Test all game modes with irish-counties",
+        "Verify keyboard shortcuts work",
+        "Verify theme toggle works",
+        "Verify settings work",
+        "Verify help modal works",
+        "Verify share functionality works",
+        "Compare with previous version - no features broken"
+      ],
+      "passes": false
+    },
+    {
+      "category": "testing",
+      "description": "Edge cases are handled gracefully",
+      "steps": [
+        "Switch regions mid-game",
+        "Handle GeoJSON loading errors",
+        "Handle invalid region IDs",
+        "Test browser back button",
+        "Test with localStorage disabled",
+        "Test with slow network connection",
+        "Verify no crashes or data loss"
+      ],
+      "passes": false
+    },
+    {
+      "category": "performance",
+      "description": "Performance is acceptable",
+      "steps": [
+        "Measure initial load time (< 3 seconds)",
+        "Measure region switching time (< 1 second)",
+        "Verify map rendering is smooth (60fps)",
+        "Check memory usage after multiple region switches",
+        "Verify no memory leaks",
+        "Verify GeoJSON files are reasonable size (Europe < 3MB)"
+      ],
+      "passes": false
+    }
+  ]
+}

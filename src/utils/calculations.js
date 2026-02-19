@@ -2,7 +2,7 @@
 // CALCULATION UTILITIES
 // ============================================
 
-import { COLORS, MAX_DISTANCE, DIRECTION_ARROWS } from './constants.js';
+import { COLORS, DIRECTION_ARROWS } from './constants.js';
 import { areAdjacent as checkAdjacency } from '../data/adjacency.js';
 
 /**
@@ -41,11 +41,12 @@ export function getBearing(from, to) {
 /**
  * Get color based on proximity to target
  * @param {number} distance - Distance in kilometers
+ * @param {number} maxDistance - Maximum possible distance in the region
  * @returns {string} Color code
  */
-export function getProximityColor(distance) {
+export function getProximityColor(distance, maxDistance) {
     if (distance === 0) return COLORS.CORRECT;
-    const ratio = distance / MAX_DISTANCE;
+    const ratio = distance / maxDistance;
     if (ratio >= 0.75) return COLORS.COLD_1;
     if (ratio >= 0.55) return COLORS.COLD_2;
     if (ratio >= 0.40) return COLORS.WARM_1;

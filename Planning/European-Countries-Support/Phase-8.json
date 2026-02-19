@@ -1,0 +1,132 @@
+{
+  "phase": 8,
+  "name": "Documentation & Polish",
+  "description": "Document changes, finalize for deployment, and add polish",
+  "prds": [
+    {
+      "category": "documentation",
+      "description": "README updated with region information",
+      "steps": [
+        "Add 'Game Regions' section to README.md",
+        "Document both supported regions (Ireland, Europe)",
+        "Explain independent daily challenges",
+        "Explain independent statistics",
+        "Add note about region switching"
+      ],
+      "passes": false
+    },
+    {
+      "category": "documentation",
+      "description": "CLAUDE.md updated with architecture notes",
+      "steps": [
+        "Add 'Multi-Region Architecture' section",
+        "Document region configuration system",
+        "Explain data loader pattern",
+        "Document storage isolation per region",
+        "Add guide for adding new regions"
+      ],
+      "passes": false
+    },
+    {
+      "category": "feature",
+      "description": "Help modal explains region feature",
+      "steps": [
+        "Update index.html help modal",
+        "Add section about regions",
+        "Explain independent daily challenges",
+        "Explain independent statistics",
+        "Update existing help text to use dynamic labels"
+      ],
+      "passes": false
+    },
+    {
+      "category": "polish",
+      "description": "Loading states are smooth",
+      "steps": [
+        "Add loading spinner for region switching",
+        "Add smooth transitions for region changes",
+        "Verify no flashing or jarring UI changes",
+        "Add feedback when region loads successfully"
+      ],
+      "passes": false
+    },
+    {
+      "category": "polish",
+      "description": "Code is clean and production-ready",
+      "steps": [
+        "Remove all console.log statements (or gate behind DEBUG flag)",
+        "Remove dead code",
+        "Remove commented-out code",
+        "Run linter/formatter if available",
+        "Verify no TODOs or FIXMEs remain"
+      ],
+      "passes": false
+    },
+    {
+      "category": "optimization",
+      "description": "GeoJSON files are optimized",
+      "steps": [
+        "Compress ireland.json if not already done",
+        "Compress europe.json using Mapshaper",
+        "Verify visual quality is acceptable",
+        "Verify file sizes are reasonable",
+        "Consider gzip compression for production"
+      ],
+      "passes": false
+    },
+    {
+      "category": "testing",
+      "description": "Cross-browser testing completed",
+      "steps": [
+        "Test on Chrome (Windows/Mac)",
+        "Test on Firefox (Windows/Mac)",
+        "Test on Safari (Mac)",
+        "Test on Edge (Windows)",
+        "Verify all features work in all browsers",
+        "Document any browser-specific issues"
+      ],
+      "passes": false
+    },
+    {
+      "category": "testing",
+      "description": "Mobile testing completed",
+      "steps": [
+        "Test on iOS Safari (iPhone)",
+        "Test on iOS Safari (iPad)",
+        "Test on Android Chrome",
+        "Verify touch interactions work",
+        "Verify map rendering works on mobile",
+        "Verify responsive design works",
+        "Test in both portrait and landscape"
+      ],
+      "passes": false
+    },
+    {
+      "category": "feature",
+      "description": "Keyboard shortcut for region menu added",
+      "steps": [
+        "Add 'R' key listener for region menu",
+        "Show region selection when R is pressed",
+        "Update help modal with new shortcut",
+        "Verify shortcut works correctly"
+      ],
+      "passes": false
+    },
+    {
+      "category": "validation",
+      "description": "Final validation checklist",
+      "steps": [
+        "All game modes work in both regions",
+        "Statistics are isolated per region",
+        "Daily challenges are independent",
+        "No regressions in existing features",
+        "Performance is acceptable",
+        "UI is polished and professional",
+        "Documentation is complete",
+        "No bugs or rough edges remain",
+        "Ready for deployment"
+      ],
+      "passes": false
+    }
+  ]
+}

@@ -6,12 +6,24 @@
 import { COUNTIES } from '../data/counties.js';
 import { COLORS } from '../utils/constants.js';
 import { getDistance, getBearing, getProximityColor, areAdjacent } from '../utils/calculations.js';
-import { getDailyCounty, getGameNumber, getTodaysDateString, getRandomCounty } from '../utils/dateUtils.js';
+import { getDailyCounty, getDailyPlace, getGameNumber, getTodaysDateString, getRandomCounty, getRandomPlace } from '../utils/dateUtils.js';
 import { store, getMaxGuesses } from './gameState.js';
 import { startNewGame, restoreGame, submitGuess, endGame, updateStatistics as updateStatsAction } from '../store/actions.js';
 import { getGameState, getGameStatus, getGameMode, getTargetCounty, getCurrentGuesses, isTimeTrialMode } from '../store/selectors.js';
 import { loadDailyState, saveDailyState as persistDailyState, saveStatistics as persistStatistics } from '../storage/persistence.js';
 import { initTimeTrialMode, stopTimeTrialTimer, updateTimeTrialStats, getElapsedTime } from './timeTrialMode.js';
+
+// Current region data (set by main.js)
+let currentRegionData = null;
+
+/**
+ * Set the current region data for game logic
+ * @param {Object} regionData - Region data object with config, data, adjacency, names
+ */
+export function setRegionData(regionData) {
+    currentRegionData = regionData;
+    console.log(`🎮 Game logic updated for region: ${regionData.config.name}`);
+}
 
 /**
  * Initialize a new game
@@ -33,7 +45,7 @@ export function initGame(mode = 'daily', suppressModal = false, callbacks = {}) 
     if (clearGuessRail) clearGuessRail();
 
     if (mode === 'daily') {
-        const targetCounty = getDailyCounty();
+        const targetCounty = currentRegionData ? getDailyPlace(currentRegionData) : getDailyCounty();
         const gameNumber = getGameNumber();
 
         // Check for saved daily state
@@ -75,7 +87,7 @@ export function initGame(mode = 'daily', suppressModal = false, callbacks = {}) 
         store.setState(startNewGame(mode, targetCounty, gameNumber), 'startNewGame');
     } else if (mode === 'timetrial') {
         // Start time trial game
-        const targetCounty = getRandomCounty();
+        const targetCounty = currentRegionData ? getRandomPlace(currentRegionData.names) : getRandomCounty();
         const state = store.getState();
         const duration = state.settings.timeTrialDurations[state.settings.difficulty];
 
@@ -86,7 +98,7 @@ export function initGame(mode = 'daily', suppressModal = false, callbacks = {}) 
         initTimeTrialMode(duration, targetCounty, callbacks);
     } else {
         // Start practice or locate game
-        const targetCounty = getRandomCounty();
+        const targetCounty = currentRegionData ? getRandomPlace(currentRegionData.names) : getRandomCounty();
         store.setState(startNewGame(mode, targetCounty, 0), 'startNewGame');
     }
 
@@ -121,13 +133,18 @@ export function processGuess(countyName, callbacks = {}) {
     const state = store.getState();
     const gameState = state.game;
 
+    // Use current region data or fallback to COUNTIES
+    const regionPlaces = currentRegionData ? currentRegionData.data : COUNTIES;
+    const maxDistance = currentRegionData ? currentRegionData.config.maxDistance : 470;
+    const groupingField = currentRegionData ? currentRegionData.config.groupingField : 'province';
+
     // Validate guess
     if (gameState.status !== 'playing') return null;
     if (gameState.guesses.some(g => g.county === countyName)) return null;
-    if (!COUNTIES[countyName]) return null;
+    if (!regionPlaces[countyName]) return null;
 
-    const target = COUNTIES[gameState.targetCounty];
-    const guessed = COUNTIES[countyName];
+    const target = regionPlaces[gameState.targetCounty];
+    const guessed = regionPlaces[countyName];
     const isCorrect = countyName === gameState.targetCounty;
     const isAdjacent = areAdjacent(countyName, gameState.targetCounty);
 
@@ -136,14 +153,14 @@ export function processGuess(countyName, callbacks = {}) {
     const direction = isCorrect ? '🎯' : getBearing(guessed, target);
 
     // Only correct answer gets green; adjacent gets HOT (red) to indicate "very close"
-    const color = isCorrect ? COLORS.CORRECT : isAdjacent ? COLORS.HOT : getProximityColor(distance);
+    const color = isCorrect ? COLORS.CORRECT : isAdjacent ? COLORS.HOT : getProximityColor(distance, maxDistance);
 
     const guess = {
         county: countyName,
         distance,
         direction,
         color,
-        province: guessed.province,
+        province: guessed[groupingField], // Use dynamic grouping field (province or subregion)
         isAdjacent
     };
 

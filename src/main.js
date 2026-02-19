@@ -4,10 +4,12 @@
 
 // Data imports
 import { COUNTIES, COUNTY_NAMES } from './data/counties.js';
+import { DEFAULT_REGION } from './data/regionConfig.js';
+import { dataLoader } from './data/dataLoader.js';
 
 // Utility imports
 import { COLORS, COLOR_EMOJIS, DIRECTION_ARROWS } from './utils/constants.js';
-import { getTodaysDateString, getGameNumber, getTimeUntilNextDay, formatTimeRemaining, getRandomCounty, createCountyShuffleQueue } from './utils/dateUtils.js';
+import { getTodaysDateString, getGameNumber, getTimeUntilNextDay, formatTimeRemaining, getRandomCounty, createCountyShuffleQueue, createPlaceShuffleQueue } from './utils/dateUtils.js';
 
 // Map imports
 import {
@@ -18,27 +20,43 @@ import {
     resetMapColors,
     highlightCounty,
     unhighlightCounty,
-    updateAllMapBorders
+    updateAllMapBorders,
+    switchRegion
 } from './map/mapController.js';
 
 // Storage imports
-import { loadStatistics, loadSettings, saveSettings, setupPersistenceSubscriptions, loadDailyState, saveTimeTrialSettings, clearTimeTrialState, loadTimeTrialState } from './storage/persistence.js';
+import { loadStatistics, loadSettings, saveSettings, setupPersistenceSubscriptions, loadDailyState, saveTimeTrialSettings, clearTimeTrialState, loadTimeTrialState, migrateOldData } from './storage/persistence.js';
 
 // Game imports
 import { store, getMaxGuesses } from './game/gameState.js';
-import { setDifficulty, updateTimeTrialSettings, initLocateMode as initLocateModeAction, exitLocateMode as exitLocateModeAction, startNextLocateRound as startNextLocateRoundAction } from './store/actions.js';
-import { initGame, processGuess } from './game/gameLogic.js';
-import { initLocateModeUI, exitLocateMode, startNextLocateRoundUI } from './game/locateMode.js';
+import { setDifficulty, setRegion, updateTimeTrialSettings, initLocateMode as initLocateModeAction, exitLocateMode as exitLocateModeAction, startNextLocateRound as startNextLocateRoundAction } from './store/actions.js';
+import { initGame, processGuess, setRegionData } from './game/gameLogic.js';
+import { initLocateModeUI, exitLocateMode, startNextLocateRoundUI, setRegionData as setLocateRegionData } from './game/locateMode.js';
 import { stopTimeTrialTimer, handleTimeout } from './game/timeTrialMode.js';
-import { initStreakMode, handleStreakCorrect, handleStreakGameOver, exitStreakMode as exitStreakModeLogic } from './game/streakMode.js';
+import { initStreakMode, handleStreakCorrect, handleStreakGameOver, exitStreakMode as exitStreakModeLogic, setRegionData as setStreakRegionData } from './game/streakMode.js';
 
 // Helper functions to get state
 const getGame = () => store.getState().game;
 const getSettings = () => store.getState().settings;
 const getStats = () => store.getState().statistics;
 
-// Shuffle queue for locate mode (improved randomness - no county repeats within 32-county cycle)
+// Current region data (loaded on initialization)
+let currentRegionData = null;
+
+// Shuffle queue for locate mode (improved randomness - no place repeats within cycle)
 let locateQueue = createCountyShuffleQueue();
+
+/**
+ * Reinitialize the locate queue for the current region
+ */
+function reinitializeLocateQueue() {
+    if (currentRegionData) {
+        locateQueue = createPlaceShuffleQueue(currentRegionData.names);
+        console.log(`🔄 Locate queue reinitialized for ${currentRegionData.config.name}`);
+    } else {
+        locateQueue = createCountyShuffleQueue();
+    }
+}
 
 // UI imports
 import {
@@ -81,7 +99,8 @@ import {
     showAutocompleteNew,
     hideAutocompleteNew,
     updateSubmitButtonState,
-    updateSubmitButtonStateNew
+    updateSubmitButtonStateNew,
+    setRegionPlaceNames
 } from './ui/autocomplete.js';
 
 import { initTheme, toggleTheme, setTheme } from './ui/theme.js';
@@ -95,6 +114,70 @@ import { initTheme, toggleTheme, setTheme } from './ui/theme.js';
  */
 function updateStats() {
     updateStatsBar();
+}
+
+/**
+ * Switch to a different region
+ * @param {string} regionId - Region identifier
+ * @returns {Promise<void>}
+ */
+async function switchToRegion(regionId) {
+    console.log(`🔄 Switching to region: ${regionId}`);
+
+    try {
+        // Load new region data
+        currentRegionData = await dataLoader.loadRegion(regionId);
+        console.log(`✅ Region data loaded: ${currentRegionData.config.name}`);
+
+        // Update store with new region
+        store.setState(setRegion(regionId), 'setRegion');
+
+        // Update modules with new region data
+        setRegionPlaceNames(currentRegionData.names);
+        setRegionData(currentRegionData);
+        setLocateRegionData(currentRegionData);
+        setStreakRegionData(currentRegionData);
+
+        // Reinitialize locate queue for new region
+        reinitializeLocateQueue();
+
+        // Switch map to new region with normalizer
+        await new Promise((resolve) => {
+            switchRegion(currentRegionData.config, () => {
+                console.log(`✅ Map switched to: ${currentRegionData.config.name}`);
+                resolve();
+            }, currentRegionData.normalizeGeoJSONName);
+        });
+
+        // Update UI labels for new region
+        updateUILabelsForRegion(currentRegionData.config);
+
+        console.log(`✅ Successfully switched to region: ${regionId}`);
+
+    } catch (error) {
+        console.error(`❌ Failed to switch region to ${regionId}:`, error);
+        throw error;
+    }
+}
+
+/**
+ * Update UI labels based on current region
+ * @param {Object} regionConfig - Region configuration
+ */
+function updateUILabelsForRegion(regionConfig) {
+    // Update input placeholders
+    const inputs = document.querySelectorAll('#county-input, #county-input-new');
+    inputs.forEach(input => {
+        if (input) {
+            input.placeholder = `Guess a ${regionConfig.placeType}...`;
+        }
+    });
+
+    // Update stats bar grouping label
+    const groupingLabel = document.querySelector('.stat-label:contains("Province")');
+    // Note: Will need to target by ID or add ID to the province label in HTML
+
+    console.log(`🏷️ Updated UI labels for ${regionConfig.name}`);
 }
 
 /**
@@ -153,9 +236,22 @@ function initStartScreenListeners() {
     const startOverlay = document.getElementById('start-overlay');
     if (!startOverlay) return;
 
-    // Store selected mode and difficulty
+    // Store selected mode, difficulty, and region
     let selectedMode = 'daily';
     let selectedDifficulty = getSettings().difficulty;
+    let selectedRegion = getSettings().selectedRegion || DEFAULT_REGION;
+
+    // Region card selection
+    document.querySelectorAll('.region-card').forEach(card => {
+        card.addEventListener('click', () => {
+            // Remove selected class from all cards
+            document.querySelectorAll('.region-card').forEach(c => c.classList.remove('selected'));
+            // Add selected class to clicked card
+            card.classList.add('selected');
+            // Store selected region
+            selectedRegion = card.dataset.region;
+        });
+    });
 
     // Mode card selection
     document.querySelectorAll('.mode-card').forEach(card => {
@@ -182,7 +278,28 @@ function initStartScreenListeners() {
     });
 
     // Start game button
-    document.getElementById('start-game-btn')?.addEventListener('click', () => {
+    document.getElementById('start-game-btn')?.addEventListener('click', async () => {
+        // Check if region changed
+        if (selectedRegion !== currentRegionData?.config.id) {
+            // Show loading indicator
+            const loading = document.getElementById('loading');
+            if (loading) {
+                loading.style.display = 'flex';
+                loading.textContent = `Loading ${selectedRegion === 'europe' ? 'Europe' : 'Irish Counties'}...`;
+            }
+
+            try {
+                // Load new region
+                await switchToRegion(selectedRegion);
+            } catch (error) {
+                console.error('Failed to switch region:', error);
+                if (loading) loading.style.display = 'none';
+                return;
+            }
+
+            if (loading) loading.style.display = 'none';
+        }
+
         startOverlay.classList.remove('visible');
 
         // Apply difficulty setting first
@@ -596,7 +713,10 @@ function handleExitStreakMode() {
 // INITIALIZATION & EVENT LISTENERS
 // ============================================
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    // Migrate old data to region-specific keys (runs once)
+    migrateOldData();
+
     // Set up persistence subscriptions for auto-save
     setupPersistenceSubscriptions(store);
 
@@ -614,11 +734,35 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize theme (reads from store, sets up subscriptions)
     initTheme(updateMapTiles, () => updateAllMapBorders(getGame().mode));
 
+    // Load current region (from settings or default)
+    const savedRegion = getSettings().selectedRegion || DEFAULT_REGION;
+    console.log(`🌍 Loading region: ${savedRegion}`);
+
+    try {
+        currentRegionData = await dataLoader.loadRegion(savedRegion);
+        console.log(`✅ Region loaded: ${currentRegionData.config.name}`);
+
+        // Update modules with region data
+        setRegionPlaceNames(currentRegionData.names);
+        setRegionData(currentRegionData);
+        setLocateRegionData(currentRegionData);
+        setStreakRegionData(currentRegionData);
+
+        // Reinitialize locate queue for new region
+        reinitializeLocateQueue();
+    } catch (error) {
+        console.error('❌ Failed to load region:', error);
+        // Fallback to default
+        currentRegionData = await dataLoader.loadRegion(DEFAULT_REGION);
+        setRegionPlaceNames(currentRegionData.names);
+        setRegionData(currentRegionData);
+    }
+
     // Initialize start screen listeners
     initStartScreenListeners();
 
-    // Initialize map
-    initMap(() => {
+    // Initialize map with region config and normalizer
+    initMap(currentRegionData.config, () => {
         // Check if there's a saved daily game to restore
         const savedDailyState = loadDailyState();
         const today = getTodaysDateString();
@@ -632,7 +776,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Show start screen for new users or when no game is in progress
             showStartScreen();
         }
-    });
+    }, currentRegionData.normalizeGeoJSONName);
 
     // ============================================
     // INPUT HANDLING - New Floating Input

@@ -13,6 +13,26 @@ export function getTodaysDateString() {
 }
 
 /**
+ * Get the daily place based on date-based seeding (region-specific)
+ * @param {Object} regionData - Region data object with config and names
+ * @returns {string} Place name
+ */
+export function getDailyPlace(regionData) {
+    const today = getTodaysDateString();
+    const regionId = regionData.config.id;
+    const seedString = `${today}-${regionId}`; // Include region in seed
+
+    let hash = 0;
+    for (let i = 0; i < seedString.length; i++) {
+        hash = ((hash << 5) - hash) + seedString.charCodeAt(i);
+        hash |= 0;
+    }
+
+    return regionData.names[Math.abs(hash) % regionData.names.length];
+}
+
+/**
+ * DEPRECATED: Use getDailyPlace(regionData) instead
  * Get the daily county based on date-based seeding
  * @returns {string} County name
  */
@@ -62,6 +82,16 @@ export function formatTimeRemaining(milliseconds) {
 }
 
 /**
+ * Get a random place name from region
+ * @param {Array<string>} placeNames - Array of place names
+ * @returns {string} Random place name
+ */
+export function getRandomPlace(placeNames) {
+    return placeNames[Math.floor(Math.random() * placeNames.length)];
+}
+
+/**
+ * DEPRECATED: Use getRandomPlace(placeNames) instead
  * Get a random county name
  * @returns {string} Random county name
  */
@@ -70,6 +100,39 @@ export function getRandomCounty() {
 }
 
 /**
+ * Create a shuffle queue that cycles through all places before repeating.
+ * Uses Fisher-Yates shuffle for unbiased randomization.
+ * @param {Array<string>} placeNames - Array of place names for the region
+ * @returns {Object} Queue with next() and reset() methods
+ */
+export function createPlaceShuffleQueue(placeNames) {
+    let queue = [];
+
+    function shuffle(array) {
+        const shuffled = [...array];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+        return shuffled;
+    }
+
+    function next() {
+        if (queue.length === 0) {
+            queue = shuffle(placeNames);
+        }
+        return queue.pop();
+    }
+
+    function reset() {
+        queue = [];
+    }
+
+    return { next, reset };
+}
+
+/**
+ * DEPRECATED: Use createPlaceShuffleQueue(placeNames) instead
  * Create a shuffle queue that cycles through all 32 counties before repeating.
  * Uses Fisher-Yates shuffle for unbiased randomization.
  * @returns {Object} Queue with next() and reset() methods

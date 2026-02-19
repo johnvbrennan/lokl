@@ -1,0 +1,93 @@
+{
+  "phase": 5,
+  "name": "Storage & Persistence Updates",
+  "description": "Isolate statistics and progress per region so each region has independent data",
+  "prds": [
+    {
+      "category": "refactoring",
+      "description": "Storage keys are region-specific",
+      "steps": [
+        "Update src/storage/persistence.js",
+        "Change KEYS constants to functions that accept regionId",
+        "KEYS.STATISTICS becomes (region) => `loklStats-${region}`",
+        "KEYS.DAILY_STATE becomes (region) => `loklDaily-${region}`",
+        "KEYS.TIMETRIAL_STATS becomes (region) => `loklTimeTrialStats-${region}`",
+        "KEYS.STREAK_STATS becomes (region) => `loklStreakStats-${region}`",
+        "Keep KEYS.SETTINGS as global (not region-specific)"
+      ],
+      "passes": false
+    },
+    {
+      "category": "refactoring",
+      "description": "All storage functions accept regionId parameter",
+      "steps": [
+        "Update loadStatistics(regionId) signature",
+        "Update saveStatistics(stats, regionId) signature",
+        "Update loadDailyState(regionId) signature",
+        "Update saveDailyState(state, regionId) signature",
+        "Update loadTimeTrialStatistics(regionId) signature",
+        "Update saveTimeTrialStatistics(stats, regionId) signature",
+        "Update loadStreakStatistics(regionId) signature",
+        "Update saveStreakStatistics(stats, regionId) signature"
+      ],
+      "passes": false
+    },
+    {
+      "category": "feature",
+      "description": "Data migration preserves existing user data",
+      "steps": [
+        "Add migrateOldData() function to persistence.js",
+        "Check for 'loklMigrated' flag in localStorage",
+        "If not migrated, copy old keys to irish-counties keys",
+        "Migrate loklStats -> loklStats-irish-counties",
+        "Migrate loklDaily -> loklDaily-irish-counties",
+        "Migrate loklTimeTrialStats -> loklTimeTrialStats-irish-counties",
+        "Migrate loklStreakStats -> loklStreakStats-irish-counties",
+        "Set loklMigrated flag to prevent re-migration"
+      ],
+      "passes": false
+    },
+    {
+      "category": "refactoring",
+      "description": "All code uses new storage function signatures",
+      "steps": [
+        "Update all calls to loadStatistics() to pass regionId",
+        "Update all calls to saveStatistics() to pass regionId",
+        "Update all calls to loadDailyState() to pass regionId",
+        "Update all calls to saveDailyState() to pass regionId",
+        "Update time trial and streak mode storage calls",
+        "Verify no storage calls are missing regionId"
+      ],
+      "passes": false
+    },
+    {
+      "category": "testing",
+      "description": "Statistics are isolated per region",
+      "steps": [
+        "Load irish-counties region",
+        "Check statistics are loaded correctly",
+        "Play a game and update statistics",
+        "Switch to europe region",
+        "Verify statistics are empty/default for europe",
+        "Play a game in europe region",
+        "Switch back to irish-counties",
+        "Verify irish-counties statistics unchanged"
+      ],
+      "passes": false
+    },
+    {
+      "category": "testing",
+      "description": "Old user data is preserved after migration",
+      "steps": [
+        "Create test with old localStorage keys",
+        "Run migrateOldData()",
+        "Verify data copied to irish-counties keys",
+        "Verify old data still exists",
+        "Verify loklMigrated flag is set",
+        "Run migrateOldData() again",
+        "Verify migration doesn't run twice"
+      ],
+      "passes": false
+    }
+  ]
+}

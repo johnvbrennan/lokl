@@ -56,6 +56,7 @@ export function getInitialState() {
         settings: {
             difficulty: 'medium',        // 'easy' (6 guesses), 'hard' (4 guesses)
             theme: 'light',              // 'light' or 'dark'
+            selectedRegion: 'irish-counties', // Selected geographic region
             timeTrialDurations: {        // Time trial durations in seconds
                 easy: 60,
                 medium: 45,
@@ -125,6 +126,7 @@ export function getDefaultSettings() {
     return {
         difficulty: 'medium',
         theme: 'light',
+        selectedRegion: 'irish-counties',
         timeTrialDurations: {
             easy: 60,
             medium: 45,

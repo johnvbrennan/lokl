@@ -5,16 +5,17 @@
 
 import { getDefaultSettings } from '../store/initialState.js';
 
-// LocalStorage keys
+// LocalStorage keys (region-specific where applicable)
 const KEYS = {
-    STATISTICS: 'loklStats',
-    DAILY_STATE: 'loklDaily',
-    SETTINGS: 'loklSettings',
-    THEME: 'loklTheme',
-    TIMETRIAL_SETTINGS: 'loklTimeTrialSettings',
-    TIMETRIAL_STATS: 'loklTimeTrialStats',
-    TIMETRIAL_STATE: 'loklTimeTrialState',
-    STREAK_STATS: 'loklStreakStats'
+    STATISTICS: (region) => `loklStats-${region}`,
+    DAILY_STATE: (region) => `loklDaily-${region}`,
+    SETTINGS: 'loklSettings', // Global (includes selectedRegion)
+    THEME: 'loklTheme', // Global
+    TIMETRIAL_SETTINGS: 'loklTimeTrialSettings', // Global
+    TIMETRIAL_STATS: (region) => `loklTimeTrialStats-${region}`,
+    TIMETRIAL_STATE: (region) => `loklTimeTrialState-${region}`,
+    STREAK_STATS: (region) => `loklStreakStats-${region}`,
+    MIGRATED: 'loklMigrated' // Migration flag
 };
 
 /**
@@ -25,9 +26,12 @@ const KEYS = {
 export function setupPersistenceSubscriptions(store) {
     // Subscribe to state changes for auto-save
     store.subscribe((newState, oldState) => {
+        // Get current region from settings
+        const regionId = newState.settings?.selectedRegion || 'irish-counties';
+
         // Save statistics if changed
         if (newState.statistics !== oldState.statistics) {
-            saveStatistics(newState.statistics);
+            saveStatistics(newState.statistics, regionId);
         }
 
         // Save settings if changed
@@ -41,12 +45,12 @@ export function setupPersistenceSubscriptions(store) {
 
         // Save time trial statistics if changed
         if (newState.timeTrialStatistics !== oldState.timeTrialStatistics) {
-            saveTimeTrialStatistics(newState.timeTrialStatistics);
+            saveTimeTrialStatistics(newState.timeTrialStatistics, regionId);
         }
 
         // Save streak statistics if changed
         if (newState.streakStatistics !== oldState.streakStatistics) {
-            saveStreakStatistics(newState.streakStatistics);
+            saveStreakStatistics(newState.streakStatistics, regionId);
         }
 
         // Save daily game state if in daily mode and game state changed
@@ -56,7 +60,7 @@ export function setupPersistenceSubscriptions(store) {
                 guesses: newState.game.guesses,
                 status: newState.game.status
             };
-            saveDailyState(dailyState);
+            saveDailyState(dailyState, regionId);
         }
 
         // Save time trial game state if in time trial mode and game state changed
@@ -68,7 +72,7 @@ export function setupPersistenceSubscriptions(store) {
                 timeLimit: newState.game.timeLimit,
                 startTime: newState.game.startTime
             };
-            saveTimeTrialState(timeTrialState);
+            saveTimeTrialState(timeTrialState, regionId);
         }
     });
 }
@@ -79,11 +83,12 @@ export function setupPersistenceSubscriptions(store) {
 
 /**
  * Load statistics from localStorage
+ * @param {string} regionId - Region identifier (default: 'irish-counties')
  * @returns {Object} Statistics object with defaults
  */
-export function loadStatistics() {
+export function loadStatistics(regionId = 'irish-counties') {
     try {
-        const saved = localStorage.getItem(KEYS.STATISTICS);
+        const saved = localStorage.getItem(KEYS.STATISTICS(regionId));
         if (saved) {
             return JSON.parse(saved);
         }
@@ -105,10 +110,11 @@ export function loadStatistics() {
 /**
  * Save statistics to localStorage
  * @param {Object} statistics - Statistics object to save
+ * @param {string} regionId - Region identifier (default: 'irish-counties')
  */
-export function saveStatistics(statistics) {
+export function saveStatistics(statistics, regionId = 'irish-counties') {
     try {
-        localStorage.setItem(KEYS.STATISTICS, JSON.stringify(statistics));
+        localStorage.setItem(KEYS.STATISTICS(regionId), JSON.stringify(statistics));
     } catch (e) {
         console.error('Failed to save statistics:', e);
     }
@@ -120,11 +126,12 @@ export function saveStatistics(statistics) {
 
 /**
  * Load daily game state from localStorage
+ * @param {string} regionId - Region identifier (default: 'irish-counties')
  * @returns {Object|null} Daily state or null if not found
  */
-export function loadDailyState() {
+export function loadDailyState(regionId = 'irish-counties') {
     try {
-        const saved = localStorage.getItem(KEYS.DAILY_STATE);
+        const saved = localStorage.getItem(KEYS.DAILY_STATE(regionId));
         return saved ? JSON.parse(saved) : null;
     } catch (e) {
         console.error('Failed to load daily state:', e);
@@ -135,10 +142,11 @@ export function loadDailyState() {
 /**
  * Save daily game state to localStorage
  * @param {Object} state - State object with date, guesses, status
+ * @param {string} regionId - Region identifier (default: 'irish-counties')
  */
-export function saveDailyState(state) {
+export function saveDailyState(state, regionId = 'irish-counties') {
     try {
-        localStorage.setItem(KEYS.DAILY_STATE, JSON.stringify(state));
+        localStorage.setItem(KEYS.DAILY_STATE(regionId), JSON.stringify(state));
     } catch (e) {
         console.error('Failed to save daily state:', e);
     }
@@ -276,11 +284,12 @@ export function saveTimeTrialSettings(settings) {
 
 /**
  * Load time trial statistics from localStorage
+ * @param {string} regionId - Region identifier (default: 'irish-counties')
  * @returns {Object} Time trial statistics with defaults
  */
-export function loadTimeTrialStatistics() {
+export function loadTimeTrialStatistics(regionId = 'irish-counties') {
     try {
-        const saved = localStorage.getItem(KEYS.TIMETRIAL_STATS);
+        const saved = localStorage.getItem(KEYS.TIMETRIAL_STATS(regionId));
         if (saved) {
             return JSON.parse(saved);
         }
@@ -304,9 +313,9 @@ export function loadTimeTrialStatistics() {
  * Save time trial statistics to localStorage
  * @param {Object} stats - Time trial statistics to save
  */
-export function saveTimeTrialStatistics(stats) {
+export function saveTimeTrialStatistics(stats, regionId = 'irish-counties') {
     try {
-        localStorage.setItem(KEYS.TIMETRIAL_STATS, JSON.stringify(stats));
+        localStorage.setItem(KEYS.TIMETRIAL_STATS(regionId), JSON.stringify(stats));
     } catch (e) {
         console.error('Failed to save time trial statistics:', e);
     }
@@ -318,11 +327,12 @@ export function saveTimeTrialStatistics(stats) {
 
 /**
  * Load time trial game state from localStorage
+ * @param {string} regionId - Region identifier (default: 'irish-counties')
  * @returns {Object|null} Time trial state or null if not found/expired
  */
-export function loadTimeTrialState() {
+export function loadTimeTrialState(regionId = 'irish-counties') {
     try {
-        const saved = localStorage.getItem(KEYS.TIMETRIAL_STATE);
+        const saved = localStorage.getItem(KEYS.TIMETRIAL_STATE(regionId));
         if (!saved) return null;
 
         const state = JSON.parse(saved);
@@ -332,7 +342,7 @@ export function loadTimeTrialState() {
             const elapsed = (Date.now() - state.startTime) / 1000;
             if (elapsed > state.timeLimit) {
                 // State has expired
-                clearTimeTrialState();
+                clearTimeTrialState(regionId);
                 return null;
             }
         }
@@ -348,9 +358,9 @@ export function loadTimeTrialState() {
  * Save time trial game state to localStorage
  * @param {Object} state - Time trial state to save
  */
-export function saveTimeTrialState(state) {
+export function saveTimeTrialState(state, regionId = 'irish-counties') {
     try {
-        localStorage.setItem(KEYS.TIMETRIAL_STATE, JSON.stringify(state));
+        localStorage.setItem(KEYS.TIMETRIAL_STATE(regionId), JSON.stringify(state));
     } catch (e) {
         console.error('Failed to save time trial state:', e);
     }
@@ -358,10 +368,11 @@ export function saveTimeTrialState(state) {
 
 /**
  * Clear time trial game state from localStorage
+ * @param {string} regionId - Region identifier (default: 'irish-counties')
  */
-export function clearTimeTrialState() {
+export function clearTimeTrialState(regionId = 'irish-counties') {
     try {
-        localStorage.removeItem(KEYS.TIMETRIAL_STATE);
+        localStorage.removeItem(KEYS.TIMETRIAL_STATE(regionId));
     } catch (e) {
         console.error('Failed to clear time trial state:', e);
     }
@@ -373,11 +384,12 @@ export function clearTimeTrialState() {
 
 /**
  * Load streak statistics from localStorage
+ * @param {string} regionId - Region identifier (default: 'irish-counties')
  * @returns {Object} Streak statistics with defaults
  */
-export function loadStreakStatistics() {
+export function loadStreakStatistics(regionId = 'irish-counties') {
     try {
-        const saved = localStorage.getItem(KEYS.STREAK_STATS);
+        const saved = localStorage.getItem(KEYS.STREAK_STATS(regionId));
         if (saved) {
             return JSON.parse(saved);
         }
@@ -396,11 +408,77 @@ export function loadStreakStatistics() {
 /**
  * Save streak statistics to localStorage
  * @param {Object} stats - Streak statistics to save
+ * @param {string} regionId - Region identifier (default: 'irish-counties')
  */
-export function saveStreakStatistics(stats) {
+export function saveStreakStatistics(stats, regionId = 'irish-counties') {
     try {
-        localStorage.setItem(KEYS.STREAK_STATS, JSON.stringify(stats));
+        localStorage.setItem(KEYS.STREAK_STATS(regionId), JSON.stringify(stats));
     } catch (e) {
         console.error('Failed to save streak statistics:', e);
+    }
+}
+
+// ============================================
+// DATA MIGRATION
+// ============================================
+
+/**
+ * Migrate old localStorage data to region-specific keys
+ * This preserves existing user data when upgrading to multi-region support
+ */
+export function migrateOldData() {
+    // Check if migration already ran
+    const migrated = localStorage.getItem(KEYS.MIGRATED);
+    if (migrated) {
+        console.log('✅ Data migration already complete');
+        return;
+    }
+
+    console.log('🔄 Migrating old data to region-specific keys...');
+
+    const defaultRegion = 'irish-counties';
+
+    try {
+        // Migrate statistics
+        const oldStats = localStorage.getItem('loklStats');
+        if (oldStats) {
+            localStorage.setItem(KEYS.STATISTICS(defaultRegion), oldStats);
+            console.log('  ✅ Migrated statistics');
+        }
+
+        // Migrate daily state
+        const oldDaily = localStorage.getItem('loklDaily');
+        if (oldDaily) {
+            localStorage.setItem(KEYS.DAILY_STATE(defaultRegion), oldDaily);
+            console.log('  ✅ Migrated daily state');
+        }
+
+        // Migrate time trial stats
+        const oldTTStats = localStorage.getItem('loklTimeTrialStats');
+        if (oldTTStats) {
+            localStorage.setItem(KEYS.TIMETRIAL_STATS(defaultRegion), oldTTStats);
+            console.log('  ✅ Migrated time trial statistics');
+        }
+
+        // Migrate time trial state
+        const oldTTState = localStorage.getItem('loklTimeTrialState');
+        if (oldTTState) {
+            localStorage.setItem(KEYS.TIMETRIAL_STATE(defaultRegion), oldTTState);
+            console.log('  ✅ Migrated time trial state');
+        }
+
+        // Migrate streak stats
+        const oldStreakStats = localStorage.getItem('loklStreakStats');
+        if (oldStreakStats) {
+            localStorage.setItem(KEYS.STREAK_STATS(defaultRegion), oldStreakStats);
+            console.log('  ✅ Migrated streak statistics');
+        }
+
+        // Mark migration as complete
+        localStorage.setItem(KEYS.MIGRATED, 'true');
+        console.log('✅ Data migration complete');
+
+    } catch (e) {
+        console.error('❌ Data migration failed:', e);
     }
 }
