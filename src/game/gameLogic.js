@@ -136,6 +136,7 @@ export function processGuess(countyName, callbacks = {}) {
     // Use current region data or fallback to COUNTIES
     const regionPlaces = currentRegionData ? currentRegionData.data : COUNTIES;
     const maxDistance = currentRegionData ? currentRegionData.config.maxDistance : 470;
+    const groupingField = currentRegionData ? currentRegionData.config.groupingField : 'province';
 
     // Validate guess
     if (gameState.status !== 'playing') return null;
@@ -159,7 +160,7 @@ export function processGuess(countyName, callbacks = {}) {
         distance,
         direction,
         color,
-        province: guessed.province,
+        province: guessed[groupingField], // Use dynamic grouping field (province or subregion)
         isAdjacent
     };
 
