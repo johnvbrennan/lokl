@@ -20,7 +20,8 @@ import {
     resetMapColors,
     highlightCounty,
     unhighlightCounty,
-    updateAllMapBorders
+    updateAllMapBorders,
+    switchRegion
 } from './map/mapController.js';
 
 // Storage imports
@@ -28,7 +29,7 @@ import { loadStatistics, loadSettings, saveSettings, setupPersistenceSubscriptio
 
 // Game imports
 import { store, getMaxGuesses } from './game/gameState.js';
-import { setDifficulty, updateTimeTrialSettings, initLocateMode as initLocateModeAction, exitLocateMode as exitLocateModeAction, startNextLocateRound as startNextLocateRoundAction } from './store/actions.js';
+import { setDifficulty, setRegion, updateTimeTrialSettings, initLocateMode as initLocateModeAction, exitLocateMode as exitLocateModeAction, startNextLocateRound as startNextLocateRoundAction } from './store/actions.js';
 import { initGame, processGuess, setRegionData } from './game/gameLogic.js';
 import { initLocateModeUI, exitLocateMode, startNextLocateRoundUI } from './game/locateMode.js';
 import { stopTimeTrialTimer, handleTimeout } from './game/timeTrialMode.js';
@@ -104,6 +105,65 @@ function updateStats() {
 }
 
 /**
+ * Switch to a different region
+ * @param {string} regionId - Region identifier
+ * @returns {Promise<void>}
+ */
+async function switchToRegion(regionId) {
+    console.log(`🔄 Switching to region: ${regionId}`);
+
+    try {
+        // Load new region data
+        currentRegionData = await dataLoader.loadRegion(regionId);
+        console.log(`✅ Region data loaded: ${currentRegionData.config.name}`);
+
+        // Update store with new region
+        store.setState(setRegion(regionId), 'setRegion');
+
+        // Update modules with new region data
+        setRegionPlaceNames(currentRegionData.names);
+        setRegionData(currentRegionData);
+
+        // Switch map to new region
+        await new Promise((resolve) => {
+            switchRegion(currentRegionData.config, () => {
+                console.log(`✅ Map switched to: ${currentRegionData.config.name}`);
+                resolve();
+            });
+        });
+
+        // Update UI labels for new region
+        updateUILabelsForRegion(currentRegionData.config);
+
+        console.log(`✅ Successfully switched to region: ${regionId}`);
+
+    } catch (error) {
+        console.error(`❌ Failed to switch region to ${regionId}:`, error);
+        throw error;
+    }
+}
+
+/**
+ * Update UI labels based on current region
+ * @param {Object} regionConfig - Region configuration
+ */
+function updateUILabelsForRegion(regionConfig) {
+    // Update input placeholders
+    const inputs = document.querySelectorAll('#county-input, #county-input-new');
+    inputs.forEach(input => {
+        if (input) {
+            input.placeholder = `Guess a ${regionConfig.placeType}...`;
+        }
+    });
+
+    // Update stats bar grouping label
+    const groupingLabel = document.querySelector('.stat-label:contains("Province")');
+    // Note: Will need to target by ID or add ID to the province label in HTML
+
+    console.log(`🏷️ Updated UI labels for ${regionConfig.name}`);
+}
+
+/**
  * Update difficulty display
  */
 function updateDifficultyDisplay() {
@@ -159,9 +219,22 @@ function initStartScreenListeners() {
     const startOverlay = document.getElementById('start-overlay');
     if (!startOverlay) return;
 
-    // Store selected mode and difficulty
+    // Store selected mode, difficulty, and region
     let selectedMode = 'daily';
     let selectedDifficulty = getSettings().difficulty;
+    let selectedRegion = getSettings().selectedRegion || DEFAULT_REGION;
+
+    // Region card selection
+    document.querySelectorAll('.region-card').forEach(card => {
+        card.addEventListener('click', () => {
+            // Remove selected class from all cards
+            document.querySelectorAll('.region-card').forEach(c => c.classList.remove('selected'));
+            // Add selected class to clicked card
+            card.classList.add('selected');
+            // Store selected region
+            selectedRegion = card.dataset.region;
+        });
+    });
 
     // Mode card selection
     document.querySelectorAll('.mode-card').forEach(card => {
@@ -188,7 +261,28 @@ function initStartScreenListeners() {
     });
 
     // Start game button
-    document.getElementById('start-game-btn')?.addEventListener('click', () => {
+    document.getElementById('start-game-btn')?.addEventListener('click', async () => {
+        // Check if region changed
+        if (selectedRegion !== currentRegionData?.config.id) {
+            // Show loading indicator
+            const loading = document.getElementById('loading');
+            if (loading) {
+                loading.style.display = 'flex';
+                loading.textContent = `Loading ${selectedRegion === 'europe' ? 'Europe' : 'Irish Counties'}...`;
+            }
+
+            try {
+                // Load new region
+                await switchToRegion(selectedRegion);
+            } catch (error) {
+                console.error('Failed to switch region:', error);
+                if (loading) loading.style.display = 'none';
+                return;
+            }
+
+            if (loading) loading.style.display = 'none';
+        }
+
         startOverlay.classList.remove('visible');
 
         // Apply difficulty setting first
