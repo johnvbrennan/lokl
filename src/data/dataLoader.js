@@ -1,9 +1,13 @@
 // ============================================
 // REGION DATA LOADER
-// Handles dynamic loading of region-specific data
+// Handles loading of region-specific data
 // ============================================
 
 import { REGIONS, DEFAULT_REGION } from './regionConfig.js';
+import { COUNTIES } from './counties.js';
+import { COUNTY_ADJACENCY } from './adjacency.js';
+import { COUNTRIES } from './countries.js';
+import { COUNTRY_ADJACENCY } from './countryAdjacency.js';
 
 /**
  * Normalize GeoJSON country names to match our data
@@ -45,8 +49,23 @@ function normalizeGeoJSONName(name) {
 }
 
 /**
+ * Static region data registry
+ * All region data is imported upfront for reliable production builds
+ */
+const REGION_DATA_REGISTRY = {
+    'irish-counties': {
+        data: COUNTIES,
+        adjacency: COUNTY_ADJACENCY
+    },
+    'europe': {
+        data: COUNTRIES,
+        adjacency: COUNTRY_ADJACENCY
+    }
+};
+
+/**
  * Region Data Loader
- * Dynamically loads region-specific data modules
+ * Loads region-specific data from static imports
  */
 export class RegionDataLoader {
     constructor() {
@@ -68,35 +87,10 @@ export class RegionDataLoader {
         console.log(`📥 Loading region '${regionId}'...`);
 
         const config = REGIONS[regionId] || REGIONS[DEFAULT_REGION];
+        const registryData = REGION_DATA_REGISTRY[regionId];
 
-        try {
-            // Dynamically import data and adjacency modules
-            const dataModule = await import(/* @vite-ignore */ config.dataModule);
-            const adjacencyModule = await import(/* @vite-ignore */ config.adjacencyModule);
-
-            // Extract the actual data (handle both default and named exports)
-            const data = dataModule.COUNTIES || dataModule.COUNTRIES || dataModule.default;
-            const adjacency = adjacencyModule.COUNTY_ADJACENCY || adjacencyModule.COUNTRY_ADJACENCY || adjacencyModule.default;
-
-            // Create sorted list of place names
-            const names = Object.keys(data).sort();
-
-            const regionData = {
-                config,
-                data,
-                adjacency,
-                names,
-                normalizeGeoJSONName: normalizeGeoJSONName // Provide normalization function
-            };
-
-            // Cache the loaded region
-            this.cache.set(regionId, regionData);
-
-            console.log(`✅ Region '${regionId}' loaded successfully (${names.length} places)`);
-
-            return regionData;
-        } catch (error) {
-            console.error(`❌ Failed to load region '${regionId}':`, error);
+        if (!registryData) {
+            console.error(`❌ Region '${regionId}' not found in registry`);
 
             // Fallback to default region if loading fails
             if (regionId !== DEFAULT_REGION) {
@@ -104,8 +98,30 @@ export class RegionDataLoader {
                 return this.loadRegion(DEFAULT_REGION);
             }
 
-            throw error;
+            throw new Error(`Region '${regionId}' not found`);
         }
+
+        // Get data and adjacency from registry
+        const data = registryData.data;
+        const adjacency = registryData.adjacency;
+
+        // Create sorted list of place names
+        const names = Object.keys(data).sort();
+
+        const regionData = {
+            config,
+            data,
+            adjacency,
+            names,
+            normalizeGeoJSONName: normalizeGeoJSONName // Provide normalization function
+        };
+
+        // Cache the loaded region
+        this.cache.set(regionId, regionData);
+
+        console.log(`✅ Region '${regionId}' loaded successfully (${names.length} places)`);
+
+        return regionData;
     }
 
     /**
