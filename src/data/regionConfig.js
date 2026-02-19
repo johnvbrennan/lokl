@@ -24,8 +24,6 @@ export const REGIONS = {
         minZoom: 6,                 // Minimum zoom level
         maxZoom: 10,                // Maximum zoom level
         geoJsonPath: '/assets/ireland.json',
-        dataModule: './counties.js',
-        adjacencyModule: './adjacency.js',
         groupingField: 'province',   // Data field for grouping (province)
         groupingLabel: 'Province',   // UI label for grouping
         placeType: 'county',         // Singular place type for UI text
@@ -42,8 +40,6 @@ export const REGIONS = {
         minZoom: 3,                 // Minimum zoom level
         maxZoom: 7,                 // Maximum zoom level
         geoJsonPath: '/assets/europe.json',
-        dataModule: './countries.js',
-        adjacencyModule: './countryAdjacency.js',
         groupingField: 'subregion',  // Data field for grouping (subregion)
         groupingLabel: 'Region',     // UI label for grouping
         placeType: 'country',        // Singular place type for UI text
