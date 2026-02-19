@@ -5,37 +5,41 @@
 
 // Map state
 let map = null;
-let countyLayers = {}; // Store layer references by county name
-let countyColors = new Map(); // Store current fill colors by county name
+let countyLayers = {}; // Store layer references by county/country name
+let countyColors = new Map(); // Store current fill colors by county/country name
 let geoJsonLayer = null;
 let tileLayer = null; // Store reference to current tile layer
 let currentHighlightedCounty = null;
+let currentRegionConfig = null; // Store current region configuration
 
 /**
  * Initialize the Leaflet map
+ * @param {Object} regionConfig - Region configuration object
  * @param {Function} onMapReady - Callback when map is loaded
  */
-export function initMap(onMapReady) {
-    // Create map centered on Ireland with forced SVG renderer for mobile compatibility
+export function initMap(regionConfig, onMapReady) {
+    currentRegionConfig = regionConfig;
+
+    // Create map with region-specific settings
     map = L.map('map', {
-        center: [53.5, -7.5],
-        zoom: 7,
-        minZoom: 6,
-        maxZoom: 10,
+        center: regionConfig.mapCenter,
+        zoom: regionConfig.mapZoom,
+        minZoom: regionConfig.minZoom,
+        maxZoom: regionConfig.maxZoom,
         zoomControl: true,
         attributionControl: true,
         preferCanvas: false, // Force SVG rendering (not Canvas)
         renderer: L.svg() // Explicitly use SVG renderer
     });
 
-    console.log('🗺️ Map initialized with SVG renderer');
+    console.log(`🗺️ Map initialized for region: ${regionConfig.name}`);
 
     // Add initial tile layer based on current theme
     const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
     updateMapTiles(currentTheme);
 
     // Load GeoJSON after tiles
-    loadGeoJSON(onMapReady);
+    loadGeoJSON(regionConfig.geoJsonPath, onMapReady);
 
     // Set up resize handler
     let resizeTimeout;
@@ -179,11 +183,12 @@ export function updateMapTiles(theme) {
 }
 
 /**
- * Load GeoJSON data for Irish counties
+ * Load GeoJSON data for the region
+ * @param {string} geoJsonPath - Path to the GeoJSON file
  * @param {Function} onMapReady - Callback when GeoJSON is loaded
  */
-export function loadGeoJSON(onMapReady) {
-    fetch('/assets/ireland.json')
+export function loadGeoJSON(geoJsonPath, onMapReady) {
+    fetch(geoJsonPath)
         .then(response => {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
@@ -191,27 +196,27 @@ export function loadGeoJSON(onMapReady) {
             return response.json();
         })
         .then(data => {
-            console.log('GeoJSON loaded, features:', data.features.length);
+            console.log(`GeoJSON loaded from ${geoJsonPath}, features:`, data.features.length);
 
             geoJsonLayer = L.geoJSON(data, {
                 style: defaultStyle,
                 onEachFeature: onEachFeature
             }).addTo(map);
 
-            // Bring counties to front
+            // Bring layers to front
             geoJsonLayer.bringToFront();
 
-            // Fit map to Ireland bounds
+            // Fit map to region bounds
             map.fitBounds(geoJsonLayer.getBounds(), { padding: [20, 20] });
 
-            // Constrain panning so counties stay within the visible viewport
+            // Constrain panning so region stays within the visible viewport
             map.setMaxBounds(geoJsonLayer.getBounds().pad(0.2));
             map.options.maxBoundsViscosity = 1.0;
 
             // Hide loading indicator
             document.getElementById('loading').style.display = 'none';
 
-            console.log('County layers loaded:', Object.keys(countyLayers).length);
+            console.log('Place layers loaded:', Object.keys(countyLayers).length);
 
             // Force map to recalculate size - multiple passes to catch mobile layout delays
             [100, 300, 600].forEach(delay => {
@@ -231,8 +236,8 @@ export function loadGeoJSON(onMapReady) {
             console.error('Failed to load GeoJSON:', error);
             console.log('To run locally, start a web server:');
             console.log('  Python: python -m http.server 8000');
-            console.log('  Node:   npx serve');
-            console.log('  Then open: http://localhost:8000');
+            console.log('  Node:   npx vite');
+            console.log('  Then open: http://localhost:5173');
             document.getElementById('loading').innerHTML =
                 'Failed to load map data.<br><small>Run from a web server (see console for instructions)</small>';
         });
@@ -560,4 +565,42 @@ export function getMap() {
  */
 export function getCountyLayers() {
     return countyLayers;
+}
+
+/**
+ * Switch to a different region
+ * @param {Object} newRegionConfig - New region configuration object
+ * @param {Function} onMapReady - Callback when region switch is complete
+ */
+export function switchRegion(newRegionConfig, onMapReady) {
+    console.log(`🔄 Switching to region: ${newRegionConfig.name}`);
+
+    // Clear existing layers
+    if (geoJsonLayer) {
+        map.removeLayer(geoJsonLayer);
+        geoJsonLayer = null;
+    }
+
+    // Clear layer tracking
+    countyLayers = {};
+    countyColors.clear();
+    currentHighlightedCounty = null;
+
+    // Update region config
+    currentRegionConfig = newRegionConfig;
+
+    // Recenter map with new region settings
+    map.setView(newRegionConfig.mapCenter, newRegionConfig.mapZoom);
+
+    // Update zoom constraints
+    map.setMinZoom(newRegionConfig.minZoom);
+    map.setMaxZoom(newRegionConfig.maxZoom);
+
+    // Load new GeoJSON
+    loadGeoJSON(newRegionConfig.geoJsonPath, () => {
+        console.log(`✅ Region switched to: ${newRegionConfig.name}`);
+        if (onMapReady) {
+            onMapReady();
+        }
+    });
 }

@@ -6,15 +6,26 @@
 import { COUNTY_NAMES } from '../data/counties.js';
 import { gameState } from '../game/gameState.js';
 
+// Current region place names (updated when region changes)
+let currentPlaceNames = COUNTY_NAMES;
+
+/**
+ * Set the current region place names for autocomplete
+ * @param {Array<string>} placeNames - Array of place names
+ */
+export function setRegionPlaceNames(placeNames) {
+    currentPlaceNames = placeNames;
+}
+
 /**
  * Get autocomplete matches for input
  * @param {string} input - User input text
- * @returns {Array<string>} Array of matching county names
+ * @returns {Array<string>} Array of matching place names
  */
 export function getAutocompleteMatches(input) {
     if (!input) return [];
     const guessedCounties = gameState.guesses.map(g => g.county);
-    return COUNTY_NAMES.filter(name =>
+    return currentPlaceNames.filter(name =>
         name.toLowerCase().startsWith(input.toLowerCase()) &&
         !guessedCounties.includes(name)
     );
@@ -112,7 +123,7 @@ export function updateSubmitButtonState() {
 
     const value = input.value.trim();
     const matches = getAutocompleteMatches(value);
-    const isValid = matches.length === 1 || COUNTY_NAMES.includes(value);
+    const isValid = matches.length === 1 || currentPlaceNames.includes(value);
 
     if (isValid && gameState.status === 'playing') {
         btn.classList.add('ready');
@@ -132,7 +143,7 @@ export function updateSubmitButtonStateNew() {
     const value = input.value.trim();
     const matches = getAutocompleteMatches(value);
 
-    if (matches.length === 1 || COUNTY_NAMES.includes(value)) {
+    if (matches.length === 1 || currentPlaceNames.includes(value)) {
         btn.classList.add('ready');
     } else {
         btn.classList.remove('ready');

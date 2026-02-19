@@ -4,6 +4,8 @@
 
 // Data imports
 import { COUNTIES, COUNTY_NAMES } from './data/counties.js';
+import { DEFAULT_REGION } from './data/regionConfig.js';
+import { dataLoader } from './data/dataLoader.js';
 
 // Utility imports
 import { COLORS, COLOR_EMOJIS, DIRECTION_ARROWS } from './utils/constants.js';
@@ -27,7 +29,7 @@ import { loadStatistics, loadSettings, saveSettings, setupPersistenceSubscriptio
 // Game imports
 import { store, getMaxGuesses } from './game/gameState.js';
 import { setDifficulty, updateTimeTrialSettings, initLocateMode as initLocateModeAction, exitLocateMode as exitLocateModeAction, startNextLocateRound as startNextLocateRoundAction } from './store/actions.js';
-import { initGame, processGuess } from './game/gameLogic.js';
+import { initGame, processGuess, setRegionData } from './game/gameLogic.js';
 import { initLocateModeUI, exitLocateMode, startNextLocateRoundUI } from './game/locateMode.js';
 import { stopTimeTrialTimer, handleTimeout } from './game/timeTrialMode.js';
 import { initStreakMode, handleStreakCorrect, handleStreakGameOver, exitStreakMode as exitStreakModeLogic } from './game/streakMode.js';
@@ -36,6 +38,9 @@ import { initStreakMode, handleStreakCorrect, handleStreakGameOver, exitStreakMo
 const getGame = () => store.getState().game;
 const getSettings = () => store.getState().settings;
 const getStats = () => store.getState().statistics;
+
+// Current region data (loaded on initialization)
+let currentRegionData = null;
 
 // Shuffle queue for locate mode (improved randomness - no county repeats within 32-county cycle)
 let locateQueue = createCountyShuffleQueue();
@@ -81,7 +86,8 @@ import {
     showAutocompleteNew,
     hideAutocompleteNew,
     updateSubmitButtonState,
-    updateSubmitButtonStateNew
+    updateSubmitButtonStateNew,
+    setRegionPlaceNames
 } from './ui/autocomplete.js';
 
 import { initTheme, toggleTheme, setTheme } from './ui/theme.js';
@@ -596,7 +602,7 @@ function handleExitStreakMode() {
 // INITIALIZATION & EVENT LISTENERS
 // ============================================
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     // Set up persistence subscriptions for auto-save
     setupPersistenceSubscriptions(store);
 
@@ -614,11 +620,30 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize theme (reads from store, sets up subscriptions)
     initTheme(updateMapTiles, () => updateAllMapBorders(getGame().mode));
 
+    // Load current region (from settings or default)
+    const savedRegion = getSettings().selectedRegion || DEFAULT_REGION;
+    console.log(`🌍 Loading region: ${savedRegion}`);
+
+    try {
+        currentRegionData = await dataLoader.loadRegion(savedRegion);
+        console.log(`✅ Region loaded: ${currentRegionData.config.name}`);
+
+        // Update modules with region data
+        setRegionPlaceNames(currentRegionData.names);
+        setRegionData(currentRegionData);
+    } catch (error) {
+        console.error('❌ Failed to load region:', error);
+        // Fallback to default
+        currentRegionData = await dataLoader.loadRegion(DEFAULT_REGION);
+        setRegionPlaceNames(currentRegionData.names);
+        setRegionData(currentRegionData);
+    }
+
     // Initialize start screen listeners
     initStartScreenListeners();
 
-    // Initialize map
-    initMap(() => {
+    // Initialize map with region config
+    initMap(currentRegionData.config, () => {
         // Check if there's a saved daily game to restore
         const savedDailyState = loadDailyState();
         const today = getTodaysDateString();

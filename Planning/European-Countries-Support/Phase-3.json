@@ -1,0 +1,70 @@
+{
+  "phase": 3,
+  "name": "Map Controller Refactoring",
+  "description": "Make map controller region-agnostic to support multiple regions",
+  "prds": [
+    {
+      "category": "refactoring",
+      "description": "Map initialization accepts region configuration",
+      "steps": [
+        "Update src/map/mapController.js",
+        "Change initMap() signature to accept regionConfig parameter",
+        "Use regionConfig.mapCenter instead of hardcoded [53.5, -7.5]",
+        "Use regionConfig.mapZoom instead of hardcoded 7",
+        "Use regionConfig.minZoom and maxZoom",
+        "Store currentRegionConfig in module-level state"
+      ],
+      "passes": false
+    },
+    {
+      "category": "refactoring",
+      "description": "GeoJSON loading uses dynamic path",
+      "steps": [
+        "Update loadGeoJSON() to accept geoJsonPath parameter",
+        "Pass regionConfig.geoJsonPath to loadGeoJSON()",
+        "Add map.fitBounds() after GeoJSON loads",
+        "Verify map centers correctly for both regions",
+        "Verify zoom levels are appropriate"
+      ],
+      "passes": false
+    },
+    {
+      "category": "feature",
+      "description": "Region switching function implemented",
+      "steps": [
+        "Add switchRegion(newRegionConfig, onMapReady) function",
+        "Clear existing geoJsonLayer and county/place layers",
+        "Update currentRegionConfig",
+        "Recenter map with new region's mapCenter and zoom",
+        "Update zoom constraints (minZoom, maxZoom)",
+        "Load new GeoJSON for the region",
+        "Export switchRegion function"
+      ],
+      "passes": false
+    },
+    {
+      "category": "testing",
+      "description": "Map loads correctly with Ireland GeoJSON",
+      "steps": [
+        "Run dev server",
+        "Verify map loads with Irish counties",
+        "Verify map is centered on Ireland",
+        "Verify zoom level is appropriate",
+        "Verify no JavaScript errors in console"
+      ],
+      "passes": false
+    },
+    {
+      "category": "testing",
+      "description": "Map can switch to Europe region (once data exists)",
+      "steps": [
+        "Call switchRegion() with europe config",
+        "Verify map recenters to Europe",
+        "Verify old GeoJSON layer is removed",
+        "Verify new GeoJSON layer loads",
+        "Verify map bounds fit Europe correctly"
+      ],
+      "passes": false
+    }
+  ]
+}

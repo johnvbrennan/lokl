@@ -1,0 +1,89 @@
+{
+  "phase": 1,
+  "name": "Region Configuration Foundation",
+  "description": "Create abstraction layer for multi-region support without breaking existing functionality",
+  "prds": [
+    {
+      "category": "infrastructure",
+      "description": "Region configuration module created with Irish and European regions",
+      "steps": [
+        "Create src/data/regionConfig.js file",
+        "Define REGIONS object with irish-counties and europe configurations",
+        "Verify each region has all required properties (id, name, maxDistance, mapCenter, mapZoom, geoJsonPath, etc.)",
+        "Export DEFAULT_REGION constant",
+        "Export getRegionConfig() and getAvailableRegions() helper functions"
+      ],
+      "passes": true
+    },
+    {
+      "category": "infrastructure",
+      "description": "Data loader module handles dynamic region loading",
+      "steps": [
+        "Create src/data/dataLoader.js file",
+        "Implement RegionDataLoader class with cache",
+        "Implement loadRegion() method with dynamic imports",
+        "Add fallback to DEFAULT_REGION on load failure",
+        "Verify cache works correctly",
+        "Export singleton dataLoader instance"
+      ],
+      "passes": true
+    },
+    {
+      "category": "state",
+      "description": "State management includes region selection",
+      "steps": [
+        "Update src/store/initialState.js",
+        "Add selectedRegion: 'irish-counties' to settings object",
+        "Update getDefaultSettings() to include selectedRegion",
+        "Verify initial state structure is correct"
+      ],
+      "passes": true
+    },
+    {
+      "category": "state",
+      "description": "setRegion action added to state actions",
+      "steps": [
+        "Update src/store/actions.js",
+        "Add setRegion(regionId) action creator",
+        "Verify action returns correct state update object",
+        "Verify action updates settings.selectedRegion"
+      ],
+      "passes": true
+    },
+    {
+      "category": "refactoring",
+      "description": "MAX_DISTANCE constant removed from constants module",
+      "steps": [
+        "Update src/utils/constants.js",
+        "Remove hardcoded MAX_DISTANCE export",
+        "Add comment explaining MAX_DISTANCE is now region-specific",
+        "Reference regionConfig.js in comment"
+      ],
+      "passes": true
+    },
+    {
+      "category": "refactoring",
+      "description": "getProximityColor accepts dynamic maxDistance parameter",
+      "steps": [
+        "Update src/utils/calculations.js",
+        "Remove MAX_DISTANCE import from constants",
+        "Update getProximityColor() signature to accept maxDistance parameter",
+        "Verify distance ratio calculation uses maxDistance parameter",
+        "Verify all color thresholds work correctly"
+      ],
+      "passes": true
+    },
+    {
+      "category": "regression",
+      "description": "Existing Irish counties functionality still works",
+      "steps": [
+        "Run dev server with npx vite",
+        "Verify map loads with Irish counties",
+        "Verify no JavaScript errors in console",
+        "Verify game can be started",
+        "Verify guesses work (if testing manually)"
+      ],
+      "passes": false
+    }
+  ]
+}

@@ -1,0 +1,84 @@
+{
+  "phase": 2,
+  "name": "European Countries Data Collection",
+  "description": "Gather and structure all data needed for European countries (44 countries)",
+  "prds": [
+    {
+      "category": "data",
+      "description": "European countries data structure created",
+      "steps": [
+        "Create src/data/countries.js file",
+        "Define COUNTRIES object with 44 European countries",
+        "Each country has: lat, lng, subregion, fact fields",
+        "Verify all country names are spelled correctly",
+        "Verify coordinates are reasonable for each country",
+        "Export COUNTRY_NAMES as sorted array"
+      ],
+      "passes": false
+    },
+    {
+      "category": "data",
+      "description": "Country facts are educational and appropriate",
+      "steps": [
+        "Review all country facts for accuracy",
+        "Verify facts are 15-30 words",
+        "Verify facts are educational and family-friendly",
+        "Verify facts are non-political",
+        "Verify no spelling or grammar errors"
+      ],
+      "passes": false
+    },
+    {
+      "category": "data",
+      "description": "European countries GeoJSON acquired and processed",
+      "steps": [
+        "Download GeoJSON from Natural Earth Data",
+        "Filter to European countries only",
+        "Simplify geometry using Mapshaper",
+        "Verify file size is < 3MB",
+        "Save as public/assets/europe.json",
+        "Verify all 44 countries are present",
+        "Verify properties.name matches country names in countries.js"
+      ],
+      "passes": false
+    },
+    {
+      "category": "data",
+      "description": "Country adjacency matrix created",
+      "steps": [
+        "Create src/data/countryAdjacency.js file",
+        "Define COUNTRY_ADJACENCY object with border relationships",
+        "Verify all 44 countries are defined",
+        "Verify adjacency is bidirectional (if A borders B, B borders A)",
+        "Handle edge cases (islands, microstates)",
+        "Export areAdjacent() helper function"
+      ],
+      "passes": false
+    },
+    {
+      "category": "data",
+      "description": "Subregion classifications are accurate",
+      "steps": [
+        "Verify Western Europe countries are correct",
+        "Verify Central Europe countries are correct",
+        "Verify Northern Europe countries are correct",
+        "Verify Southern Europe countries are correct",
+        "Verify Eastern Europe countries are correct",
+        "Ensure total equals 44 countries"
+      ],
+      "passes": false
+    },
+    {
+      "category": "validation",
+      "description": "All data files are valid and loadable",
+      "steps": [
+        "Verify countries.js has no syntax errors",
+        "Verify countryAdjacency.js has no syntax errors",
+        "Verify europe.json is valid GeoJSON",
+        "Test loading GeoJSON in QGIS or online viewer",
+        "Verify country centroids are reasonable"
+      ],
+      "passes": false
+    }
+  ]
+}

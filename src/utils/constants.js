@@ -2,7 +2,8 @@
 // GAME CONSTANTS
 // ============================================
 
-export const MAX_DISTANCE = 470; // Maximum distance across Ireland in km
+// MAX_DISTANCE is now region-specific and provided by region configuration
+// See src/data/regionConfig.js for region-specific maxDistance values
 
 // ============================================
 // COLOR CONSTANTS - Colorblind-friendly with Cyber theme

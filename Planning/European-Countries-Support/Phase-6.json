@@ -1,0 +1,110 @@
+{
+  "phase": 6,
+  "name": "UI Implementation",
+  "description": "Add region selection interface and update dynamic UI labels",
+  "prds": [
+    {
+      "category": "feature",
+      "description": "Region selection cards added to start overlay",
+      "steps": [
+        "Update index.html start overlay",
+        "Add region-selection div before mode-selection",
+        "Add irish-counties region card with 🇮🇪 flag and '32 counties'",
+        "Add europe region card with 🇪🇺 flag and '44 countries'",
+        "Set irish-counties as default selected",
+        "Add section label 'Choose Your Region'"
+      ],
+      "passes": false
+    },
+    {
+      "category": "styling",
+      "description": "Region cards are styled correctly",
+      "steps": [
+        "Update public/style.css",
+        "Add .region-selection styles",
+        "Add .region-cards grid layout (2 columns)",
+        "Add .region-card styles (border, padding, hover effects)",
+        "Add .region-card.selected styles",
+        "Add .region-flag, .region-name, .region-count styles",
+        "Verify styles work in light and dark themes"
+      ],
+      "passes": false
+    },
+    {
+      "category": "feature",
+      "description": "Region selection logic works correctly",
+      "steps": [
+        "Update src/main.js initStartScreenListeners()",
+        "Add click handlers to .region-card elements",
+        "Store selectedRegion when card is clicked",
+        "Toggle .selected class on cards",
+        "Verify only one card can be selected at a time",
+        "Verify selection persists until start game"
+      ],
+      "passes": false
+    },
+    {
+      "category": "feature",
+      "description": "Start game loads selected region",
+      "steps": [
+        "Update start-game-btn click handler",
+        "Check if selectedRegion differs from currentRegionData",
+        "Call switchToRegion(selectedRegion) if different",
+        "Wait for region loading before starting game",
+        "Show loading indicator during region switch",
+        "Verify game starts with correct region data"
+      ],
+      "passes": false
+    },
+    {
+      "category": "refactoring",
+      "description": "Dynamic UI labels update based on region",
+      "steps": [
+        "Update input placeholder: `Guess a ${regionConfig.placeType}...`",
+        "Update locate mode text: `Find this ${regionConfig.placeType} on the map`",
+        "Update stats bar grouping label to use regionConfig.groupingLabel",
+        "Update help modal text to use dynamic labels",
+        "Verify labels update when region changes"
+      ],
+      "passes": false
+    },
+    {
+      "category": "feature",
+      "description": "Region selection persists through game",
+      "steps": [
+        "Select europe region",
+        "Start a game",
+        "Verify game uses europe data",
+        "Return to start overlay",
+        "Verify europe region is still selected"
+      ],
+      "passes": false
+    },
+    {
+      "category": "testing",
+      "description": "Region selection UI works on desktop",
+      "steps": [
+        "Open game on desktop browser",
+        "Verify region cards display correctly",
+        "Click each region card",
+        "Verify visual feedback (selected state)",
+        "Start game with each region",
+        "Verify correct region loads"
+      ],
+      "passes": false
+    },
+    {
+      "category": "testing",
+      "description": "Region selection UI works on mobile",
+      "steps": [
+        "Open game on mobile browser",
+        "Verify region cards are touch-friendly",
+        "Tap each region card",
+        "Verify visual feedback works",
+        "Start game with each region",
+        "Verify correct region loads"
+      ],
+      "passes": false
+    }
+  ]
+}
