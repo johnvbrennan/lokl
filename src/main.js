@@ -9,7 +9,7 @@ import { dataLoader } from './data/dataLoader.js';
 
 // Utility imports
 import { COLORS, COLOR_EMOJIS, DIRECTION_ARROWS } from './utils/constants.js';
-import { getTodaysDateString, getGameNumber, getTimeUntilNextDay, formatTimeRemaining, getRandomCounty, createCountyShuffleQueue } from './utils/dateUtils.js';
+import { getTodaysDateString, getGameNumber, getTimeUntilNextDay, formatTimeRemaining, getRandomCounty, createCountyShuffleQueue, createPlaceShuffleQueue } from './utils/dateUtils.js';
 
 // Map imports
 import {
@@ -43,8 +43,20 @@ const getStats = () => store.getState().statistics;
 // Current region data (loaded on initialization)
 let currentRegionData = null;
 
-// Shuffle queue for locate mode (improved randomness - no county repeats within 32-county cycle)
+// Shuffle queue for locate mode (improved randomness - no place repeats within cycle)
 let locateQueue = createCountyShuffleQueue();
+
+/**
+ * Reinitialize the locate queue for the current region
+ */
+function reinitializeLocateQueue() {
+    if (currentRegionData) {
+        locateQueue = createPlaceShuffleQueue(currentRegionData.names);
+        console.log(`🔄 Locate queue reinitialized for ${currentRegionData.config.name}`);
+    } else {
+        locateQueue = createCountyShuffleQueue();
+    }
+}
 
 // UI imports
 import {
@@ -125,6 +137,9 @@ async function switchToRegion(regionId) {
         setRegionData(currentRegionData);
         setLocateRegionData(currentRegionData);
         setStreakRegionData(currentRegionData);
+
+        // Reinitialize locate queue for new region
+        reinitializeLocateQueue();
 
         // Switch map to new region with normalizer
         await new Promise((resolve) => {
@@ -732,6 +747,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         setRegionData(currentRegionData);
         setLocateRegionData(currentRegionData);
         setStreakRegionData(currentRegionData);
+
+        // Reinitialize locate queue for new region
+        reinitializeLocateQueue();
     } catch (error) {
         console.error('❌ Failed to load region:', error);
         // Fallback to default
