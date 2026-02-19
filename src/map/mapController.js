@@ -13,6 +13,16 @@ let currentHighlightedCounty = null;
 let currentRegionConfig = null; // Store current region configuration
 let nameNormalizer = null; // Function to normalize GeoJSON names (provided by region data)
 
+// Small countries that need enhanced visibility (area in km²)
+const SMALL_COUNTRIES = {
+    'Liechtenstein': 160,
+    'San Marino': 61,
+    'Monaco': 2,
+    'Vatican City': 0.44,
+    'Malta': 316,
+    'Andorra': 468
+};
+
 /**
  * Initialize the Leaflet map
  * @param {Object} regionConfig - Region configuration object
@@ -267,6 +277,9 @@ function defaultStyle(feature, gameMode = null) {
     // Prefer Map, fallback to feature properties
     const guessColor = storedColorFromMap?.color || storedColorFromFeature;
 
+    // Check if this is a small country that needs enhanced visibility
+    const isSmallCountry = countyName && SMALL_COUNTRIES.hasOwnProperty(countyName);
+
     // DEBUG: Log what we're finding
     if (guessColor) {
         console.log(`  🎨 ${countyName}: found color ${guessColor} (from ${storedColorFromMap ? 'Map' : 'feature'})`);
@@ -277,19 +290,19 @@ function defaultStyle(feature, gameMode = null) {
         return {
             fillColor: guessColor,
             fillOpacity: 0.9,
-            weight: isLocateMode ? 2 : 1,
-            opacity: isLocateMode ? 1 : 0.6,
-            color: isLocateMode ? mapBorderBright : mapBorder
+            weight: isSmallCountry ? 3 : (isLocateMode ? 2 : 1),
+            opacity: isSmallCountry ? 1 : (isLocateMode ? 1 : 0.6),
+            color: isSmallCountry ? mapBorderBright : (isLocateMode ? mapBorderBright : mapBorder)
         };
     }
 
-    // Default: transparent fill
+    // Default: transparent fill (with enhanced borders for small countries)
     return {
         fillColor: 'transparent',
         fillOpacity: 0,
-        weight: isLocateMode ? 2 : 1,
-        opacity: isLocateMode ? 1 : 0.6,
-        color: isLocateMode ? mapBorderBright : mapBorder
+        weight: isSmallCountry ? 3 : (isLocateMode ? 2 : 1),
+        opacity: isSmallCountry ? 1 : (isLocateMode ? 1 : 0.6),
+        color: isSmallCountry ? mapBorderBright : (isLocateMode ? mapBorderBright : mapBorder)
     };
 }
 
